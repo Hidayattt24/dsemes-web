@@ -43,5 +43,5 @@ next-env.d.ts
 
 #ai doc
 .agents/
-CLAUDE.md
 AGENTS.md
+CLAUDE.md
