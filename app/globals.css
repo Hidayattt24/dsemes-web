@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ─── Design System: DSMES Admin ─────────────────────────────────────────── */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fonts */
+  --font-poppins: "Poppins", sans-serif;
+  --font-jakarta: "Plus Jakarta Sans", sans-serif;
+
+  /* ── Dashboard color palette (Poppins / teal #00695C) ── */
+  --color-primary:         #00695C;
+  --color-primary-light:   #F0F9F8;
+  --color-surface-bg:      #F4F6F8;
+  --color-surface-card:    #FFFFFF;
+  --color-text-main:       #1A202C;
+  --color-text-muted:      #718096;
+  --color-border-light:    #E2E8F0;
+  --color-error-bg:        #FFF5F5;
+  --color-error-text:      #C53030;
+  --color-warning-bg:      #FFFBEB;
+  --color-warning-text:    #B45309;
+
+  /* ── Auth color palette (Plus Jakarta Sans / teal #004f45) ── */
+  --color-auth-primary:              #004f45;
+  --color-auth-primary-container:    #00695c;
+  --color-auth-surface:              #fbf9f8;
+  --color-auth-on-surface:           #1b1c1c;
+  --color-auth-on-surface-variant:   #3e4946;
+  --color-auth-outline-variant:      #bec9c5;
+  --color-auth-outline:              #6e7976;
+  --color-auth-secondary:            #286b33;
+  --color-auth-on-primary-fixed:     #00201b;
+  --color-auth-on-primary-container: #94e5d5;
+
+  /* ── Spacing scale ── */
+  --spacing-stack-sm: 12px;
+  --spacing-stack-md: 24px;
+  --spacing-stack-lg: 48px;
+  --spacing-gutter:   24px;
+
+  /* ── Border radius ── */
+  --radius-card:  16px;
+  --radius-input: 12px;
+  --radius-pill:  9999px;
+  --radius-xl:    24px;
+
+  /* ── Shadows ── */
+  --shadow-premium: 0 4px 20px rgba(0, 0, 0, 0.02);
+  --shadow-auth:    0 8px 32px -4px rgba(0, 79, 69, 0.12);
+
+  /* ── Touch target ── */
+  --input-height: 56px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Global Base ─────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E0;
+}
+
+/* ─── Utility classes ─────────────────────────────────────────────────────── */
+
+/* Premium dashboard card */
+.premium-card {
+  background: #ffffff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-premium);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+/* Glassmorphism (auth hero) */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 105, 92, 0.04);
+}
+
+/* Medical grid pattern (auth hero background) */
+.medical-grid {
+  background-image:
+    linear-gradient(rgba(0, 79, 69, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 79, 69, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Auth hero gradient */
+.hero-gradient {
+  background: radial-gradient(circle at top left, #004f45, #00201b);
+}
+
+/* Material Symbols default settings */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+.material-symbols-filled {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
