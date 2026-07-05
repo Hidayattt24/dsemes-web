@@ -1,13 +1,13 @@
 "use client";
 
-import { SidebarNavLink } from "./SidebarNavLink";
+import { SidebarNavLink } from "@/components/layout/SidebarNavLink";
 import { MAIN_NAV_ITEMS, BOTTOM_NAV_ITEMS } from "@/constants/navigation";
 import { authService } from "@/services/authService";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useRouter }    from "next/navigation";
 import { ROUTES }       from "@/constants/routes";
 
-export function DashboardSidebar() {
+export function SidebarNavbar() {
   const { logout } = useAuthStore();
   const router     = useRouter();
 

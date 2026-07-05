@@ -2,7 +2,7 @@ import { ROUTES } from "./routes";
 
 /**
  * Sidebar navigation items.
- * Add / remove items here — DashboardSidebar reads this array.
+ * Add / remove items here — SidebarNavbar reads this array.
  */
 export interface NavItem {
   readonly label: string;

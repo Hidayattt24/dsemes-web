@@ -3,7 +3,7 @@
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuthStore } from "@/lib/stores/authStore";
 
-export function DashboardHeader() {
+export function HeaderNavbar() {
   const { user } = useAuthStore();
 
   return (
@@ -20,24 +20,22 @@ export function DashboardHeader() {
       </div>
 
       {/* User profile */}
-      {user && (
-        <div className="flex items-center gap-4 pl-6 border-l border-[#E2E8F0]">
-          <div className="text-right">
-            <p className="text-sm font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
-              {user.name}
-            </p>
-            <p className="text-[11px] text-[#718096] font-medium font-[family-name:var(--font-poppins)]">
-              {user.puskesmas}
-            </p>
-          </div>
-          <Avatar
-            src={user.avatarUrl}
-            name={user.name}
-            size={40}
-            showOnline
-          />
+      <div className="flex items-center gap-4 pl-6 border-l border-[#E2E8F0]">
+        <div className="text-right">
+          <p className="text-sm font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
+            {user?.name ?? "Admin DSMES"}
+          </p>
+          <p className="text-[11px] text-[#718096] font-medium font-[family-name:var(--font-poppins)]">
+            {user?.puskesmas ?? "Dinkes Aceh"}
+          </p>
         </div>
-      )}
+        <Avatar
+          src={user?.avatarUrl}
+          name={user?.name ?? "Admin DSMES"}
+          size={40}
+          showOnline={!!user}
+        />
+      </div>
     </header>
   );
 }
