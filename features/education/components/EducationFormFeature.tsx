@@ -57,48 +57,158 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
     );
   }
 
-  // Handle mock thumbnail selection
-  const triggerMockUpload = () => {
-    const mockThumb = "https://lh3.googleusercontent.com/aida-public/AB6AXuDpin8nNCmgtE7rRHhBIl8gQirLli7cW3WJP-L6RpCB1cPWmi1O_ZqLsmIFLRIktv-eVNj6I3XVFbN5iFpt1BtMYj0Ui-y-8zoxUH8RNv1yHD62jBGUPlpez5zBgIwsZPCgfohPYTNRBBb4_fpY1nwe6zfmQmYydGiWXop-XsxR940f25fhUOvkmUL-onyXINB8pfQBIw66phznnlJcwCKq6WOP4-yQs2_xSGOJnutWO-R-86pzTF04Ha9hUAQF_-hkrWuU08JFE3G8";
-    handleChange("thumbnail", mockThumb);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const processFile = (file: File) => {
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (typeof e.target?.result === "string") {
+        handleChange("thumbnail", e.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const editorRef = useRef<HTMLDivElement>(null);
+  const editorImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync initial content from DB (only once when loading finishes)
+  useEffect(() => {
+    if (!isLoading && editorRef.current) {
+      editorRef.current.innerHTML = fields.content;
+    }
+  }, [isLoading]);
+
+  const insertHTML = (html: string) => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (editorRef.current.contains(range.commonAncestorContainer)) {
+          range.deleteContents();
+          
+          const el = document.createElement("div");
+          el.innerHTML = html;
+          const fragment = document.createDocumentFragment();
+          let node;
+          let lastNode;
+          while ((node = el.firstChild)) {
+            lastNode = fragment.appendChild(node);
+          }
+          range.insertNode(fragment);
+
+          if (lastNode) {
+            range.setStartAfter(lastNode);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+          
+          handleChange("content", editorRef.current.innerHTML);
+          return;
+        }
+      }
+      // Fallback
+      editorRef.current.innerHTML += html;
+      handleChange("content", editorRef.current.innerHTML);
+    }
   };
 
   // Helper to use clinical template
   const applyClinicalTemplate = () => {
-    const template = `### Cara Mengukur Gula Darah\n\nCuci tangan sebelum menggunakan glukometer. Pastikan tangan benar-benar kering sebelum menyentuh strip tes untuk menghindari kontaminasi atau hasil yang tidak akurat.\n\nLangkah-langkah:\n1. Siapkan alat (glukometer, strip, lancet)\n2. Bersihkan jari dengan alkohol swab\n3. Gunakan strip pada glukometer\n\n[Info Penting: Pemeriksaan sebaiknya dilakukan sebelum sarapan untuk hasil baseline yang paling akurat.]`;
+    const template = `<h3 class="text-lg font-bold text-[#1E293B] mt-4 mb-2">Cara Mengukur Gula Darah</h3><p class="text-sm text-[#4A5568] leading-relaxed mb-4">Cuci tangan sebelum menggunakan glukometer. Pastikan tangan benar-benar kering sebelum menyentuh strip tes untuk menghindari kontaminasi atau hasil yang tidak akurat.</p><h4 class="text-sm font-bold text-[#1E293B] mb-2">Langkah-langkah:</h4><ol class="list-decimal pl-5 text-sm text-[#4A5568] space-y-1 mb-4"><li>Siapkan alat (glukometer, strip, lancet)</li><li>Bersihkan jari dengan alkohol swab</li><li>Gunakan strip pada glukometer</li></ol><div class="bg-teal-50 border-l-4 border-[#00695C] p-4 my-4 rounded-r-lg text-sm text-[#00695C] font-semibold"><strong>Info Penting:</strong> Pemeriksaan sebaiknya dilakukan sebelum sarapan untuk hasil baseline yang paling akurat.</div>`;
     handleChange("content", template);
     handleChange("duration", 5);
+    if (editorRef.current) {
+      editorRef.current.innerHTML = template;
+    }
   };
 
   // Helper to append formatting snippets
   const appendSnippet = (type: "judul" | "paragraf" | "langkah" | "info") => {
     let snippet = "";
     if (type === "judul") {
-      snippet = "\n\n### Judul Bagian Baru\n";
+      snippet = '<h3 class="text-lg font-bold text-[#1E293B] mt-4 mb-2">Judul Bagian Baru</h3>';
     } else if (type === "paragraf") {
-      snippet = "\n\nParagraf penjelasan materi baru di sini...\n";
+      snippet = '<p class="text-sm text-[#4A5568] leading-relaxed mb-4">Paragraf penjelasan materi baru di sini...</p>';
     } else if (type === "langkah") {
-      snippet = "\n\nLangkah-langkah:\n1. Langkah pertama\n2. Langkah kedua\n3. Langkah ketiga\n";
+      snippet = '<ol class="list-decimal pl-5 text-sm text-[#4A5568] space-y-1 mb-4"><li>Langkah pertama</li><li>Langkah kedua</li></ol>';
     } else if (type === "info") {
-      snippet = "\n\n[Info Penting: Catatan informasi klinis penting di sini...]\n";
+      snippet = '<div class="bg-teal-50 border-l-4 border-[#00695C] p-4 my-4 rounded-r-lg text-sm text-[#00695C] font-semibold"><strong>Info Penting:</strong> Catatan informasi klinis penting di sini...</div>';
     }
-    handleChange("content", fields.content + snippet);
+    insertHTML(snippet);
   };
 
-  // Insert mock uploaded image inside editor
-  const handleInsertMockImage = () => {
-    const mockImgUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDMQYfz7rV6EhsE2sj7_zb9EH39viduL03wF_Kb3E8gay8BzbDvsdnNbSUgf87atScN8VloDV1vnL6uRhzjSCQiMZcqQwxNpHPuFs9Ofk_yYpwlVWrFid3BPfl7hn09w2eGTPl0AG2CTN4L1t0KjwCgfrA7G0YkrYjMu9odi2vge_V9R2yE7ylUl2skr2cxjNXt5dAi0fSaHw5wc56KcXaPNPngnTU4qIxnWvFQMTOpeqTPAzio03GUUtNqnf0biE6zwb2rF8sn6p8A";
-    handleChange("content", fields.content + `\n\n[Gambar: ${mockImgUrl}]\n`);
+  const triggerEditorImageUpload = () => {
+    editorImageInputRef.current?.click();
+  };
+
+  const handleEditorImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (typeof event.target?.result === "string") {
+        const imgHtml = `<img src="${event.target.result}" alt="Preview" class="max-w-full h-auto rounded-xl my-4 border border-[#E2E8F0] shadow-sm" />`;
+        insertHTML(imgHtml);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   // Insert YouTube video from modal
   const handleInsertYoutube = () => {
     if (youtubeUrlInput.trim()) {
-      handleChange("content", fields.content + `\n\n[YouTube: ${youtubeUrlInput}]\n`);
+      const embedHtml = `<div class="my-4 p-4 bg-[#F1F5F9] rounded-xl border border-[#E2E8F0] flex items-center gap-3 select-none" contenteditable="false"><span class="material-symbols-outlined text-[#00695C] text-2xl">smart_display</span><div><p class="text-xs font-bold text-[#00695C] uppercase tracking-wider">Video YouTube</p><a href="${youtubeUrlInput}" target="_blank" class="text-xs font-semibold text-[#1E293B] hover:underline">${youtubeUrlInput}</a></div></div>`;
+      insertHTML(embedHtml);
       handleChange("youtubeLink", youtubeUrlInput);
       setIsYoutubeModalOpen(false);
       setYoutubeUrlInput("");
     }
+  };
+
+  const handleEditorInput = (e: React.FormEvent<HTMLDivElement>) => {
+    handleChange("content", e.currentTarget.innerHTML);
   };
 
   // Add custom new category dynamically in combobox
@@ -118,7 +228,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
     c.toLowerCase().includes(categorySearchQuery.toLowerCase())
   );
 
-  const characterCount = fields.content.length;
+  const characterCount = fields.content.replace(/<[^>]*>/g, "").length;
 
   return (
     <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)] relative">
@@ -369,6 +479,13 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
             <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider font-[family-name:var(--font-poppins)]">
               Banner Materi
             </label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+              className="hidden"
+            />
 
             {fields.thumbnail ? (
               <div className="relative group rounded-xl overflow-hidden border border-[#E2E8F0] aspect-video bg-[#F1F5F9] max-w-lg">
@@ -378,7 +495,14 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
                   alt="Banner preview"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={triggerUpload}
+                    className="bg-white text-[#00695C] px-4 py-2 rounded-lg text-xs font-bold cursor-pointer hover:bg-[#F0F9F8]"
+                  >
+                    Ubah Banner
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleChange("thumbnail", "")}
@@ -390,7 +514,9 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
               </div>
             ) : (
               <div
-                onClick={triggerMockUpload}
+                onClick={triggerUpload}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
                 className="border-2 border-dashed border-[#E2E8F0] hover:border-[#00695C] rounded-xl p-12 flex flex-col items-center justify-center bg-[#F1F5F9]/30 hover:bg-[#F1F5F9]/60 transition-all cursor-pointer group"
               >
                 <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
@@ -459,6 +585,13 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
             
             {/* Editor Toolbar with Youtube integration */}
             <div className="flex flex-wrap gap-2 p-2 bg-[#F1F5F9]/50 rounded-xl">
+              <input
+                type="file"
+                ref={editorImageInputRef}
+                onChange={handleEditorImageChange}
+                accept="image/png, image/jpeg, image/jpg, image/webp"
+                className="hidden"
+              />
               <button
                 type="button"
                 onClick={() => appendSnippet("judul")}
@@ -493,7 +626,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
               </button>
               <button
                 type="button"
-                onClick={handleInsertMockImage}
+                onClick={triggerEditorImageUpload}
                 className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-[#E2E8F0] text-[11px] font-bold text-[#64748B] hover:text-[#00695C] hover:border-[#00695C] transition-all shadow-sm cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm select-none">image</span>
@@ -511,39 +644,22 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
             </div>
 
             {/* Editor Canvas Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-              
-              {/* Textarea inputs */}
-              <div className="lg:col-span-2 space-y-2">
-                <textarea
-                  value={fields.content}
-                  onChange={(e) => handleChange("content", e.target.value)}
-                  className={[
-                    "w-full min-h-[500px] h-full border border-[#E2E8F0] rounded-xl p-8 outline-none focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] transition-all text-sm leading-relaxed font-medium font-[family-name:var(--font-poppins)] text-[#1E293B] placeholder:text-[#64748B]/50 editor-container resize-none",
-                    errors.content ? "border-red-500" : "",
-                  ].join(" ")}
-                  placeholder="Tulis atau gunakan template klinis untuk menyusun materi edukasi..."
-                />
-                {errors.content && (
-                  <p className="text-red-500 text-xs font-semibold font-[family-name:var(--font-poppins)]">
-                    {errors.content}
-                  </p>
-                )}
-              </div>
-
-              {/* Drag & Drop Media Upload Container inside editor */}
-              <div className="border-2 border-dashed border-[#E2E8F0] hover:border-[#00695C] rounded-xl p-10 flex flex-col items-center justify-center bg-[#F1F5F9]/30 hover:bg-[#F1F5F9]/60 transition-all cursor-pointer group select-none min-h-[250px]" onClick={handleInsertMockImage}>
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm">
-                  <span className="material-symbols-outlined text-[#00695C] text-xl select-none">add_a_photo</span>
-                </div>
-                <p className="text-xs font-semibold text-[#1E293B] font-[family-name:var(--font-poppins)] text-center">
-                  Drag & Drop File atau Pilih Gambar
+            <div className="space-y-2">
+              <div
+                ref={editorRef}
+                contentEditable
+                onInput={handleEditorInput}
+                data-placeholder="Tulis atau gunakan template klinis untuk menyusun materi edukasi..."
+                className={[
+                  "w-full min-h-[500px] border border-[#E2E8F0] rounded-xl p-8 outline-none focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] transition-all text-sm leading-relaxed font-medium font-[family-name:var(--font-poppins)] text-[#1E293B] editor-container overflow-y-auto whitespace-pre-wrap",
+                  errors.content ? "border-red-500" : "",
+                ].join(" ")}
+              />
+              {errors.content && (
+                <p className="text-red-500 text-xs font-semibold font-[family-name:var(--font-poppins)]">
+                  {errors.content}
                 </p>
-                <p className="text-[10px] text-[#64748B] mt-0.5 font-[family-name:var(--font-poppins)] text-center">
-                  Format PNG, JPG (Maks. 2MB)
-                </p>
-              </div>
-
+              )}
             </div>
 
             {/* Footer Meta */}

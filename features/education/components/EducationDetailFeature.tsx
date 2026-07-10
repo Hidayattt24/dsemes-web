@@ -186,9 +186,10 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
                   </p>
                 </>
               ) : (
-                <div className="text-base text-[#4A5568] leading-relaxed whitespace-pre-line space-y-6">
-                  {article.content}
-                </div>
+                <div
+                  className="text-base text-[#4A5568] leading-relaxed space-y-6"
+                  dangerouslySetInnerHTML={{ __html: article.content }}
+                />
               )}
             </article>
 
