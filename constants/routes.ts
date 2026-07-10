@@ -13,7 +13,9 @@ export const ROUTES = {
   // Admin pages
   DASHBOARD: "/admin/dashboard",
   DATA_PASIEN: "/admin/data-pasien",
+  PEMANTAUAN_CATATAN_PASIEN: "/admin/pemantauan-catatan-pasien",
   MANAJEMEN_EDUKASI: "/admin/manajemen-edukasi",
+  MANAJEMEN_KUISIONER: "/admin/manajemen-kuisioner",
   ADMINISTRATOR: "/admin/administrator",
   PENGATURAN: "/admin/pengaturan",
 } as const;
