@@ -1,72 +1,19 @@
-"use client";
+import type { Metadata } from "next";
+import dynamic from "next/dynamic";
+import { TableLoader } from "@/components/ui/loading";
 
-import { useState } from "react";
-import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { useToast } from "@/components/ui/Toast";
+const QuizListFeature = dynamic(
+  () => import("@/features/quiz/components/QuizListFeature").then((mod) => mod.QuizListFeature),
+  {
+    loading: () => <TableLoader />,
+  }
+);
+
+export const metadata: Metadata = {
+  title: "Manajemen Kuesioner | Digital DSMES Admin",
+  description: "Kelola kuesioner edukasi dan pantau progres belajar pasien DSMES.",
+};
 
 export default function ManajemenKuisionerPage() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { showToast } = useToast();
-
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsDeleting(false);
-    setIsOpen(false);
-    showToast({
-      type: "success",
-      title: "Berhasil",
-      description: "Kuisioner berhasil dihapus.",
-    });
-  };
-
-  return (
-    <section className="space-y-8 max-w-[1600px] mx-auto w-full">
-      <div>
-        <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight font-[family-name:var(--font-poppins)]">
-          Manajemen Kuisioner
-        </h2>
-        <p className="text-sm text-[#718096] mt-1 font-[family-name:var(--font-poppins)]">
-          Kelola kuisioner dan kuesioner evaluasi pasien DSMES Aceh.
-        </p>
-      </div>
-
-      <div className="bg-white p-8 rounded-2xl border border-[#E2E8F0] shadow-sm flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-6">
-          <div>
-            <p className="text-lg font-semibold text-[#1A202C] font-[family-name:var(--font-poppins)]">
-              Coming Soon
-            </p>
-            <p className="text-sm text-[#718096] mt-1 font-[family-name:var(--font-poppins)]">
-              Halaman ini sedang dalam pengembangan.
-            </p>
-          </div>
-
-          <div className="pt-6 border-t border-slate-100 flex flex-col items-center gap-3">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Demo Interaktif</p>
-            <button
-              onClick={() => setIsOpen(true)}
-              className="flex items-center gap-2 bg-[#FFF5F5] border border-[#FEB2B2] text-[#C53030] hover:bg-[#FFF5F5]/80 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm shadow-red-100"
-            >
-              <span className="material-symbols-outlined text-[16px]">delete</span>
-              <span>Simulasikan Hapus Kuisioner</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <ConfirmationModal
-        open={isOpen}
-        title="Hapus Kuisioner?"
-        description="Apakah Anda yakin ingin menghapus kuisioner ini?"
-        variant="danger"
-        confirmText="Ya, Hapus"
-        cancelText="Batal"
-        loading={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setIsOpen(false)}
-      />
-    </section>
-  );
+  return <QuizListFeature />;
 }
