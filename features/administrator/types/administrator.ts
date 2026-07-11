@@ -5,7 +5,7 @@ export interface Administrator {
   readonly email: string;
   readonly whatsapp: string;
   readonly status: "Aktif" | "Nonaktif";
-  readonly role: "Super Admin" | "Monitoring Staff";
+  readonly role: "Monitoring Staff";
   readonly lastLogin: string;
   readonly createdAt: string;
   readonly notes?: string;

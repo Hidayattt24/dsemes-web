@@ -30,7 +30,7 @@ let MOCK_ADMINISTRATORS: Administrator[] = [
     email: "ahmad.faisal@dsmes.go.id",
     whatsapp: "+62 811 9988 7766",
     status: "Aktif",
-    role: "Super Admin",
+    role: "Monitoring Staff",
     lastLogin: "Hari ini, 09:12",
     createdAt: "01 Jun 2023",
   },

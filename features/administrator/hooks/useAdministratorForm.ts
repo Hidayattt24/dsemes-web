@@ -13,7 +13,7 @@ interface FormFields {
   readonly whatsapp: string;
   readonly password?: string;
   readonly confirmPassword?: string;
-  readonly role: "Super Admin" | "Monitoring Staff";
+  readonly role: "Monitoring Staff";
   readonly status: "Aktif" | "Nonaktif";
   readonly permissions: string[];
   readonly notes?: string;

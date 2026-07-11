@@ -15,12 +15,9 @@ export function AdministratorFeature() {
     administrators,
     totalCount,
     activeCount,
-    superAdminCount,
     isLoading,
     searchQuery,
     setSearchQuery,
-    roleFilter,
-    setRoleFilter,
     statusFilter,
     setStatusFilter,
     deleteAdmin,
@@ -171,7 +168,7 @@ export function AdministratorFeature() {
       </div>
 
       {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="premium-card p-6 flex items-center gap-4">
           <div className="w-12 h-12 bg-[#F0F9F8] rounded-full flex items-center justify-center text-[#00695C]">
             <span className="material-symbols-outlined text-2xl">groups</span>
@@ -207,20 +204,6 @@ export function AdministratorFeature() {
             </div>
           </div>
         </div>
-
-        <div className="premium-card p-6 flex items-center gap-4">
-          <div className="w-12 h-12 bg-[#F0F9F8] rounded-full flex items-center justify-center text-[#00695C]">
-            <span className="material-symbols-outlined text-2xl">admin_panel_settings</span>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-[#718096] uppercase tracking-widest leading-none">
-              Super Admin
-            </p>
-            <p className="text-2xl font-bold text-[#1A202C] mt-2 leading-none">
-              {superAdminCount}
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Search and Filters Bar */}
@@ -239,22 +222,6 @@ export function AdministratorFeature() {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto justify-end">
-          {/* Role Filter */}
-          <div className="relative">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-4 pr-10 py-2.5 text-sm focus:border-[#00695C] outline-none cursor-pointer text-[#1A202C] font-medium font-[family-name:var(--font-poppins)] min-w-[150px]"
-            >
-              <option value="Semua">Semua Peran</option>
-              <option value="Super Admin">Super Admin</option>
-              <option value="Monitoring Staff">Monitoring Staff</option>
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#718096] text-lg">
-              expand_more
-            </span>
-          </div>
-
           {/* Status Filter */}
           <div className="relative">
             <select

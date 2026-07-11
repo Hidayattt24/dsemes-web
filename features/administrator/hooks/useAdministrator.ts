@@ -54,13 +54,11 @@ export function useAdministrator() {
   // Stats
   const totalCount = administrators.length;
   const activeCount = administrators.filter((a) => a.status === "Aktif").length;
-  const superAdminCount = administrators.filter((a) => a.role === "Super Admin").length;
 
   return {
     administrators: filteredAdministrators,
     totalCount,
     activeCount,
-    superAdminCount,
     isLoading,
     searchQuery,
     setSearchQuery,
