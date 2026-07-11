@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useEducationDetail } from "../hooks/useEducationDetail";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/common/ErrorState";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { useToast } from "@/components/ui/Toast";
 
 interface EducationDetailFeatureProps {
   readonly articleId: string;
@@ -21,6 +24,19 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
     goBack,
     goToEdit,
   } = useEducationDetail(articleId);
+
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const { showToast } = useToast();
+
+  const handleConfirmDelete = async () => {
+    showToast({
+      type: "success",
+      title: "Berhasil",
+      description: "Materi edukasi berhasil dihapus.",
+    });
+    await deleteArticle();
+    setIsDeleteOpen(false);
+  };
 
   if (isLoading) {
     return (
@@ -74,11 +90,7 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
           </button>
           {/* Delete */}
           <button
-            onClick={() => {
-              if (confirm(`Apakah Anda yakin ingin menghapus "${article.title}"?`)) {
-                deleteArticle();
-              }
-            }}
+            onClick={() => setIsDeleteOpen(true)}
             disabled={isDeleting}
             className="bg-[#FFF5F5] text-[#C53030] px-6 py-2.5 rounded-xl flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all text-sm font-semibold border border-red-100 shadow-sm cursor-pointer disabled:opacity-50"
           >
@@ -294,6 +306,18 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
         </div>
 
       </div>
+
+      <ConfirmationModal
+        open={isDeleteOpen}
+        title="Hapus Materi Edukasi?"
+        description="Materi yang dihapus tidak dapat dikembalikan."
+        variant="danger"
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        loading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteOpen(false)}
+      />
     </section>
   );
 }

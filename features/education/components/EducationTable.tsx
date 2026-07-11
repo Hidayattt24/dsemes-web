@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { DataTable, type TableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import type { EducationArticle } from "../types/education";
 import { ROUTES } from "@/constants/routes";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { useToast } from "@/components/ui/Toast";
 
 interface EducationTableProps {
   readonly articles: readonly EducationArticle[];
@@ -13,6 +16,32 @@ interface EducationTableProps {
 }
 
 export function EducationTable({ articles, loading, onDelete }: EducationTableProps) {
+  const [deleteArticleInfo, setDeleteArticleInfo] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { showToast } = useToast();
+
+  const handleConfirmDelete = async () => {
+    if (!deleteArticleInfo) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(deleteArticleInfo.id);
+      showToast({
+        type: "success",
+        title: "Berhasil",
+        description: "Materi edukasi berhasil dihapus.",
+      });
+    } catch {
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: "Gagal menghapus materi edukasi.",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteArticleInfo(null);
+    }
+  };
+
   const columns: TableColumn<EducationArticle>[] = [
     {
       key: "thumbnail",
@@ -115,11 +144,7 @@ export function EducationTable({ articles, loading, onDelete }: EducationTablePr
           </Link>
           {/* Delete Button */}
           <button
-            onClick={() => {
-              if (confirm(`Apakah Anda yakin ingin menghapus "${row.title}"?`)) {
-                onDelete(row.id);
-              }
-            }}
+            onClick={() => setDeleteArticleInfo({ id: row.id, title: row.title })}
             className="w-8 h-8 flex items-center justify-center border border-red-100 rounded-lg hover:bg-red-50 transition-all text-red-500 hover:text-red-700 cursor-pointer"
             title="Hapus"
           >
@@ -132,13 +157,27 @@ export function EducationTable({ articles, loading, onDelete }: EducationTablePr
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={[...articles]}
-      keyExtract={(row) => row.id}
-      loading={loading}
-      emptyTitle="Tidak ada artikel"
-      emptyMessage="Belum ada artikel edukasi yang terdaftar."
-    />
+    <>
+      <DataTable
+        columns={columns}
+        data={[...articles]}
+        keyExtract={(row) => row.id}
+        loading={loading}
+        emptyTitle="Tidak ada artikel"
+        emptyMessage="Belum ada artikel edukasi yang terdaftar."
+      />
+
+      <ConfirmationModal
+        open={deleteArticleInfo !== null}
+        title="Hapus Materi Edukasi?"
+        description="Materi yang dihapus tidak dapat dikembalikan."
+        variant="danger"
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        loading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteArticleInfo(null)}
+      />
+    </>
   );
 }

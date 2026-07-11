@@ -1,0 +1,396 @@
+"use client";
+
+import { useAdministratorForm } from "../hooks/useAdministratorForm";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useState, useEffect } from "react";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+
+interface AdministratorFormFeatureProps {
+  readonly adminId?: string;
+}
+
+export function AdministratorFormFeature({ adminId }: AdministratorFormFeatureProps) {
+  const {
+    fields,
+    isLoading,
+    isSaving,
+    errors,
+    handleChange: baseHandleChange,
+    handleTogglePermission: baseHandleTogglePermission,
+    save,
+    cancel,
+  } = useAdministratorForm(adminId);
+
+  // Password visibility states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [isDirty, setIsDirty] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+
+  const handleChange = (key: any, val: any) => {
+    baseHandleChange(key, val);
+    setIsDirty(true);
+  };
+
+  const handleTogglePermission = (permission: string) => {
+    baseHandleTogglePermission(permission);
+    setIsDirty(true);
+  };
+
+  const handleCancelClick = () => {
+    if (isDirty) {
+      setIsCancelOpen(true);
+    } else {
+      cancel();
+    }
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)] relative">
+      {/* Action Toolbar */}
+      <div className="flex justify-between items-center mb-10">
+        <div>
+          <h2 className="text-3xl font-bold text-[#1E293B] tracking-tight font-[family-name:var(--font-poppins)]">
+            {adminId ? "Edit Staff Monitoring" : "Tambah Staff Monitoring Baru"}
+          </h2>
+          <p className="text-[#64748B] text-sm mt-1 font-[family-name:var(--font-poppins)]">
+            {adminId ? "Ubah informasi akun staff monitoring." : "Lengkapi formulir di bawah ini untuk menambahkan akun staff monitoring."}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={handleCancelClick}
+            className="px-6 py-2.5 rounded-full border border-[#E2E8F0] text-[#1E293B] text-sm font-semibold hover:bg-[#F1F5F9] transition-all cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={save}
+            disabled={isSaving}
+            className="px-8 py-2.5 rounded-full bg-[#00695C] text-white text-sm font-semibold shadow-lg shadow-[#00695C]/20 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50"
+          >
+            {isSaving ? "Menyimpan..." : "Simpan Staff"}
+          </button>
+        </div>
+      </div>
+
+      {/* Form Cards Stack */}
+      <div className="space-y-8 w-full">
+        {/* Card 1: Informasi Akun */}
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 shadow-sm space-y-6">
+          <div className="border-b border-[#E2E8F0]/60 pb-3">
+            <h3 className="text-base font-bold text-[#1E293B]">Informasi Akun</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Nama Lengkap */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Nama Lengkap <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={fields.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                placeholder="Masukkan nama lengkap"
+                className={[
+                  "w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]",
+                  errors.name ? "border-red-500" : "",
+                ].join(" ")}
+              />
+              {errors.name && (
+                <p className="text-red-500 text-xs font-semibold">{errors.name}</p>
+              )}
+            </div>
+
+            {/* Username */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Username <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={fields.username}
+                onChange={(e) => handleChange("username", e.target.value)}
+                placeholder="Username unik"
+                className={[
+                  "w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]",
+                  errors.username ? "border-red-500" : "",
+                ].join(" ")}
+              />
+              {errors.username && (
+                <p className="text-red-500 text-xs font-semibold">{errors.username}</p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={fields.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                placeholder="email@contoh.com"
+                className={[
+                  "w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]",
+                  errors.email ? "border-red-500" : "",
+                ].join(" ")}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs font-semibold">{errors.email}</p>
+              )}
+            </div>
+
+            {/* WhatsApp */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Nomor WhatsApp
+              </label>
+              <input
+                type="tel"
+                value={fields.whatsapp}
+                onChange={(e) => handleChange("whatsapp", e.target.value)}
+                placeholder="Contoh: 081234567890"
+                className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Keamanan */}
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 shadow-sm space-y-6">
+          <div className="border-b border-[#E2E8F0]/60 pb-3">
+            <h3 className="text-base font-bold text-[#1E293B]">Keamanan</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Password {!adminId && <span className="text-red-500">*</span>}
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={fields.password}
+                  onChange={(e) => handleChange("password", e.target.value)}
+                  placeholder="Minimal 8 karakter"
+                  className={[
+                    "w-full pl-5 pr-12 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]",
+                    errors.password ? "border-red-500" : "",
+                  ].join(" ")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#718096] hover:text-[#00695C] cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs font-semibold">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Konfirmasi Password {!adminId && <span className="text-red-500">*</span>}
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={fields.confirmPassword}
+                  onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                  placeholder="Ulangi password"
+                  className={[
+                    "w-full pl-5 pr-12 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]",
+                    errors.confirmPassword ? "border-red-500" : "",
+                  ].join(" ")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#718096] hover:text-[#00695C] cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {showConfirmPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs font-semibold">{errors.confirmPassword}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Status & Peran */}
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 shadow-sm space-y-6">
+          <div className="border-b border-[#E2E8F0]/60 pb-3">
+            <h3 className="text-base font-bold text-[#1E293B]">Status & Peran</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Peran Sistem */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Peran Sistem
+              </label>
+              <input
+                type="text"
+                value={fields.role}
+                readOnly
+                disabled
+                className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] outline-none text-sm font-semibold text-[#64748B] bg-[#F8FAFC] cursor-not-allowed"
+              />
+            </div>
+
+            {/* Status Akun */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Status Akun
+              </label>
+              <div className="flex gap-6 pt-3">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Aktif"
+                    checked={fields.status === "Aktif"}
+                    onChange={() => handleChange("status", "Aktif")}
+                    className="text-[#00695C] border-[#E2E8F0] focus:ring-[#00695C] w-5 h-5 cursor-pointer accent-[#00695C]"
+                  />
+                  <span className="text-sm font-semibold text-[#1A202C] group-hover:text-[#00695C] transition-colors">
+                    Aktif
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Nonaktif"
+                    checked={fields.status === "Nonaktif"}
+                    onChange={() => handleChange("status", "Nonaktif")}
+                    className="text-[#00695C] border-[#E2E8F0] focus:ring-[#00695C] w-5 h-5 cursor-pointer accent-[#00695C]"
+                  />
+                  <span className="text-sm font-semibold text-[#718096] group-hover:text-[#00695C] transition-colors">
+                    Nonaktif
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Hak Akses / Permissions */}
+            <div className="space-y-3 md:col-span-2 pt-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Hak Akses Khusus (Opsional)
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { id: "baca_pasien", label: "Baca Data Pasien" },
+                  { id: "edit_pasien", label: "Edit/Ubah Data Pasien" },
+                  { id: "manajemen_edukasi", label: "Manajemen Edukasi" },
+                  { id: "manajemen_kuesioner", label: "Manajemen Kuesioner" },
+                ].map((perm) => (
+                  <label key={perm.id} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={fields.permissions.includes(perm.id)}
+                      onChange={() => handleTogglePermission(perm.id)}
+                      className="rounded border-[#E2E8F0] text-[#00695C] focus:ring-[#00695C] cursor-pointer accent-[#00695C] w-4.5 h-4.5"
+                    />
+                    <span className="text-xs font-semibold text-[#4A5568] group-hover:text-[#00695C] transition-colors">
+                      {perm.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Catatan Tambahan (Opsional) */}
+            <div className="space-y-2 md:col-span-2 pt-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Catatan Tambahan (Opsional)
+              </label>
+              <textarea
+                value={fields.notes || ""}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                placeholder="Masukkan catatan tambahan jika diperlukan..."
+                rows={3}
+                className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B] resize-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Info Banner Accent */}
+        <div className="flex items-start gap-3 bg-[#F0F9F8] p-5 rounded-xl border border-[#B2DFDB]/40 mt-4 select-none">
+          <span className="material-symbols-outlined text-[#00695C] text-[20px] mt-0.5 select-none">info</span>
+          <p className="text-xs text-[#00695C] font-semibold leading-relaxed">
+            Staff Monitoring memiliki hak akses untuk memantau data perkembangan klinis pasien diabetes secara langsung (realtime) melalui dashboard.
+          </p>
+        </div>
+
+        {/* Action Buttons Footer */}
+        <div className="flex justify-end gap-4 py-8 border-t border-[#E2E8F0]/40">
+          <button
+            onClick={handleCancelClick}
+            className="px-8 py-3 rounded-xl border border-[#E2E8F0] text-[#1E293B] text-sm font-bold hover:bg-white transition-all shadow-sm cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={save}
+            disabled={isSaving}
+            className="px-10 py-3 rounded-xl bg-[#00695C] text-white text-sm font-bold shadow-xl shadow-[#00695C]/25 hover:opacity-90 transition-all flex items-center gap-3 cursor-pointer disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-lg select-none">save</span>
+            <span>{isSaving ? "Menyimpan..." : "Simpan Staff Monitoring"}</span>
+          </button>
+        </div>
+      </div>
+
+      <ConfirmationModal
+        open={isCancelOpen}
+        title="Batalkan Perubahan?"
+        description="Perubahan yang belum disimpan akan hilang."
+        variant="warning"
+        confirmText="Ya, Batalkan"
+        cancelText="Lanjut Mengedit"
+        onConfirm={() => {
+          setIsCancelOpen(false);
+          setIsDirty(false); // bypass beforeunload
+          cancel();
+        }}
+        onCancel={() => setIsCancelOpen(false)}
+      />
+    </div>
+  );
+}

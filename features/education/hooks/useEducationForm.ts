@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { educationService } from "../services/educationService";
 import { ROUTES } from "@/constants/routes";
+import { useToast } from "@/components/ui/Toast";
 
 interface FormFields {
   readonly title: string;
@@ -18,6 +19,7 @@ interface FormFields {
 
 export function useEducationForm(articleId?: string) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [fields, setFields] = useState<FormFields>({
     title: "",
     category: "Nutrisi & Makanan",
@@ -88,6 +90,11 @@ export function useEducationForm(articleId?: string) {
         id: articleId,
         ...fields,
         status: forcedStatus ?? fields.status,
+      });
+      showToast({
+        type: "success",
+        title: "Berhasil",
+        description: articleId ? "Materi edukasi berhasil diperbarui." : "Materi edukasi berhasil ditambahkan.",
       });
       router.push(ROUTES.MANAJEMEN_EDUKASI);
       router.refresh();

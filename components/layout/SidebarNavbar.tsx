@@ -1,17 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { SidebarNavLink } from "@/components/layout/SidebarNavLink";
 import { MAIN_NAV_ITEMS } from "@/constants/navigation";
 import { authService } from "@/services/authService";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useRouter }    from "next/navigation";
 import { ROUTES }       from "@/constants/routes";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 
 export function SidebarNavbar() {
   const { logout } = useAuthStore();
   const router     = useRouter();
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   const handleLogout = async (): Promise<void> => {
+    setIsLogoutOpen(false);
     await authService.logout();
     logout();
     router.push(ROUTES.LOGIN);
@@ -44,7 +48,7 @@ export function SidebarNavbar() {
       {/* Bottom logout section */}
       <div className="px-4 pt-6 border-t border-[#E2E8F0] flex flex-col gap-1">
         <button
-          onClick={handleLogout}
+          onClick={() => setIsLogoutOpen(true)}
           className={[
             "flex items-center gap-4 px-4 py-3 rounded-xl w-full cursor-pointer",
             "text-[#C53030] hover:bg-[#FFF5F5] transition-all duration-200",
@@ -55,6 +59,17 @@ export function SidebarNavbar() {
           <span>Keluar</span>
         </button>
       </div>
+
+      <ConfirmationModal
+        open={isLogoutOpen}
+        title="Keluar dari Sistem?"
+        description="Apakah Anda yakin ingin keluar dari akun ini?"
+        variant="warning"
+        confirmText="Keluar"
+        cancelText="Batal"
+        onConfirm={handleLogout}
+        onCancel={() => setIsLogoutOpen(false)}
+      />
     </aside>
   );
 }

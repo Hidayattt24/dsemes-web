@@ -3,6 +3,7 @@
 import { useEducationForm } from "../hooks/useEducationForm";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useState, useRef, useEffect } from "react";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 
 interface EducationFormFeatureProps {
   readonly articleId?: string;
@@ -14,10 +15,37 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
     isLoading,
     isSaving,
     errors,
-    handleChange,
+    handleChange: baseHandleChange,
     save,
     cancel,
   } = useEducationForm(articleId);
+
+  const [isDirty, setIsDirty] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+
+  const handleChange = (key: any, val: any) => {
+    baseHandleChange(key, val);
+    setIsDirty(true);
+  };
+
+  const handleCancelClick = () => {
+    if (isDirty) {
+      setIsCancelOpen(true);
+    } else {
+      cancel();
+    }
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   // Combobox category states
   const [categoriesList, setCategoriesList] = useState<string[]>([
@@ -723,7 +751,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
         {/* Global Actions Footer */}
         <div className="flex justify-end gap-4 py-8 border-t border-[#E2E8F0]/40">
           <button
-            onClick={cancel}
+            onClick={handleCancelClick}
             className="px-8 py-3 rounded-xl border border-[#E2E8F0] text-[#1E293B] text-sm font-bold hover:bg-white transition-all shadow-sm cursor-pointer"
           >
             Batal
@@ -739,6 +767,21 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
         </div>
 
       </div>
+
+      <ConfirmationModal
+        open={isCancelOpen}
+        title="Batalkan Perubahan?"
+        description="Perubahan yang belum disimpan akan hilang."
+        variant="warning"
+        confirmText="Ya, Batalkan"
+        cancelText="Lanjut Mengedit"
+        onConfirm={() => {
+          setIsCancelOpen(false);
+          setIsDirty(false); // bypass beforeunload
+          cancel();
+        }}
+        onCancel={() => setIsCancelOpen(false)}
+      />
     </div>
   );
 }
