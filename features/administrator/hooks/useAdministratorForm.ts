@@ -35,7 +35,7 @@ export function useAdministratorForm(adminId?: string) {
     notes: "",
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!adminId);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormFields, string>>>({});
 

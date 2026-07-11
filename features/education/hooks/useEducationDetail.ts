@@ -31,7 +31,9 @@ export function useEducationDetail(articleId: string) {
   };
 
   useEffect(() => {
-    fetchDetail();
+    if (articleId) {
+      fetchDetail();
+    }
   }, [articleId]);
 
   const deleteArticle = async () => {

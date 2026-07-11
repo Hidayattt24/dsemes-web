@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { PatientDetailFeature } from "@/features/patient/components/PatientDetailFeature";
+import dynamic from "next/dynamic";
+import { DetailPageLoader } from "@/components/ui/loading";
+
+const PatientDetailFeature = dynamic(
+  () => import("@/features/patient/components/PatientDetailFeature").then((mod) => mod.PatientDetailFeature),
+  {
+    loading: () => <DetailPageLoader type="patient" />,
+  }
+);
 
 export const metadata: Metadata = {
   title: "Detail Pasien | Digital DSMES Admin",

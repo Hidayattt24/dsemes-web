@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { EducationDetailFeature } from "@/features/education/components/EducationDetailFeature";
+import dynamic from "next/dynamic";
+import { DetailPageLoader } from "@/components/ui/loading";
+
+const EducationDetailFeature = dynamic(
+  () => import("@/features/education/components/EducationDetailFeature").then((mod) => mod.EducationDetailFeature),
+  {
+    loading: () => <DetailPageLoader type="education" />,
+  }
+);
 
 export const metadata: Metadata = {
   title: "Detail Edukasi | Digital DSMES Admin",

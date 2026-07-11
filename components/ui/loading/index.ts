@@ -1,0 +1,9 @@
+export { DetailPageLoader } from "./DetailPageLoader";
+export { FormLoader } from "./FormLoader";
+export { TableLoader } from "./TableLoader";
+export { DashboardLoader } from "./DashboardLoader";
+export { GlobalPageLoader } from "./GlobalPageLoader";
+export { DetailPatientSkeleton } from "./DetailPatientSkeleton";
+export { DetailRecordSkeleton } from "./DetailRecordSkeleton";
+export { DetailEducationSkeleton } from "./DetailEducationSkeleton";
+export { FormSkeleton } from "./FormSkeleton";

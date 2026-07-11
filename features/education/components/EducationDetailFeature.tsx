@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useEducationDetail } from "../hooks/useEducationDetail";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/common/ErrorState";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useToast } from "@/components/ui/Toast";
+
+import { DetailPageLoader } from "@/components/ui/loading";
 
 interface EducationDetailFeatureProps {
   readonly articleId: string;
@@ -39,11 +40,7 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <DetailPageLoader type="education" />;
   }
 
   if (error || !article) {

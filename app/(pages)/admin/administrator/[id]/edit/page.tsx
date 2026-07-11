@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { AdministratorFormFeature } from "@/features/administrator/components/AdministratorFormFeature";
+import dynamic from "next/dynamic";
+import { FormLoader } from "@/components/ui/loading";
+
+const AdministratorFormFeature = dynamic(
+  () => import("@/features/administrator/components/AdministratorFormFeature").then((mod) => mod.AdministratorFormFeature),
+  {
+    loading: () => <FormLoader />,
+  }
+);
 
 export const metadata: Metadata = {
   title: "Edit Staff Monitoring | Digital DSMES Admin",

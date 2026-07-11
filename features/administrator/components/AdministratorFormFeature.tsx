@@ -5,6 +5,8 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useState, useEffect } from "react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 
+import { FormLoader } from "@/components/ui/loading";
+
 interface AdministratorFormFeatureProps {
   readonly adminId?: string;
 }
@@ -58,11 +60,7 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
   }, [isDirty]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <FormLoader />;
   }
 
   return (

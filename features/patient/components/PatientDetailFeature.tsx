@@ -8,11 +8,12 @@ import { PatientPersonalInfoCard } from "./PatientPersonalInfoCard";
 import { PatientBloodSugarChart } from "./PatientBloodSugarChart";
 import { PatientCalorieChart } from "./PatientCalorieChart";
 import { PatientEducationActivity } from "./PatientEducationActivity";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/common/ErrorState";
 import Link from "next/link";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useToast } from "@/components/ui/Toast";
+
+import { DetailPageLoader } from "@/components/ui/loading";
 
 interface PatientDetailFeatureProps {
   readonly patientId: string;
@@ -40,11 +41,7 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <DetailPageLoader type="patient" />;
   }
 
   if (error || !patient) {
