@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { NavItem } from "@/constants/navigation";
+import { useSidebarStore } from "@/lib/stores/sidebarStore";
 
 interface SidebarNavLinkProps {
   readonly item: NavItem;
@@ -11,10 +12,12 @@ interface SidebarNavLinkProps {
 export function SidebarNavLink({ item }: SidebarNavLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+  const { closeMobile } = useSidebarStore();
 
   return (
     <Link
       href={item.href}
+      onClick={closeMobile}
       aria-current={isActive ? "page" : undefined}
       className={[
         "flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200",

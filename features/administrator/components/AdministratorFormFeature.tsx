@@ -66,7 +66,7 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
   return (
     <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)] relative">
       {/* Action Toolbar */}
-      <div className="flex justify-between items-center mb-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-10">
         <div>
           <h2 className="text-3xl font-bold text-[#1E293B] tracking-tight font-[family-name:var(--font-poppins)]">
             {adminId ? "Edit Staff Monitoring" : "Tambah Staff Monitoring Baru"}
@@ -75,17 +75,17 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
             {adminId ? "Ubah informasi akun staff monitoring." : "Lengkapi formulir di bawah ini untuk menambahkan akun staff monitoring."}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex w-full sm:w-auto justify-end gap-3 flex-wrap">
           <button
             onClick={handleCancelClick}
-            className="px-6 py-2.5 rounded-full border border-[#E2E8F0] text-[#1E293B] text-sm font-semibold hover:bg-[#F1F5F9] transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full border border-[#E2E8F0] text-[#1E293B] text-sm font-semibold hover:bg-[#F1F5F9] transition-all cursor-pointer text-center"
           >
             Batal
           </button>
           <button
             onClick={save}
             disabled={isSaving}
-            className="px-8 py-2.5 rounded-full bg-[#00695C] text-white text-sm font-semibold shadow-lg shadow-[#00695C]/20 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-initial px-8 py-2.5 rounded-full bg-[#00695C] text-white text-sm font-semibold shadow-lg shadow-[#00695C]/20 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50 text-center"
           >
             {isSaving ? "Menyimpan..." : "Simpan Staff"}
           </button>
@@ -357,17 +357,17 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
         </div>
 
         {/* Action Buttons Footer */}
-        <div className="flex justify-end gap-4 py-8 border-t border-[#E2E8F0]/40">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 py-8 border-t border-[#E2E8F0]/40">
           <button
             onClick={handleCancelClick}
-            className="px-8 py-3 rounded-xl border border-[#E2E8F0] text-[#1E293B] text-sm font-bold hover:bg-white transition-all shadow-sm cursor-pointer"
+            className="w-full sm:w-auto px-8 py-3 rounded-xl border border-[#E2E8F0] text-[#1E293B] text-sm font-bold hover:bg-[#F4F6F8] transition-all shadow-sm cursor-pointer text-center"
           >
             Batal
           </button>
           <button
             onClick={save}
             disabled={isSaving}
-            className="px-10 py-3 rounded-xl bg-[#00695C] text-white text-sm font-bold shadow-xl shadow-[#00695C]/25 hover:opacity-90 transition-all flex items-center gap-3 cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto px-10 py-3 rounded-xl bg-[#00695C] text-white text-sm font-bold shadow-xl shadow-[#00695C]/25 hover:opacity-90 transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 text-center"
           >
             <span className="material-symbols-outlined text-lg select-none">save</span>
             <span>{isSaving ? "Menyimpan..." : "Simpan Staff Monitoring"}</span>

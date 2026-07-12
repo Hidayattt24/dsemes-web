@@ -159,7 +159,7 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
                   </p>
 
                   {/* Inline Two-Column Images */}
-                  <div className="grid grid-cols-2 gap-6 my-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 my-10">
                     <div className="rounded-xl overflow-hidden border border-[#E2E8F0] shadow-sm aspect-[4/3] bg-[#F4F6F8]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img

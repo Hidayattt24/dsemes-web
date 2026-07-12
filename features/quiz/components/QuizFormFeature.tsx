@@ -59,7 +59,7 @@ export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
             {quizId ? "Edit Kuesioner" : "Tambah Kuesioner Baru"}
           </h2>
         </div>
-        <div className="flex gap-3 w-full sm:w-auto">
+        <div className="flex gap-3 w-full sm:w-auto flex-wrap">
           <button
             onClick={cancel}
             type="button"

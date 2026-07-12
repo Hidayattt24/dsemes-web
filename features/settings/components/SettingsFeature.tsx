@@ -58,16 +58,16 @@ export function SettingsFeature() {
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)]">
       {/* Header / Action Toolbar Section */}
-      <div className="flex justify-between items-end pb-4 border-b border-[#E2E8F0]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-[#E2E8F0] gap-4 font-[family-name:var(--font-poppins)]">
         <div>
           <h1 className="text-3xl font-bold text-[#1A202C] tracking-tight">Pengaturan Sistem</h1>
           <p className="text-[#718096] mt-1 text-sm">Kelola profil, keamanan, dan preferensi akun Anda.</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex w-full sm:w-auto justify-end gap-3 flex-wrap">
           <button
             type="button"
             onClick={handleBatalClick}
-            className="px-6 py-2.5 rounded-xl font-semibold text-[#718096] hover:text-[#1A202C] transition-colors border border-transparent cursor-pointer"
+            className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl font-semibold text-[#718096] hover:text-[#1A202C] transition-colors border border-[#E2E8F0] sm:border-transparent cursor-pointer text-center"
           >
             Batal
           </button>
@@ -75,7 +75,7 @@ export function SettingsFeature() {
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 bg-[#00695C] text-white px-8 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all active:scale-95 shadow-md shadow-[#00695C]/10 cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-[#00695C] text-white px-8 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all active:scale-95 shadow-md shadow-[#00695C]/10 cursor-pointer disabled:opacity-50 text-center"
           >
             {isSaving ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
