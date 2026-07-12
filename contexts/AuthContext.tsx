@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { authService } from "@/services/authService";
 import { tokenService } from "@/utils/token";
+import { axiosInstance } from "@/lib/axios";
 import type { AuthUser, LoginCredentials } from "@/types/auth";
 import { ROUTES } from "@/constants/routes";
 
@@ -36,36 +37,43 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
         return;
       }
 
-      // If we have tokens but no user is set in Zustand, or we want to double check session validity
+      // If we have tokens but no user is set in Zustand, restore the session
       if (accessToken && !user) {
         setLoading(true);
         try {
-          // Fetch current staff member profile
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1"}/staff/me`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
+          // Decode the JWT payload to determine role WITHOUT verifying signature
+          // (signature is verified server-side; this is only for routing to the correct endpoint)
+          let role: string | null = null;
+          try {
+            const payload = JSON.parse(atob(accessToken.split(".")[1]));
+            role = payload?.role ?? null;
+          } catch {
+            // Malformed token — fall through to clear tokens
+          }
 
-          if (response.ok) {
-            const result = await response.json();
-            const staff = result.data;
-            setUser({
-              id: staff.id,
-              name: staff.full_name,
-              email: staff.email,
-              role: staff.role,
-              puskesmas: "",
-            });
-          } else {
-            // Token is invalid, try to refresh or clear
+          if (!role) {
             storeLogout();
             tokenService.clearTokens();
+            setIsInitialized(true);
+            return;
           }
+
+          // Choose the correct /me endpoint based on the user's role
+          const meEndpoint = role === "admin" ? "/admin/me" : "/staff/me";
+
+          // Use axiosInstance so expired tokens trigger the 401 refresh interceptor automatically
+          const response = await axiosInstance.get(meEndpoint);
+          const staff = response.data.data;
+          setUser({
+            id: staff.id,
+            name: staff.full_name,
+            email: staff.email,
+            role: staff.role,
+            puskesmas: "",
+          });
         } catch (error) {
           console.error("Failed to restore session profile:", error);
-          // If network is offline, we can keep the offline Zustand session if it exists,
-          // but if we had no user in state, we clear tokens
+          // If token is invalid or refresh failed, clear tokens and logout
           if (!user) {
             storeLogout();
             tokenService.clearTokens();

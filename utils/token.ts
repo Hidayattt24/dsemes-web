@@ -1,5 +1,12 @@
 /**
- * Client-side cookie utilities for token management.
+ * Client-side token storage utilities.
+ *
+ * Hybrid storage strategy:
+ *  - localStorage  → primary store used by Axios interceptor (reliable on http://localhost)
+ *  - Cookie        → secondary store read by Next.js Edge middleware for SSR route protection
+ *
+ * The cookie is written WITHOUT the `Secure` flag on HTTP so that localhost development works.
+ * In production (HTTPS) the `Secure` flag is added automatically.
  */
 
 export const TOKEN_KEYS = {
@@ -7,54 +14,59 @@ export const TOKEN_KEYS = {
   REFRESH_TOKEN: "dsmes_refresh_token",
 } as const;
 
-export function getCookie(name: string): string | undefined {
+function localGet(key: string): string | undefined {
   if (typeof window === "undefined") return undefined;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop()?.split(";").shift();
-  }
-  return undefined;
+  return localStorage.getItem(key) ?? undefined;
 }
 
-export function setCookie(name: string, value: string, days?: number): void {
+function localSet(key: string, value: string): void {
   if (typeof window === "undefined") return;
-  let expires = "";
-  if (days) {
-    const date = new Date();
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-    expires = `; expires=${date.toUTCString()}`;
-  }
-  // Secure + SameSite=Lax for security
-  document.cookie = `${name}=${value || ""}${expires}; path=/; SameSite=Lax; Secure`;
+  localStorage.setItem(key, value);
 }
 
-export function deleteCookie(name: string): void {
+function localRemove(key: string): void {
   if (typeof window === "undefined") return;
-  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax; Secure`;
+  localStorage.removeItem(key);
+}
+
+/** Write a plain (non-HttpOnly) cookie readable by Next.js middleware. */
+function cookieSet(name: string, value: string, days: number): void {
+  if (typeof window === "undefined") return;
+  const date = new Date();
+  date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+  const secureFlag = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=${value}; path=/; expires=${date.toUTCString()}; SameSite=Lax${secureFlag}`;
+}
+
+function cookieRemove(name: string): void {
+  if (typeof window === "undefined") return;
+  const secureFlag = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax${secureFlag}`;
 }
 
 export const tokenService = {
   getAccessToken(): string | undefined {
-    return getCookie(TOKEN_KEYS.ACCESS_TOKEN);
+    // Prefer localStorage (always set on HTTP); fall back to nothing
+    return localGet(TOKEN_KEYS.ACCESS_TOKEN);
   },
   setAccessToken(token: string): void {
-    // Access token usually has shorter TTL (e.g. 1 day or 15 mins)
-    // We set cookie expiry to 1 day for convenience or leave it session-based
-    setCookie(TOKEN_KEYS.ACCESS_TOKEN, token, 1);
+    localSet(TOKEN_KEYS.ACCESS_TOKEN, token);
+    cookieSet(TOKEN_KEYS.ACCESS_TOKEN, token, 1); // 1-day cookie for middleware
   },
   deleteAccessToken(): void {
-    deleteCookie(TOKEN_KEYS.ACCESS_TOKEN);
+    localRemove(TOKEN_KEYS.ACCESS_TOKEN);
+    cookieRemove(TOKEN_KEYS.ACCESS_TOKEN);
   },
   getRefreshToken(): string | undefined {
-    return getCookie(TOKEN_KEYS.REFRESH_TOKEN);
+    return localGet(TOKEN_KEYS.REFRESH_TOKEN);
   },
   setRefreshToken(token: string): void {
-    // Refresh token lasts longer (e.g. 7 days)
-    setCookie(TOKEN_KEYS.REFRESH_TOKEN, token, 7);
+    localSet(TOKEN_KEYS.REFRESH_TOKEN, token);
+    cookieSet(TOKEN_KEYS.REFRESH_TOKEN, token, 7); // 7-day cookie for middleware
   },
   deleteRefreshToken(): void {
-    deleteCookie(TOKEN_KEYS.REFRESH_TOKEN);
+    localRemove(TOKEN_KEYS.REFRESH_TOKEN);
+    cookieRemove(TOKEN_KEYS.REFRESH_TOKEN);
   },
   clearTokens(): void {
     this.deleteAccessToken();
