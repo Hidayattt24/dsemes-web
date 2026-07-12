@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { SidebarNavLink } from "@/components/layout/SidebarNavLink";
-import { MAIN_NAV_ITEMS } from "@/constants/navigation";
+import { MAIN_NAV_ITEMS, STAFF_NAV_ITEMS } from "@/constants/navigation";
 import { authService } from "@/services/authService";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useSidebarStore } from "@/lib/stores/sidebarStore";
-import { useRouter }    from "next/navigation";
+import { useRouter, usePathname }    from "next/navigation";
 import { ROUTES }       from "@/constants/routes";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 
@@ -14,7 +14,10 @@ export function SidebarNavbar() {
   const { logout } = useAuthStore();
   const { isMobileOpen, closeMobile } = useSidebarStore();
   const router     = useRouter();
+  const pathname   = usePathname();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+
+  const navItems = pathname.startsWith("/staff") ? STAFF_NAV_ITEMS : MAIN_NAV_ITEMS;
 
   const handleLogout = async (): Promise<void> => {
     setIsLogoutOpen(false);
@@ -76,7 +79,7 @@ export function SidebarNavbar() {
 
       {/* Main nav items */}
       <nav className="flex-1 px-4 flex flex-col gap-1" aria-label="Menu utama">
-        {MAIN_NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <SidebarNavLink key={item.href} item={item} />
         ))}
       </nav>

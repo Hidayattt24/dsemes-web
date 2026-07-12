@@ -1,6 +1,7 @@
 "use client";
 
 import type { PatientGrowthDataPoint } from "@/types/dashboard";
+import { Select } from "@/components/ui/Select";
 
 interface PatientGrowthChartProps {
   readonly data:         PatientGrowthDataPoint[];
@@ -9,6 +10,11 @@ interface PatientGrowthChartProps {
 }
 
 const YEAR_OPTIONS = [2024, 2023] as const;
+
+const yearSelectOptions = YEAR_OPTIONS.map((y) => ({
+  value: String(y),
+  label: `Tahun ${y}`,
+}));
 
 export function PatientGrowthChart({
   data,
@@ -22,18 +28,14 @@ export function PatientGrowthChart({
         <h3 className="text-lg font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
           Pertumbuhan Pasien Baru
         </h3>
-        <select
-          value={selectedYear}
-          onChange={(e) => onYearChange(Number(e.target.value))}
-          aria-label="Pilih tahun"
-          className="bg-[#F4F6F8] border-none rounded-xl text-xs font-bold text-[#1A202C] focus:ring-2 focus:ring-[#00695C]/20 py-2 pl-4 pr-8 cursor-pointer font-[family-name:var(--font-poppins)]"
-        >
-          {YEAR_OPTIONS.map((y) => (
-            <option key={y} value={y}>
-              Tahun {y}
-            </option>
-          ))}
-        </select>
+        <div className="w-32">
+          <Select
+            value={String(selectedYear)}
+            onChange={(val) => onYearChange(Number(val))}
+            options={yearSelectOptions}
+            placeholder="Tahun"
+          />
+        </div>
       </div>
 
       {/* Bars */}

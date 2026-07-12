@@ -66,13 +66,7 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
           </span>
         </div>
 
-        <button
-          onClick={() => setIsDeleteOpen(true)}
-          className="flex items-center gap-2 border border-[#FEB2B2] bg-[#FFF5F5] hover:bg-[#FFF5F5]/80 text-[#C53030] px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm shadow-red-100"
-        >
-          <span className="material-symbols-outlined text-[16px]">delete</span>
-          <span>Hapus Pasien</span>
-        </button>
+
       </div>
 
       {/* Profile summary bento cards */}
@@ -98,17 +92,6 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
         </div>
       </div>
 
-      <ConfirmationModal
-        open={isDeleteOpen}
-        title="Hapus Data Pasien?"
-        description="Apakah Anda yakin ingin menghapus data pasien ini?"
-        variant="danger"
-        confirmText="Ya, Hapus"
-        cancelText="Batal"
-        loading={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setIsDeleteOpen(false)}
-      />
     </section>
   );
 }

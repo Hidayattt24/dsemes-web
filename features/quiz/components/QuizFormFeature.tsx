@@ -6,9 +6,23 @@ import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
+import { Select } from "@/components/ui/Select";
+
 interface QuizFormFeatureProps {
   readonly quizId?: string;
 }
+
+const linkedArticleOptions = [
+  { value: "1", label: "Pencegahan Diabetes Tipe 2" },
+  { value: "2", label: "Pola Makan Sehat untuk Pasien" },
+  { value: "3", label: "Pentingnya Aktivitas Fisik Harian" },
+] as const;
+
+const difficultyOptions = [
+  { value: "Mudah", label: "Mudah" },
+  { value: "Sedang", label: "Sedang" },
+  { value: "Sulit", label: "Sulit" },
+] as const;
 
 export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
   const {
@@ -114,42 +128,25 @@ export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
               <label className="block text-xs font-bold text-[#718096] uppercase tracking-wider mb-2">
                 Materi Edukasi Terkait <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <select
-                  value={fields.linkedArticleId}
-                  onChange={(e) => handleChange("linkedArticleId", e.target.value)}
-                  className="w-full h-12 rounded-xl border border-[#E2E8F0] bg-white px-4 appearance-none focus:ring-1 focus:ring-[#00695C] focus:border-[#00695C] text-sm text-[#1A202C] pr-10 cursor-pointer outline-none"
-                  required
-                >
-                  <option value="" disabled>Pilih Materi Edukasi</option>
-                  <option value="1">Pencegahan Diabetes Tipe 2</option>
-                  <option value="2">Pola Makan Sehat untuk Pasien</option>
-                  <option value="3">Pentingnya Aktivitas Fisik Harian</option>
-                </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#718096] text-lg pointer-events-none select-none">
-                  expand_more
-                </span>
-              </div>
+              <Select
+                value={fields.linkedArticleId}
+                onChange={(val) => handleChange("linkedArticleId", val)}
+                options={linkedArticleOptions}
+                placeholder="Pilih Materi Edukasi"
+                required
+              />
             </div>
             {/* Difficulty */}
             <div className="col-span-1">
               <label className="block text-xs font-bold text-[#718096] uppercase tracking-wider mb-2">
                 Tingkat Kesulitan
               </label>
-              <div className="relative">
-                <select
-                  value={fields.difficulty}
-                  onChange={(e) => handleChange("difficulty", e.target.value)}
-                  className="w-full h-12 rounded-xl border border-[#E2E8F0] bg-white px-4 appearance-none focus:ring-1 focus:ring-[#00695C] focus:border-[#00695C] text-sm text-[#1A202C] pr-10 cursor-pointer outline-none"
-                >
-                  <option value="Mudah">Mudah</option>
-                  <option value="Sedang">Sedang</option>
-                  <option value="Sulit">Sulit</option>
-                </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#718096] text-lg pointer-events-none select-none">
-                  expand_more
-                </span>
-              </div>
+              <Select
+                value={fields.difficulty}
+                onChange={(val) => handleChange("difficulty", val)}
+                options={difficultyOptions}
+                placeholder="Pilih Tingkat Kesulitan"
+              />
             </div>
             {/* Passing Score */}
             <div className="col-span-1">

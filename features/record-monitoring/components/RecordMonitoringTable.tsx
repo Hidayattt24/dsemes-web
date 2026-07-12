@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import type { PatientRecord } from "../types/record";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface RecordMonitoringTableProps {
   readonly patients: PatientRecord[];
@@ -12,6 +13,7 @@ interface RecordMonitoringTableProps {
 }
 
 export function RecordMonitoringTable({ patients, loading }: RecordMonitoringTableProps) {
+  const pathname = usePathname();
   const columns: TableColumn<PatientRecord>[] = [
     {
       key: "patient",
@@ -87,7 +89,7 @@ export function RecordMonitoringTable({ patients, loading }: RecordMonitoringTab
       header: "Aksi",
       render: (row) => (
         <Link
-          href={`/admin/pemantauan-catatan-pasien/${row.id}`}
+          href={pathname.startsWith("/staff") ? `/staff/pemantauan-catatan-pasien/${row.id}` : `/admin/pemantauan-catatan-pasien/${row.id}`}
           className="text-[#00695C] hover:text-[#004d43] font-semibold text-sm transition-colors inline-flex items-center gap-1 hover:underline"
         >
           Lihat

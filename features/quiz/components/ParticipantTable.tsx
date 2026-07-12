@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { useState, useMemo } from "react";
+import { usePathname } from "next/navigation";
 
 interface ParticipantTableProps {
   readonly quizId: string;
@@ -19,6 +20,7 @@ export function ParticipantTable({
   searchQuery,
   onSearchChange,
 }: ParticipantTableProps) {
+  const pathname = usePathname();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -83,7 +85,7 @@ export function ParticipantTable({
       className: "text-right",
       render: (row) => (
         <Link
-          href={`${ROUTES.MANAJEMEN_KUISIONER}/${quizId}/participant/${row.patientId}`}
+          href={pathname.startsWith("/staff") ? `/staff/manajemen-kuisioner/${quizId}/participant/${row.patientId}` : `${ROUTES.MANAJEMEN_KUISIONER}/${quizId}/participant/${row.patientId}`}
           className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-[#E2E8F0] hover:bg-slate-50 text-xs font-bold text-[#00695C] transition-all cursor-pointer shadow-sm hover:scale-[1.01]"
         >
           Detail

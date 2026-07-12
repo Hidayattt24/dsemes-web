@@ -8,6 +8,7 @@ import { AccountSecurityForm } from "./AccountSecurityForm";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
+import { SettingsSkeleton } from "@/components/staff/settings/SettingsSkeleton";
 
 export function SettingsFeature() {
   const {
@@ -48,11 +49,7 @@ export function SettingsFeature() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   return (

@@ -1,0 +1,108 @@
+import { DataTable, type TableColumn } from "@/components/common/DataTable";
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import type { PatientRecord } from "../types/record";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+interface IncreasingTrendTableProps {
+  readonly patients: PatientRecord[];
+  readonly loading: boolean;
+}
+
+export function IncreasingTrendTable({ patients, loading }: IncreasingTrendTableProps) {
+  const pathname = usePathname();
+  const isStaff = pathname.startsWith("/staff");
+
+  const columns: TableColumn<PatientRecord>[] = [
+    {
+      key: "patient",
+      header: "Pasien",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <Avatar src={row.avatarUrl} name={row.name} size={36} />
+          <div>
+            <p className="font-semibold text-sm text-[#1A202C]">{row.name}</p>
+            <p className="text-xs text-[#718096]">ID: P-00{row.id}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "prevAvg",
+      header: "Rerata Sebelumnya",
+      render: (row) => {
+        const currentAvg = parseInt(row.dailySummary.bloodSugar) || 120;
+        const diff = (parseInt(row.id) * 7) % 25 + 10;
+        const prevAvg = currentAvg - diff;
+        return <span className="text-sm text-[#718096] font-medium">{prevAvg} mg/dL</span>;
+      },
+    },
+    {
+      key: "avgCurrent",
+      header: "Rerata Saat Ini",
+      render: (row) => {
+        const currentAvg = parseInt(row.dailySummary.bloodSugar) || 120;
+        return <span className="font-bold text-sm text-red-600">{currentAvg} mg/dL</span>;
+      },
+    },
+    {
+      key: "increasePercent",
+      header: "Persentase Kenaikan",
+      render: (row) => {
+        const currentAvg = parseInt(row.dailySummary.bloodSugar) || 120;
+        const diff = (parseInt(row.id) * 7) % 25 + 10;
+        const prevAvg = currentAvg - diff;
+        const percent = (diff / prevAvg) * 100;
+        return (
+          <span className="font-extrabold text-sm text-red-600">
+            +{percent.toFixed(1)}%
+          </span>
+        );
+      },
+    },
+    {
+      key: "trend",
+      header: "Indikator Tren",
+      render: (row) => {
+        const diff = (parseInt(row.id) * 7) % 25 + 10;
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#9B2C2C] bg-[#FFF5F5] px-2.5 py-1 rounded-full border border-red-100">
+            <span className="material-symbols-outlined text-[14px] select-none">trending_up</span>
+            <span>Meningkat (+{diff} mg/dL)</span>
+          </span>
+        );
+      },
+    },
+    {
+      key: "lastUpdated",
+      header: "Pembaruan Terakhir",
+      render: (row) => <span className="text-xs text-[#718096] font-medium">{row.lastActive || "Hari ini"}</span>,
+    },
+    {
+      key: "action",
+      header: "Aksi",
+      className: "text-right",
+      render: (row) => (
+        <Link
+          href={isStaff ? `/staff/pemantauan-catatan-pasien/${row.id}` : `/admin/pemantauan-catatan-pasien/${row.id}`}
+          className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border border-[#E2E8F0] hover:bg-slate-50 text-xs font-bold text-[#00695C] transition-all cursor-pointer shadow-sm hover:scale-[1.01]"
+        >
+          <span>Detail</span>
+          <span className="material-symbols-outlined text-sm select-none ml-1">visibility</span>
+        </Link>
+      ),
+    },
+  ];
+
+  return (
+    <DataTable
+      columns={columns}
+      data={patients}
+      keyExtract={(row) => row.id}
+      loading={loading}
+      emptyTitle="Tren Stabil"
+      emptyMessage="Tidak ada pasien dengan peningkatan gula darah signifikan."
+    />
+  );
+}

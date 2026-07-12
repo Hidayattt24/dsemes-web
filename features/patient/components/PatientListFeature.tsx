@@ -3,6 +3,19 @@
 import { usePatients } from "../hooks/usePatients";
 import { PatientStatistics } from "./PatientStatistics";
 import { PatientTable } from "./PatientTable";
+import { Select } from "@/components/ui/Select";
+
+const statusOptions = [
+  { value: "Semua", label: "Semua Status" },
+  { value: "Aktif", label: "Aktif" },
+  { value: "Nonaktif", label: "Nonaktif" },
+] as const;
+
+const genderOptions = [
+  { value: "Semua", label: "Semua Jenis Kelamin" },
+  { value: "Laki-laki", label: "Laki-laki" },
+  { value: "Perempuan", label: "Perempuan" },
+] as const;
 
 export function PatientListFeature() {
   const {
@@ -27,25 +40,21 @@ export function PatientListFeature() {
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <section className="space-y-8 max-w-[1600px] mx-auto w-full">
-      {/* Header */}
+    <div className="space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)]">
+      {/* Title Header */}
       <div>
-        <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight font-[family-name:var(--font-poppins)]">
-          Daftar Pasien
-        </h2>
-        <p className="text-sm text-[#718096] mt-1 font-[family-name:var(--font-poppins)]">
-          Kelola data pasien terdaftar di seluruh Puskesmas Aceh.
-        </p>
+        <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight">Data Pasien</h2>
+        <p className="text-sm text-[#718096] mt-1">Kelola data pasien terdaftar dan pantau status kesehatannya</p>
       </div>
 
-      {/* Summary Stats */}
+      {/* Patient Statistics Bento Grid */}
       <PatientStatistics stats={stats} />
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+      {/* Filter and Search Action bar */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         {/* Search */}
-        <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-xl border border-[#E2E8F0] w-full sm:w-96 focus-within:border-[#00695C] transition-all">
-          <span className="material-symbols-outlined text-[#718096] text-xl">search</span>
+        <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-xl px-4 py-3 flex items-center gap-3 w-full md:flex-1 max-w-md h-12">
+          <span className="material-symbols-outlined text-[#718096] select-none text-xl">search</span>
           <input
             type="text"
             value={searchQuery}
@@ -58,35 +67,23 @@ export function PatientListFeature() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto justify-end">
           {/* Status Filter */}
-          <div className="relative">
-            <select
+          <div className="w-36">
+            <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-4 pr-10 py-2.5 text-sm focus:border-[#00695C] outline-none cursor-pointer text-[#1A202C] font-medium font-[family-name:var(--font-poppins)] min-w-[140px]"
-            >
-              <option value="Semua">Semua Status</option>
-              <option value="Aktif">Aktif</option>
-              <option value="Nonaktif">Nonaktif</option>
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#718096] text-lg">
-              expand_more
-            </span>
+              onChange={setStatusFilter}
+              options={statusOptions}
+              placeholder="Status"
+            />
           </div>
 
           {/* Gender Filter */}
-          <div className="relative">
-            <select
+          <div className="w-48">
+            <Select
               value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value)}
-              className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-4 pr-10 py-2.5 text-sm focus:border-[#00695C] outline-none cursor-pointer text-[#1A202C] font-medium font-[family-name:var(--font-poppins)] min-w-[170px]"
-            >
-              <option value="Semua">Semua Jenis Kelamin</option>
-              <option value="Laki-laki">Laki-laki</option>
-              <option value="Perempuan">Perempuan</option>
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#718096] text-lg">
-              expand_more
-            </span>
+              onChange={setGenderFilter}
+              options={genderOptions}
+              placeholder="Jenis Kelamin"
+            />
           </div>
         </div>
       </div>
@@ -147,6 +144,6 @@ export function PatientListFeature() {
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }

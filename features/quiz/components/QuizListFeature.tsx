@@ -8,8 +8,11 @@ import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useToast } from "@/components/ui/Toast";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
+import { usePathname } from "next/navigation";
 
 export function QuizListFeature() {
+  const pathname = usePathname();
+  const isStaff = pathname.startsWith("/staff");
   const {
     quizzes,
     stats,
@@ -49,18 +52,24 @@ export function QuizListFeature() {
       {/* Page Header & Action */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight">Manajemen Kuesioner</h2>
-          <p className="text-sm text-[#718096] mt-1">
-            Kelola kuesioner edukasi dan pantau progres belajar pasien
+          <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight">
+            {isStaff ? "Pemantauan Kuesioner" : "Manajemen Kuesioner"}
+          </h2>
+          <p className="text-sm text-[#718096] mt-1 font-[family-name:var(--font-poppins)]">
+            {isStaff
+              ? "Pantau kuesioner edukasi dan progres belajar pasien"
+              : "Kelola kuesioner edukasi dan pantau progres belajar pasien"}
           </p>
         </div>
-        <Link
-          href={`${ROUTES.MANAJEMEN_KUISIONER}/tambah`}
-          className="bg-[#00695C] text-white text-sm font-bold h-12 px-6 rounded-xl flex items-center gap-2 hover:bg-[#004d43] transition-colors shadow-md shadow-[#00695C]/10 cursor-pointer active:scale-95 duration-200"
-        >
-          <span className="material-symbols-outlined text-lg select-none">add</span>
-          <span>Tambah Kuesioner Baru</span>
-        </Link>
+        {!isStaff && (
+          <Link
+            href={`${ROUTES.MANAJEMEN_KUISIONER}/tambah`}
+            className="bg-[#00695C] text-white text-sm font-bold h-12 px-6 rounded-xl flex items-center gap-2 hover:bg-[#004d43] transition-colors shadow-md shadow-[#00695C]/10 cursor-pointer active:scale-95 duration-200"
+          >
+            <span className="material-symbols-outlined text-lg select-none">add</span>
+            <span>Tambah Kuesioner Baru</span>
+          </Link>
+        )}
       </div>
 
       {/* Stats Cards Bento Grid */}

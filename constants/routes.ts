@@ -18,6 +18,11 @@ export const ROUTES = {
   MANAJEMEN_KUISIONER: "/admin/manajemen-kuisioner",
   ADMINISTRATOR: "/admin/administrator",
   PENGATURAN: "/admin/pengaturan",
+  // Staff pages
+  STAFF_DASHBOARD: "/staff/dashboard",
+  STAFF_PEMANTAUAN_CATATAN_PASIEN: "/staff/pemantauan-catatan-pasien",
+  STAFF_MANAJEMEN_KUISIONER: "/staff/manajemen-kuisioner",
+  STAFF_PENGATURAN: "/staff/pengaturan",
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

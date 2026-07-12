@@ -1,12 +1,20 @@
 "use client";
 
 import type { BloodSugarLog } from "../types/record";
+import { useState } from "react";
+import { Select } from "@/components/ui/Select";
 
 interface BloodSugarHistoryCardProps {
   readonly logs: BloodSugarLog[];
 }
 
+const periodOptions = [
+  { value: "7", label: "7 Hari Terakhir" },
+  { value: "30", label: "30 Hari Terakhir" },
+] as const;
+
 export function BloodSugarHistoryCard({ logs }: BloodSugarHistoryCardProps) {
+  const [period, setPeriod] = useState("7");
   // Let's create an SVG line chart to wow the user.
   // We'll plot the 'after' meal values (130 to 165) and 'before' meal values (99 to 120).
   const beforePoints = "20,95 70,105 120,75 170,115 220,85 270,99 320,105";
@@ -19,10 +27,9 @@ export function BloodSugarHistoryCard({ logs }: BloodSugarHistoryCardProps) {
           <span className="material-symbols-outlined text-[#00695C]">water_drop</span>
           Riwayat Gula Darah
         </h3>
-        <select className="bg-[#F4F6F8] border border-[#E2E8F0] text-[#1A202C] text-xs font-semibold rounded-lg px-3 py-2 outline-none cursor-pointer focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] transition-all">
-          <option>7 Hari Terakhir</option>
-          <option>30 Hari Terakhir</option>
-        </select>
+        <div className="w-44">
+          <Select value={period} onChange={setPeriod} options={periodOptions} />
+        </div>
       </div>
 
       {/* Styled Premium SVG Line Chart */}

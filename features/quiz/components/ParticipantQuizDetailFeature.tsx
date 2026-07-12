@@ -7,6 +7,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/common/ErrorState";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
+import { usePathname } from "next/navigation";
 
 interface ParticipantQuizDetailFeatureProps {
   readonly quizId: string;
@@ -17,6 +18,8 @@ export function ParticipantQuizDetailFeature({
   quizId,
   participantId,
 }: ParticipantQuizDetailFeatureProps) {
+  const pathname = usePathname();
+  const isStaff = pathname.startsWith("/staff");
   const { detail, isLoading, error, refetch } = useParticipantQuizDetail(quizId, participantId);
 
   if (isLoading) {
@@ -38,7 +41,7 @@ export function ParticipantQuizDetailFeature({
       {/* Header section */}
       <div className="border-b border-[#E2E8F0] pb-4">
         <Link
-          href={`${ROUTES.MANAJEMEN_KUISIONER}/${quizId}`}
+          href={isStaff ? `/staff/manajemen-kuisioner/${quizId}` : `${ROUTES.MANAJEMEN_KUISIONER}/${quizId}`}
           className="flex items-center gap-2 text-[#00695C] hover:underline text-xs font-semibold mb-2"
         >
           <span className="material-symbols-outlined text-sm select-none">arrow_back</span>

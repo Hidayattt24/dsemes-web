@@ -2,6 +2,7 @@ import type { Quiz } from "../types/quiz";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { useState, useMemo } from "react";
+import { usePathname } from "next/navigation";
 
 interface QuizTableProps {
   readonly quizzes: readonly Quiz[];
@@ -9,6 +10,8 @@ interface QuizTableProps {
 }
 
 export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
+  const pathname = usePathname();
+  const isStaff = pathname.startsWith("/staff");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -61,7 +64,7 @@ export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
               paginatedQuizzes.map((quiz) => (
                 <tr key={quiz.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="py-4 px-6 font-semibold text-[#00695C] hover:underline">
-                    <Link href={`${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}`}>{quiz.title}</Link>
+                    <Link href={isStaff ? `/staff/manajemen-kuisioner/${quiz.id}` : `${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}`}>{quiz.title}</Link>
                   </td>
                   <td className="py-4 px-6 text-[#718096] font-medium">{quiz.linkedArticleTitle}</td>
                   <td className="py-4 px-6 text-center">{quiz.questions.length}</td>
@@ -84,26 +87,30 @@ export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
                   <td className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2 text-[#718096]">
                       <Link
-                        href={`${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}`}
+                        href={isStaff ? `/staff/manajemen-kuisioner/${quiz.id}` : `${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}`}
                         className="p-2 hover:text-[#00695C] hover:bg-[#00695C]/10 rounded-lg transition-colors flex items-center"
                         title="Lihat Detail"
                       >
                         <span className="material-symbols-outlined text-[20px] select-none">visibility</span>
                       </Link>
-                      <Link
-                        href={`${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}/edit`}
-                        className="p-2 hover:text-[#B45309] hover:bg-[#B45309]/10 rounded-lg transition-colors flex items-center"
-                        title="Edit"
-                      >
-                        <span className="material-symbols-outlined text-[20px] select-none">edit</span>
-                      </Link>
-                      <button
-                        onClick={() => onDeleteClick(quiz.id)}
-                        className="p-2 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center cursor-pointer"
-                        title="Hapus"
-                      >
-                        <span className="material-symbols-outlined text-[20px] select-none">delete</span>
-                      </button>
+                      {!isStaff && (
+                        <>
+                          <Link
+                            href={`${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}/edit`}
+                            className="p-2 hover:text-[#B45309] hover:bg-[#B45309]/10 rounded-lg transition-colors flex items-center"
+                            title="Edit"
+                          >
+                            <span className="material-symbols-outlined text-[20px] select-none">edit</span>
+                          </Link>
+                          <button
+                            onClick={() => onDeleteClick(quiz.id)}
+                            className="p-2 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center cursor-pointer"
+                            title="Hapus"
+                          >
+                            <span className="material-symbols-outlined text-[20px] select-none">delete</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

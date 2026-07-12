@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useSidebarStore } from "@/lib/stores/sidebarStore";
-import { MAIN_NAV_ITEMS } from "@/constants/navigation";
+import { MAIN_NAV_ITEMS, STAFF_NAV_ITEMS } from "@/constants/navigation";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { authService } from "@/services/authService";
 import { ROUTES } from "@/constants/routes";
@@ -24,10 +24,11 @@ export function HeaderNavbar() {
 
   // Match current path to Nav item label for page title
   const getPageTitle = () => {
-    const matched = MAIN_NAV_ITEMS.find(
+    const allItems = [...MAIN_NAV_ITEMS, ...STAFF_NAV_ITEMS];
+    const matched = allItems.find(
       (item) =>
         pathname === item.href ||
-        (item.href !== "/admin" && pathname.startsWith(`${item.href}/`))
+        (item.href !== "/admin" && item.href !== "/staff" && pathname.startsWith(`${item.href}/`))
     );
     return matched ? matched.label : "Admin";
   };

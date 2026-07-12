@@ -5,6 +5,13 @@ import { EducationStatistics } from "./EducationStatistics";
 import { EducationTable } from "./EducationTable";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
+import { Select } from "@/components/ui/Select";
+
+const statusOptions = [
+  { value: "Semua", label: "Semua Status" },
+  { value: "Diterbitkan", label: "Diterbitkan" },
+  { value: "Draf", label: "Draf" },
+] as const;
 
 export function EducationListFeature() {
   const {
@@ -28,6 +35,11 @@ export function EducationListFeature() {
   } = useEducationList();
 
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const categoryOptions = categoriesList.map((cat) => ({
+    value: cat,
+    label: cat === "Semua" ? "Semua Kategori" : cat,
+  }));
 
   return (
     <section className="space-y-8 max-w-[1600px] mx-auto w-full">
@@ -71,36 +83,23 @@ export function EducationListFeature() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto justify-end">
           {/* Category Filter */}
-          <div className="relative">
-            <select
+          <div className="w-44">
+            <Select
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-4 pr-10 py-2.5 text-sm focus:border-[#0F766E] outline-none cursor-pointer text-[#1A202C] font-medium font-[family-name:var(--font-poppins)] min-w-[160px]"
-            >
-              <option value="Semua">Semua Kategori</option>
-              {categoriesList.filter(c => c !== "Semua").map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#718096] text-lg">
-              expand_more
-            </span>
+              onChange={setCategoryFilter}
+              options={categoryOptions}
+              placeholder="Kategori"
+            />
           </div>
 
           {/* Status Filter */}
-          <div className="relative">
-            <select
+          <div className="w-36">
+            <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-4 pr-10 py-2.5 text-sm focus:border-[#0F766E] outline-none cursor-pointer text-[#1A202C] font-medium font-[family-name:var(--font-poppins)] min-w-[140px]"
-            >
-              <option value="Semua">Semua Status</option>
-              <option value="Diterbitkan">Diterbitkan</option>
-              <option value="Draf">Draf</option>
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#718096] text-lg">
-              expand_more
-            </span>
+              onChange={setStatusFilter}
+              options={statusOptions}
+              placeholder="Status"
+            />
           </div>
         </div>
       </div>

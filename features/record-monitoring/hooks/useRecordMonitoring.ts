@@ -11,8 +11,12 @@ interface UseRecordMonitoringReturn {
   readonly error: string | null;
   readonly searchQuery: string;
   readonly dateFilter: string;
+  readonly complianceFilter: string;
+  readonly riskFilter: string;
   readonly setSearchQuery: (q: string) => void;
   readonly setDateFilter: (d: string) => void;
+  readonly setComplianceFilter: (c: string) => void;
+  readonly setRiskFilter: (r: string) => void;
   readonly refetch: () => void;
 }
 
@@ -24,6 +28,8 @@ export function useRecordMonitoring(): UseRecordMonitoringReturn {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [complianceFilter, setComplianceFilter] = useState("Semua");
+  const [riskFilter, setRiskFilter] = useState("Semua");
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -55,9 +61,22 @@ export function useRecordMonitoring(): UseRecordMonitoringReturn {
 
       const matchesDate = true; // Simulated match
 
-      return matchesSearch && matchesDate;
+      // Compliance calculation derived from patient id
+      const compliance = parseInt(patient.id) % 3 === 0 ? "Tidak Patuh" : parseInt(patient.id) % 2 === 0 ? "Kurang Patuh" : "Patuh";
+      const matchesCompliance = complianceFilter === "Semua" || compliance === complianceFilter;
+
+      // Risk calculation derived from patient daily summary status
+      let riskLevel = "Rendah";
+      if (patient.dailySummary.status === "Tinggi") {
+        riskLevel = parseInt(patient.id) % 2 === 0 ? "Sangat Tinggi" : "Tinggi";
+      } else if (patient.dailySummary.status === "Waspada") {
+        riskLevel = "Sedang";
+      }
+      const matchesRisk = riskFilter === "Semua" || riskLevel === riskFilter;
+
+      return matchesSearch && matchesDate && matchesCompliance && matchesRisk;
     });
-  }, [patients, searchQuery, dateFilter]);
+  }, [patients, searchQuery, dateFilter, complianceFilter, riskFilter]);
 
   return {
     patients: filteredPatients,
@@ -66,8 +85,12 @@ export function useRecordMonitoring(): UseRecordMonitoringReturn {
     error,
     searchQuery,
     dateFilter,
+    complianceFilter,
+    riskFilter,
     setSearchQuery,
     setDateFilter,
+    setComplianceFilter,
+    setRiskFilter,
     refetch: fetchData,
   };
 }

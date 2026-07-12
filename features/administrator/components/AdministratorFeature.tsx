@@ -9,6 +9,13 @@ import type { Administrator } from "../types/administrator";
 import Link from "next/link";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useToast } from "@/components/ui/Toast";
+import { Select } from "@/components/ui/Select";
+
+const statusOptions = [
+  { value: "Semua", label: "Semua Status" },
+  { value: "Aktif", label: "Aktif" },
+  { value: "Nonaktif", label: "Nonaktif" },
+] as const;
 
 export function AdministratorFeature() {
   const {
@@ -223,19 +230,13 @@ export function AdministratorFeature() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto justify-end">
           {/* Status Filter */}
-          <div className="relative">
-            <select
+          <div className="w-36">
+            <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-4 pr-10 py-2.5 text-sm focus:border-[#00695C] outline-none cursor-pointer text-[#1A202C] font-medium font-[family-name:var(--font-poppins)] min-w-[140px]"
-            >
-              <option value="Semua">Semua Status</option>
-              <option value="Aktif">Aktif</option>
-              <option value="Nonaktif">Nonaktif</option>
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#718096] text-lg">
-              expand_more
-            </span>
+              onChange={setStatusFilter}
+              options={statusOptions}
+              placeholder="Status"
+            />
           </div>
         </div>
       </div>
