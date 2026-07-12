@@ -1,82 +1,132 @@
-import type { AuthResponse, LoginCredentials } from "@/types/auth";
-
-/**
- * Authentication API service.
- * Swap the stub implementations with real fetch() calls when the API is ready.
- */
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { axiosInstance } from "@/lib/axios";
+import type { AuthResponse, LoginCredentials, AuthUser } from "@/types/auth";
+import type { ApiResponse } from "@/types/api";
+import { tokenService } from "@/utils/token";
 
 export const authService = {
   /**
    * Authenticate the user with email + password.
-   * Returns an AuthResponse containing the user and token.
+   * Only allows admin and staff roles.
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    // TODO: Replace with real API call
-    // const res = await fetch(`${API_BASE}/auth/login`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(credentials),
-    // });
-    // if (!res.ok) throw new Error("Login gagal. Periksa email dan kata sandi.");
-    // return res.json();
+    try {
+      const response = await axiosInstance.post<ApiResponse<{
+        user: {
+          id: string;
+          full_name: string;
+          email: string;
+          role: string;
+        };
+        tokens: {
+          access_token: string;
+          refresh_token: string;
+          expires_at: number;
+        };
+      }>>("/auth/staff/login", {
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-    // ── Stub implementation ───────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 800)); // simulate network
-    if (credentials.email !== "admin@dsmes.id") {
-      throw new Error("Email atau kata sandi tidak valid.");
+      const { user: backendUser, tokens } = response.data.data;
+
+      // Check role authorization
+      if (backendUser.role === "user" || backendUser.role === "patient") {
+        throw new Error("Akun ini hanya dapat digunakan pada aplikasi mobile.");
+      }
+
+      if (backendUser.role !== "admin" && backendUser.role !== "staff") {
+        throw new Error("Peran pengguna tidak diizinkan untuk masuk ke dashboard.");
+      }
+
+      // Store tokens in cookies
+      tokenService.setAccessToken(tokens.access_token);
+      tokenService.setRefreshToken(tokens.refresh_token);
+
+      const user: AuthUser = {
+        id: backendUser.id,
+        name: backendUser.full_name,
+        email: backendUser.email,
+        role: backendUser.role,
+        puskesmas: "", // fallback
+      };
+
+      return {
+        user,
+        token: tokens.access_token,
+      };
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
     }
-    return {
-      user: {
-        id: "1",
-        name: "Dr. Ahmad Faisal",
-        role: "Healthcare Admin",
-        puskesmas: "Puskesmas Meuraxa",
-        avatarUrl: undefined,
-      },
-      token: "stub-jwt-token",
-    };
   },
 
   /** Sign the current user out. */
   async logout(): Promise<void> {
-    await new Promise((r) => setTimeout(r, 300));
-    // TODO: call POST /auth/logout
+    try {
+      const refreshToken = tokenService.getRefreshToken();
+      await axiosInstance.post("/auth/logout", {
+        refresh_token: refreshToken || "",
+      });
+    } catch (error) {
+      console.error("Logout API failed, continuing client-side logout:", error);
+    } finally {
+      tokenService.clearTokens();
+    }
   },
 
   /** Request a password reset email. */
   async forgotPassword(email: string): Promise<void> {
-    // TODO: POST /auth/forgot-password  { email }
-    await new Promise((r) => setTimeout(r, 700));
-    void email;
-  },
-
-  /**
-   * Verify the 6-digit OTP sent to the user's email.
-   * POST /auth/verify-reset-code  { email, code }
-   */
-  async verifyResetCode(email: string, code: string): Promise<void> {
-    // TODO: POST /auth/verify-reset-code
-    await new Promise((r) => setTimeout(r, 600));
-    if (code !== "123456") {
-      throw new Error("Kode verifikasi tidak valid atau sudah kedaluwarsa.");
+    try {
+      await axiosInstance.post("/auth/forgot-password", {
+        email,
+        owner_type: "staff",
+      });
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
     }
-    void email;
   },
 
-  /**
-   * Set a new password after successful OTP verification.
-   * POST /auth/reset-password  { email, code, password, confirm_password }
-   */
+  /** Verify the 6-digit OTP code. */
+  async verifyResetCode(email: string, code: string): Promise<void> {
+    try {
+      await axiosInstance.post("/auth/verify-otp", {
+        email,
+        otp_code: code,
+        owner_type: "staff",
+      });
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  },
+
+  /** Set a new password after successful verification. */
   async resetPassword(
     email:           string,
     code:            string,
     password:        string,
     confirmPassword: string
   ): Promise<void> {
-    // TODO: POST /auth/reset-password
-    await new Promise((r) => setTimeout(r, 800));
-    void email; void code; void password; void confirmPassword;
+    try {
+      await axiosInstance.post("/auth/reset-password", {
+        email,
+        otp_code: code,
+        owner_type: "staff",
+        new_password: password,
+        confirm_password: confirmPassword,
+      });
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
   },
 } as const;

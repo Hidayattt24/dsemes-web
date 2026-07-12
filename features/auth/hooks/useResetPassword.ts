@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authService }            from "@/services/authService";
 import { useForgotPasswordStore } from "@/lib/stores/forgotPasswordStore";
 import { ROUTES }                 from "@/constants/routes";
+import { useToast }               from "@/components/ui/Toast";
 import type { ResetPasswordFormValues } from "@/features/auth/validation/resetPasswordSchema";
 
 interface UseResetPasswordReturn {
@@ -17,6 +18,7 @@ export function useResetPassword(): UseResetPasswordReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const { email, code, reset }    = useForgotPasswordStore();
+  const { showToast }             = useToast();
   const router                    = useRouter();
 
   const submit = async (values: ResetPasswordFormValues): Promise<void> => {
@@ -25,9 +27,20 @@ export function useResetPassword(): UseResetPasswordReturn {
     try {
       await authService.resetPassword(email, code, values.password, values.confirmPassword);
       reset(); // clear session state — flow complete
+      showToast({
+        type: "success",
+        title: "Kata Sandi Diubah",
+        description: "Kata sandi Anda telah berhasil diubah.",
+      });
       router.push(ROUTES.BERHASIL_RESET);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal mengubah kata sandi. Coba lagi.");
+      const msg = err instanceof Error ? err.message : "Gagal mengubah kata sandi. Coba lagi.";
+      setError(msg);
+      showToast({
+        type: "error",
+        title: "Gagal Mengubah Kata Sandi",
+        description: msg,
+      });
     } finally {
       setIsLoading(false);
     }

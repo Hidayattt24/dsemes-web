@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { authService } from "@/services/authService";
-import { useAuthStore } from "@/lib/stores/authStore";
-import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/Toast";
 import type { LoginCredentials } from "@/types/auth";
 
 interface UseLoginReturn {
@@ -16,18 +14,27 @@ interface UseLoginReturn {
 export function useLogin(): UseLoginReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState<string | null>(null);
-  const { setUser }               = useAuthStore();
-  const router                    = useRouter();
+  const { login }                 = useAuth();
+  const { showToast }             = useToast();
 
   const submit = async (credentials: LoginCredentials): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
-      const { user } = await authService.login(credentials);
-      setUser(user);
-      router.push(ROUTES.DASHBOARD);
+      await login(credentials);
+      showToast({
+        type: "success",
+        title: "Login Berhasil",
+        description: "Selamat datang kembali di Digital DSMES Aceh.",
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login gagal. Coba lagi.");
+      const msg = err instanceof Error ? err.message : "Login gagal. Coba lagi.";
+      setError(msg);
+      showToast({
+        type: "error",
+        title: "Login Gagal",
+        description: msg,
+      });
     } finally {
       setIsLoading(false);
     }

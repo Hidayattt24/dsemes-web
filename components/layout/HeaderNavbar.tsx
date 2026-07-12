@@ -4,15 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
-import { useAuthStore } from "@/lib/stores/authStore";
 import { useSidebarStore } from "@/lib/stores/sidebarStore";
 import { MAIN_NAV_ITEMS, STAFF_NAV_ITEMS } from "@/constants/navigation";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { authService } from "@/services/authService";
 import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/hooks/useAuth";
 
 export function HeaderNavbar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
   const { openMobile } = useSidebarStore();
   const pathname = usePathname();
   const router = useRouter();
@@ -47,9 +46,7 @@ export function HeaderNavbar() {
   const handleLogout = async (): Promise<void> => {
     setIsLogoutOpen(false);
     setIsDropdownOpen(false);
-    await authService.logout();
-    logout();
-    router.push(ROUTES.LOGIN);
+    await logout();
   };
 
   return (

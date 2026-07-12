@@ -3,15 +3,14 @@
 import { useState, useEffect } from "react";
 import { SidebarNavLink } from "@/components/layout/SidebarNavLink";
 import { MAIN_NAV_ITEMS, STAFF_NAV_ITEMS } from "@/constants/navigation";
-import { authService } from "@/services/authService";
-import { useAuthStore } from "@/lib/stores/authStore";
 import { useSidebarStore } from "@/lib/stores/sidebarStore";
 import { useRouter, usePathname }    from "next/navigation";
 import { ROUTES }       from "@/constants/routes";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { useAuth } from "@/hooks/useAuth";
 
 export function SidebarNavbar() {
-  const { logout } = useAuthStore();
+  const { logout } = useAuth();
   const { isMobileOpen, closeMobile } = useSidebarStore();
   const router     = useRouter();
   const pathname   = usePathname();
@@ -21,9 +20,7 @@ export function SidebarNavbar() {
 
   const handleLogout = async (): Promise<void> => {
     setIsLogoutOpen(false);
-    await authService.logout();
-    logout();
-    router.push(ROUTES.LOGIN);
+    await logout();
   };
 
   // Prevent body scrolling when mobile drawer is opened
