@@ -1,3 +1,4 @@
+import { axiosInstance } from "@/lib/axios";
 import type {
   PatientRecord,
   BloodSugarLog,
@@ -7,201 +8,210 @@ import type {
   RecordMonitoringStats,
 } from "../types/record";
 
-const MOCK_PATIENT_RECORDS: PatientRecord[] = [
-  {
-    id: "5", // Siti Aminah matching patient list
-    name: "Siti Aminah",
-    age: 62,
-    gender: "Perempuan",
-    address: "Jl. T. Nyak Arief No. 123, Banda Aceh",
-    initials: "SA",
+const mapPatientRecord = (data: any): PatientRecord => {
+  // Format age from date_of_birth
+  let age = 50; // default fallback
+  if (data.date_of_birth) {
+    const dob = new Date(data.date_of_birth);
+    const ageDiffMs = Date.now() - dob.getTime();
+    const ageDate = new Date(ageDiffMs);
+    age = Math.abs(ageDate.getUTCFullYear() - 1970);
+  }
+
+  // Format emergency contact
+  const emergencyContact = data.emergency_phone
+    ? `${data.emergency_phone} (${data.emergency_relation ?? "Keluarga"})`
+    : "-";
+
+  // Build dailySummary
+  const bloodSugar = data.latest_blood_sugar ? `${data.latest_blood_sugar} mg/dL` : "-";
+  
+  let bloodSugarTime = "-";
+  if (data.latest_blood_sugar_time) {
+    const bsTime = new Date(data.latest_blood_sugar_time);
+    bloodSugarTime = bsTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+  }
+
+  const meal = data.latest_meal_calories ? `${Math.round(data.latest_meal_calories)} kcal` : "-";
+  const mealType = data.latest_meal_type ? (
+    data.latest_meal_type === "sarapan" ? "Sarapan" :
+    data.latest_meal_type === "makan_siang" ? "Makan Siang" :
+    data.latest_meal_type === "makan_malam" ? "Makan Malam" : "Cemilan"
+  ) : "-";
+
+  const activity = data.latest_activity_time ? "30 Menit" : "-";
+  const activityType = data.latest_activity_name ?? "-";
+
+  // Map status: Stabil / Waspada / Tinggi / Normal
+  let status: "Stabil" | "Waspada" | "Tinggi" | "Normal" = "Normal";
+  const statusStr = data.latest_blood_sugar_status ?? "";
+  if (statusStr === "tinggi") {
+    status = "Waspada";
+  } else if (statusStr === "sangat_tinggi") {
+    status = "Tinggi";
+  } else if (statusStr === "rendah") {
+    status = "Waspada";
+  } else if (data.latest_blood_sugar) {
+    status = "Stabil";
+  }
+
+  // Initials
+  const initials = data.full_name
+    ? data.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()
+    : "P";
+
+  return {
+    id: data.id,
+    name: data.full_name,
+    age,
+    gender: data.gender === "laki_laki" ? "Laki-laki" : "Perempuan",
+    address: data.address ?? "-",
+    initials,
     puskesmas: "Puskesmas Ulee Kareng",
-    avatarUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhU-Hk4J7-QwG_TgPPscW97PKMfOmlGhJXO-dOqkzp2jJ9aWwYOM1rXPsgUkcIYNo5rof32MqUsTekD7rrupTDWloq1aOYVP-dleSPZl-1BuAf4Prl5F00nKJCC22biA_O_nBXDtnBMKt-BO871B3BvtBlf4eAT0RJHk54Wceci-JqbMoGBpddQ5HGHtNpVEqQlWJmb7-ZGaPw2Ss2XNUbwCsDcuDusTjFrPfb2ay8SLCj54EtrIlAWMcHPm6KokYQuPqFRpyDXybM",
-    lastActive: "Hari ini, 08:15",
-    diagnosisDate: "12 Okt 2021",
-    emergencyContact: "0812-3456-7890 (Anak)",
+    lastActive: data.latest_activity_time
+      ? new Date(data.latest_activity_time).toLocaleDateString("id-ID", { day: "numeric", month: "short" })
+      : "Hari ini",
+    diagnosisDate: data.diagnosis_date
+      ? new Date(data.diagnosis_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+      : "-",
+    emergencyContact,
     dailySummary: {
-      bloodSugar: "145 mg/dL",
-      bloodSugarTime: "2 jam lalu",
-      meal: "1.250 kcal",
-      mealType: "Makan Siang",
-      activity: "30 Menit",
-      activityType: "Jalan Kaki",
-      status: "Stabil",
+      bloodSugar,
+      bloodSugarTime,
+      meal,
+      mealType,
+      activity,
+      activityType,
+      status,
     },
-  },
-  {
-    id: "1",
-    name: "Ahmad Nurrahman",
-    age: 54,
-    gender: "Laki-laki",
-    address: "Jl. Diponegoro No. 45, Banda Aceh",
-    initials: "AN",
-    puskesmas: "Puskesmas Kuta Alam",
-    lastActive: "Hari ini, 09:24",
-    diagnosisDate: "15 Jan 2023",
-    emergencyContact: "0811-9921-002 (Istri)",
-    dailySummary: {
-      bloodSugar: "110 mg/dL",
-      bloodSugarTime: "1 jam lalu",
-      meal: "1.850 kcal",
-      mealType: "Makan Malam",
-      activity: "45 Menit",
-      activityType: "Sepeda",
-      status: "Stabil",
-    },
-  },
-  {
-    id: "2",
-    name: "Siti Maryam",
-    age: 42,
-    gender: "Perempuan",
-    address: "Jl. T. Nyak Arief No. 123, Banda Aceh",
-    initials: "SM",
-    puskesmas: "Puskesmas Kuta Alam",
-    avatarUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBonHLOi4DDR8Fl6O72N8wIWCIp9Ym2wPa1_3ST_Z2K8fJvYa2863-5Y0LRfVmavV-p0Fy0LS2-oH461IazfxZAiYY0BcqzJt-7gpWA0dTtpkAPKJ53BIDfL_TYSca0G0KHXKr97AfLSZ_RW1Q6GG5U6nKnAMo-NEVKQwqllgbhO0cgm80p2sM0RyTeBI6KTWOyMGI6zXUJokQOJlsBSxGG9FEtglu-HJ8fRF0thI6vI48rloIsrpsyQ2urYhat0TddrT4iOpvIpLYD",
-    lastActive: "Kemarin, 17:40",
-    diagnosisDate: "01 Sep 2023",
-    emergencyContact: "0812-9900-1122 (Suami)",
-    dailySummary: {
-      bloodSugar: "195 mg/dL",
-      bloodSugarTime: "3 jam lalu",
-      meal: "2.100 kcal",
-      mealType: "Makan Malam",
-      activity: "0 Menit",
-      activityType: "-",
-      status: "Waspada",
-    },
-  },
-  {
-    id: "3",
-    name: "Bambang Kusuma",
-    age: 61,
-    gender: "Laki-laki",
-    address: "Jl. Gajah Mada No. 12, Banda Aceh",
-    initials: "BK",
-    puskesmas: "Puskesmas Meuraxa",
-    lastActive: "3 hari lalu",
-    diagnosisDate: "15 Apr 2023",
-    emergencyContact: "0813-8822-004 (Anak)",
-    dailySummary: {
-      bloodSugar: "160 mg/dL",
-      bloodSugarTime: "4 jam lalu",
-      meal: "1.450 kcal",
-      mealType: "Sore",
-      activity: "15 Menit",
-      activityType: "Jalan kaki",
-      status: "Tinggi",
-    },
-  },
-  {
-    id: "4",
-    name: "Farah Hani",
-    age: 38,
-    gender: "Perempuan",
-    address: "Jl. Teuku Umar No. 88, Banda Aceh",
-    initials: "FH",
-    puskesmas: "Puskesmas Syiah Kuala",
-    lastActive: "Kemarin, 14:20",
-    diagnosisDate: "10 Okt 2022",
-    emergencyContact: "0815-7733-005 (Suami)",
-    dailySummary: {
-      bloodSugar: "98 mg/dL",
-      bloodSugarTime: "1 jam lalu",
-      meal: "1.100 kcal",
-      mealType: "Makan Siang",
-      activity: "60 Menit",
-      activityType: "Senam",
-      status: "Normal",
-    },
-  },
-];
-
-const MOCK_BLOOD_SUGAR_LOGS: Record<string, BloodSugarLog[]> = {
-  "5": [
-    { id: "bs1", date: "Hari ini", before: 110, after: 165 },
-    { id: "bs2", date: "Kemarin", before: 105, after: 138 },
-    { id: "bs3", date: "3 hari lalu", before: 120, after: 142 },
-    { id: "bs4", date: "4 hari lalu", before: 99, after: 130 },
-    { id: "bs5", date: "5 hari lalu", before: 115, after: 155 },
-    { id: "bs6", date: "6 hari lalu", before: 108, after: 148 },
-    { id: "bs7", date: "7 hari lalu", before: 102, after: 135 },
-  ],
-};
-
-const MOCK_MEAL_LOGS: Record<string, MealLog[]> = {
-  "5": [
-    { id: "m1", type: "Sarapan", title: "Nasi Goreng Porsi Kecil", time: "07:30 WIB", calories: 350 },
-    { id: "m2", type: "Siang", title: "Sayur Bayam & Ikan Bakar", time: "13:00 WIB", calories: 550 },
-    { id: "m3", type: "Cemilan", title: "Buah Pisang", time: "16:00 WIB", calories: 105 },
-    { id: "m4", type: "Malam", title: "Tahu Tempe & Sayur Sop", time: "19:00 WIB", calories: 245 },
-  ],
-};
-
-const MOCK_ACTIVITY_LOGS: Record<string, ActivityLog[]> = {
-  "5": [
-    { id: "a1", name: "Jalan Santai", time: "Hari ini, 06:00 WIB", intensity: "Ringan", duration: 45, caloriesBurned: 150 },
-    { id: "a2", name: "Berkebun", time: "Kemarin, 16:30 WIB", intensity: "Sedang", duration: 30, caloriesBurned: 120 },
-  ],
-};
-
-const MOCK_MEDICATION_LOGS: Record<string, MedicationLog[]> = {
-  "5": [
-    { id: "med1", name: "Metformin", dosage: "500mg", time: "Sesudah Makan (08:00)", status: "Diminum", dateGroup: "Hari Ini, 24 Okt" },
-    { id: "med2", name: "Glibenclamide", dosage: "5mg", time: "Sebelum Makan Malam (19:00)", status: "Mendatang", dateGroup: "Hari Ini, 24 Okt" },
-    { id: "med3", name: "Metformin", dosage: "500mg", time: "Sesudah Makan (08:00)", status: "Terlewat", dateGroup: "Kemarin, 23 Okt" },
-  ],
+  };
 };
 
 export const recordMonitoringService = {
   async getPatientRecords(): Promise<PatientRecord[]> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return [...MOCK_PATIENT_RECORDS];
+    const res = await axiosInstance.get("/admin/patients", { params: { limit: 100 } });
+    const list = res.data?.data ?? [];
+    return list.map(mapPatientRecord);
   },
 
   async getPatientRecordById(id: string): Promise<PatientRecord | null> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    const patient = MOCK_PATIENT_RECORDS.find((p) => p.id === id);
-    return patient ?? null;
+    try {
+      const res = await axiosInstance.get(`/admin/patients/${id}`);
+      if (res.data?.data) {
+        return mapPatientRecord(res.data.data);
+      }
+      return null;
+    } catch {
+      return null;
+    }
   },
 
   async getBloodSugarLogs(patientId: string): Promise<BloodSugarLog[]> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return MOCK_BLOOD_SUGAR_LOGS[patientId] ?? [
-      { id: "bs_d1", date: "Hari ini", before: 100, after: 135 },
-      { id: "bs_d2", date: "Kemarin", before: 95, after: 120 },
-    ];
+    const res = await axiosInstance.get(`/admin/patients/${patientId}/blood-sugar`, { params: { limit: 100 } });
+    const list = res.data?.data ?? [];
+    
+    const dailyMap: { [key: string]: { before: number; after: number; dateStr: string; rawDate: Date } } = {};
+    list.forEach((log: any) => {
+      const d = new Date(log.measured_at);
+      const dateKey = d.toDateString();
+      const formattedDate = d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+      if (!dailyMap[dateKey]) {
+        dailyMap[dateKey] = { before: 0, after: 0, dateStr: formattedDate, rawDate: d };
+      }
+      if (log.measurement_time_type === "sebelum_makan") {
+        dailyMap[dateKey].before = log.glucose_value;
+      } else {
+        dailyMap[dateKey].after = log.glucose_value;
+      }
+    });
+
+    return Object.values(dailyMap)
+      .map((item, idx) => ({
+        id: `bs-${idx}`,
+        date: item.dateStr,
+        before: item.before > 0 ? item.before : 100,
+        after: item.after > 0 ? item.after : 140,
+        rawDate: item.rawDate,
+      }))
+      .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
   },
 
   async getMealLogs(patientId: string): Promise<MealLog[]> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return MOCK_MEAL_LOGS[patientId] ?? [
-      { id: "m_d1", type: "Sarapan", title: "Bubur Ayam", time: "07:15 WIB", calories: 300 },
-      { id: "m_d2", type: "Siang", title: "Nasi Rames", time: "12:30 WIB", calories: 600 },
-    ];
+    const res = await axiosInstance.get(`/admin/patients/${patientId}/meals`, { params: { limit: 100 } });
+    const list = res.data?.data ?? [];
+    return list.map((log: any) => {
+      const loggedDate = new Date(log.logged_at);
+      const timeStr = loggedDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+      const dateStr = loggedDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+      
+      let type: "Sarapan" | "Siang" | "Cemilan" | "Malam" = "Sarapan";
+      if (log.meal_type === "makan_siang") type = "Siang";
+      else if (log.meal_type === "makan_malam") type = "Malam";
+      else if (log.meal_type === "cemilan") type = "Cemilan";
+
+      return {
+        id: log.id,
+        type,
+        title: `${log.food?.name ?? "Makanan"} (${dateStr})`,
+        time: timeStr,
+        calories: Math.round((log.food?.calories ?? 0) * (log.portion_multiplier ?? 1)),
+      };
+    });
   },
 
   async getActivityLogs(patientId: string): Promise<ActivityLog[]> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return MOCK_ACTIVITY_LOGS[patientId] ?? [
-      { id: "a_d1", name: "Jalan Santai", time: "Hari ini, 06:15 WIB", intensity: "Ringan", duration: 30, caloriesBurned: 100 },
-    ];
+    const res = await axiosInstance.get(`/admin/patients/${patientId}/activities`, { params: { limit: 100 } });
+    const list = res.data?.data ?? [];
+    return list.map((log: any) => {
+      const loggedDate = new Date(log.logged_at);
+      const dateStr = loggedDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+      const timeStr = loggedDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+
+      let intensity: "Ringan" | "Sedang" | "Berat" = "Ringan";
+      if (log.intensity === "sedang") intensity = "Sedang";
+      else if (log.intensity === "berat") intensity = "Berat";
+
+      return {
+        id: log.id,
+        name: log.activity_name,
+        time: `${dateStr}, ${timeStr}`,
+        intensity,
+        duration: log.duration_minutes,
+        caloriesBurned: Math.round(log.calories_burned),
+      };
+    });
   },
 
   async getMedicationLogs(patientId: string): Promise<MedicationLog[]> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return MOCK_MEDICATION_LOGS[patientId] ?? [
-      { id: "med_d1", name: "Metformin", dosage: "500mg", time: "Sesudah Makan (08:00)", status: "Diminum", dateGroup: "Hari Ini, 24 Okt" },
-    ];
+    const res = await axiosInstance.get(`/admin/patients/${patientId}/medications`, { params: { limit: 100 } });
+    const list = res.data?.data ?? [];
+    return list.map((log: any) => {
+      let status: "Diminum" | "Terlewat" | "Mendatang" = "Mendatang";
+      if (log.status === "completed") status = "Diminum";
+      else if (log.status === "skipped") status = "Terlewat";
+
+      const logDate = log.logged_date ? new Date(log.logged_date) : new Date();
+      const dateGroup = logDate.toLocaleDateString("id-ID", { day: "numeric", month: "short", weekday: "short" });
+
+      return {
+        id: log.id || log.reminder_id,
+        name: log.activity_name,
+        dosage: "Sesuai Petunjuk",
+        time: `Jadwal: ${log.scheduled_time || "08:00"}`,
+        status,
+        dateGroup,
+      };
+    });
   },
 
   async getStats(): Promise<RecordMonitoringStats> {
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    const res = await axiosInstance.get("/admin/dashboard");
+    const d = res.data?.data ?? {};
     return {
-      totalBloodSugarRecords: 1245,
-      totalMealRecords: 3890,
-      totalActivityRecords: 2150,
-      totalMedicationRecords: 4521,
+      totalBloodSugarRecords: d.total_sugar_logs ?? 0,
+      totalMealRecords: d.total_meal_logs ?? 0,
+      totalActivityRecords: d.total_activity_logs ?? 0,
+      totalMedicationRecords: d.total_medication_logs ?? 0,
     };
   },
 } as const;

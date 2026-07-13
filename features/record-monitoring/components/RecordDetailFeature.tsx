@@ -65,7 +65,7 @@ export function RecordDetailFeature({ patientId }: RecordDetailFeatureProps) {
       {/* Grid Layout for Charts & Lists */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-12">
         <BloodSugarHistoryCard logs={bloodSugarLogs} />
-        <MealHistoryCard logs={mealLogs} />
+        <MealHistoryCard logs={mealLogs} targetCalories={patient.dailyCalorieTarget} />
         <ActivityHistoryCard logs={activityLogs} />
         <MedicationComplianceCard logs={medicationLogs} />
       </div>
