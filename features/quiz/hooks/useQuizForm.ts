@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { quizService } from "../services/quizService";
-import type { Quiz, QuizQuestion, QuizDifficulty, QuizStatus } from "../types/quiz";
+import type { QuizQuestion, QuizDifficulty, QuizStatus } from "../types/quiz";
 import { ROUTES } from "@/constants/routes";
 import { useToast } from "@/components/ui/Toast";
 
@@ -12,6 +12,11 @@ interface FormFields {
   readonly passingScore: number;
   readonly status: QuizStatus;
   readonly questions: readonly QuizQuestion[];
+}
+
+interface ArticleOption {
+  readonly value: string;
+  readonly label: string;
 }
 
 export function useQuizForm(quizId?: string) {
@@ -34,9 +39,27 @@ export function useQuizForm(quizId?: string) {
     ],
   });
 
+  const [articleOptions, setArticleOptions] = useState<readonly ArticleOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormFields | "form", string>>>({});
+
+  // Load published articles for dropdown
+  useEffect(() => {
+    const loadArticles = async () => {
+      try {
+        const articles = await quizService.getArticles();
+        setArticleOptions(articles);
+      } catch {
+        showToast({
+          type: "warning",
+          title: "Peringatan",
+          description: "Gagal memuat daftar materi edukasi.",
+        });
+      }
+    };
+    loadArticles();
+  }, [showToast]);
 
   // Load initial data if editing
   useEffect(() => {
@@ -68,7 +91,7 @@ export function useQuizForm(quizId?: string) {
     loadQuiz();
   }, [quizId, showToast]);
 
-  const handleChange = useCallback((key: keyof FormFields, val: any) => {
+  const handleChange = useCallback((key: keyof FormFields, val: unknown) => {
     setFields((prev) => ({ ...prev, [key]: val }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   }, []);
@@ -81,17 +104,20 @@ export function useQuizForm(quizId?: string) {
     });
   }, []);
 
-  const handleOptionChange = useCallback((qIndex: number, optionKey: "A" | "B" | "C" | "D", value: string) => {
-    setFields((prev) => {
-      const updated = [...prev.questions];
-      const q = updated[qIndex];
-      updated[qIndex] = {
-        ...q,
-        options: { ...q.options, [optionKey]: value },
-      };
-      return { ...prev, questions: updated };
-    });
-  }, []);
+  const handleOptionChange = useCallback(
+    (qIndex: number, optionKey: "A" | "B" | "C" | "D", value: string) => {
+      setFields((prev) => {
+        const updated = [...prev.questions];
+        const q = updated[qIndex];
+        updated[qIndex] = {
+          ...q,
+          options: { ...q.options, [optionKey]: value },
+        };
+        return { ...prev, questions: updated };
+      });
+    },
+    []
+  );
 
   const addQuestion = useCallback(() => {
     setFields((prev) => ({
@@ -102,27 +128,30 @@ export function useQuizForm(quizId?: string) {
           id: `temp_${Date.now()}`,
           questionText: "",
           options: { A: "", B: "", C: "", D: "" },
-          correctOption: "A",
+          correctOption: "A" as const,
           explanation: "",
         },
       ],
     }));
   }, []);
 
-  const deleteQuestion = useCallback((index: number) => {
-    setFields((prev) => {
-      if (prev.questions.length <= 1) {
-        showToast({
-          type: "warning",
-          title: "Peringatan",
-          description: "Kuesioner minimal harus memiliki 1 pertanyaan.",
-        });
-        return prev;
-      }
-      const updated = prev.questions.filter((_, idx) => idx !== index);
-      return { ...prev, questions: updated };
-    });
-  }, [showToast]);
+  const deleteQuestion = useCallback(
+    (index: number) => {
+      setFields((prev) => {
+        if (prev.questions.length <= 1) {
+          showToast({
+            type: "warning",
+            title: "Peringatan",
+            description: "Kuesioner minimal harus memiliki 1 pertanyaan.",
+          });
+          return prev;
+        }
+        const updated = prev.questions.filter((_, idx) => idx !== index);
+        return { ...prev, questions: updated };
+      });
+    },
+    [showToast]
+  );
 
   const duplicateQuestion = useCallback((index: number) => {
     setFields((prev) => {
@@ -144,7 +173,7 @@ export function useQuizForm(quizId?: string) {
     if (fields.passingScore === undefined || fields.passingScore < 0 || fields.passingScore > 100) {
       newErrors.passingScore = "Nilai kelulusan harus berkisar 0-100";
     }
-    
+
     // Validate each question
     fields.questions.forEach((q, idx) => {
       if (!q.questionText.trim()) {
@@ -162,42 +191,41 @@ export function useQuizForm(quizId?: string) {
     return Object.keys(newErrors).length === 0;
   }, [fields, errors, showToast]);
 
-  const save = useCallback(async (status: QuizStatus = "Draft") => {
-    if (!validate()) return;
-    setIsSaving(true);
-    try {
-      await quizService.saveQuiz({
-        id: quizId,
-        title: fields.title,
-        linkedArticleId: fields.linkedArticleId,
-        linkedArticleTitle: fields.linkedArticleId === "1"
-          ? "Pengenalan Diabetes Mellitus"
-          : fields.linkedArticleId === "2"
-            ? "Olahraga Aman untuk Diabetisi"
-            : "Panduan Nutrisi Harian", // Mock linkage
-        difficulty: fields.difficulty,
-        passingScore: fields.passingScore,
-        status,
-        questions: fields.questions,
-      });
+  const save = useCallback(
+    async (status: QuizStatus = "Draft") => {
+      if (!validate()) return;
+      setIsSaving(true);
+      try {
+        await quizService.saveQuiz({
+          id: quizId,
+          title: fields.title,
+          linkedArticleId: fields.linkedArticleId,
+          linkedArticleTitle: articleOptions.find((a) => a.value === fields.linkedArticleId)?.label ?? "",
+          difficulty: fields.difficulty,
+          passingScore: fields.passingScore,
+          status,
+          questions: fields.questions,
+        });
 
-      showToast({
-        type: "success",
-        title: "Berhasil",
-        description: `Kuesioner berhasil disimpan sebagai ${status === "Terbit" ? "Terbitan" : "Draft"}.`,
-      });
-      router.push(ROUTES.MANAJEMEN_KUISIONER);
-      router.refresh();
-    } catch {
-      showToast({
-        type: "error",
-        title: "Gagal",
-        description: "Gagal menyimpan kuesioner.",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [quizId, fields, validate, router, showToast]);
+        showToast({
+          type: "success",
+          title: "Berhasil",
+          description: `Kuesioner berhasil disimpan sebagai ${status === "Terbit" ? "Terbitan" : "Draft"}.`,
+        });
+        router.push(ROUTES.MANAJEMEN_KUISIONER);
+        router.refresh();
+      } catch {
+        showToast({
+          type: "error",
+          title: "Gagal",
+          description: "Gagal menyimpan kuesioner.",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [quizId, fields, articleOptions, validate, router, showToast]
+  );
 
   const cancel = useCallback(() => {
     router.push(ROUTES.MANAJEMEN_KUISIONER);
@@ -205,6 +233,7 @@ export function useQuizForm(quizId?: string) {
 
   return {
     fields,
+    articleOptions,
     isLoading,
     isSaving,
     errors,

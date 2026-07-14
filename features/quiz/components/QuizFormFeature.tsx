@@ -12,12 +12,6 @@ interface QuizFormFeatureProps {
   readonly quizId?: string;
 }
 
-const linkedArticleOptions = [
-  { value: "1", label: "Pencegahan Diabetes Tipe 2" },
-  { value: "2", label: "Pola Makan Sehat untuk Pasien" },
-  { value: "3", label: "Pentingnya Aktivitas Fisik Harian" },
-] as const;
-
 const difficultyOptions = [
   { value: "Mudah", label: "Mudah" },
   { value: "Sedang", label: "Sedang" },
@@ -27,6 +21,7 @@ const difficultyOptions = [
 export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
   const {
     fields,
+    articleOptions,
     isLoading,
     isSaving,
     handleChange,
@@ -131,7 +126,7 @@ export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
               <Select
                 value={fields.linkedArticleId}
                 onChange={(val) => handleChange("linkedArticleId", val)}
-                options={linkedArticleOptions}
+                options={articleOptions}
                 placeholder="Pilih Materi Edukasi"
                 required
               />
