@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEducationDetail } from "../hooks/useEducationDetail";
+import { educationService } from "../services/educationService";
+import type { EducationArticle } from "../types/education";
 import { ErrorState } from "@/components/common/ErrorState";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
@@ -29,6 +31,16 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const { showToast } = useToast();
 
+  const [relatedArticles, setRelatedArticles] = useState<EducationArticle[]>([]);
+
+
+  useEffect(() => {
+    educationService.getArticles().then((list) => {
+      const filtered = list.filter((art) => art.id !== articleId).slice(0, 3);
+      setRelatedArticles(filtered);
+    }).catch(() => {});
+  }, [articleId]);
+
   const handleConfirmDelete = async () => {
     showToast({
       type: "success",
@@ -46,22 +58,6 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
   if (error || !article) {
     return <ErrorState message={error ?? "Artikel tidak ditemukan."} onRetry={refetch} />;
   }
-
-  // Related articles mock details
-  const relatedArticles = [
-    {
-      title: "Pola Makan 3J untuk Diabetesi yang Efektif",
-      date: "15 Jan 2023",
-      duration: "5 Min",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBA9Kvi0rYYDjMNNHx1CGHyFYx891hKmQGIzPklNK2z9M8h7XW7j0vzKYoDGRx3Rk1bl4o6wVbOXDqtU8w6pUzOPfx8INdYFOd99PfECXOpTSZfCFAErikfNPfOp5ZsOLaX8EUDDtpCqiiPQayfhs3QJTWcCVY-hpKKGhAEE9DCVRUboAQFn84aNztmWAFo-DnjPml0gps2OQli0IGu4hTzu7YuJbNWFcZSYPigH2OO0pgf9bXybjncIBWNV7dh5o-zN9pglUbYvK5K",
-    },
-    {
-      title: "Olahraga Aman dan Terukur untuk Pasien Diabetes",
-      date: "12 Jan 2023",
-      duration: "7 Min",
-      img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBWLygb52l7hlD4Ugk86up1pg9F0OvB5Pe8uYdAW-KXN6PqHGPiT8A5t0oJPbBN0fPXxsvAvceQM-YXUHUiFJxPlVeJcpKGLAMR4IC8L9YX0MLHi_tX9uGSr4t8EVMe8BbW5ItjPEtMoMlzk_Bx1E-ZE51L-Bsk-YBRm6hyb5WN5LJol7e1PLAIdrZn4hf-06Xp0Vxyl0YbsCW-ukv6vkHW3kX3Tm3JqLjrSxxMSnHOhIstp4OYg4rDz8tn4_KDSz7A0SYK8y9qqpuT",
-    },
-  ];
 
   const isDefaultArticle = article.id === "1";
 
@@ -195,24 +191,19 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
                   </p>
                 </>
               ) : (
-                <div
-                  className="text-base text-[#4A5568] leading-relaxed space-y-6"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
-                />
+                <div className="relative">
+                  <style>{`
+                    .editor-only-overlay, .editor-actions {
+                      display: none !important;
+                    }
+                  `}</style>
+                  <div
+                    className="text-base text-[#4A5568] leading-relaxed space-y-6"
+                    dangerouslySetInnerHTML={{ __html: article.content }}
+                  />
+                </div>
               )}
             </article>
-
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2 pt-8 mt-8 border-t border-[#E2E8F0]">
-              {["#Diabetes", "#EdukasiPasien", "#KesehatanAceh", "#DietSehat"].map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-[#F4F6F8] px-4 py-1.5 rounded-lg text-[12px] font-bold text-[#718096] border border-[#E2E8F0] uppercase tracking-tight"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* Footer Navigation Action */}
@@ -275,14 +266,14 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
             <div className="space-y-4 font-[family-name:var(--font-poppins)]">
               {relatedArticles.map((rel) => (
                 <Link
-                  key={rel.title}
-                  href="#"
+                  key={rel.id}
+                  href={`${ROUTES.MANAJEMEN_EDUKASI}/${rel.id}`}
                   className="flex gap-4 p-2 rounded-xl hover:bg-[#F4F6F8] transition-all group"
                 >
                   <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-[#E2E8F0] bg-[#F4F6F8]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={rel.img}
+                      src={rel.thumbnail || "https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=200"}
                       alt={rel.title}
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                     />
@@ -292,7 +283,7 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
                       {rel.title}
                     </h5>
                     <p className="text-[11px] text-[#718096] mt-1.5">
-                      {rel.date} • {rel.duration}
+                      {rel.createdAt} • {rel.duration} Min
                     </p>
                   </div>
                 </Link>

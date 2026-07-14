@@ -4,12 +4,18 @@ import { useEducationForm } from "../hooks/useEducationForm";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useState, useRef, useEffect } from "react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
+import { useToast } from "@/components/ui/Toast";
+import { createPortal } from "react-dom";
 
 interface EducationFormFeatureProps {
   readonly articleId?: string;
 }
 
 export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
+  const router = useRouter();
+  const { showToast } = useToast();
   const {
     fields,
     isLoading,
@@ -60,9 +66,204 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
   const [newCategoryInput, setNewCategoryInput] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const handleBack = () => {
+    if (typeof document !== "undefined" && document.referrer && document.referrer.includes(window.location.host)) {
+      router.back();
+    } else {
+      router.push(ROUTES.MANAJEMEN_EDUKASI);
+    }
+  };
+
   // YouTube modal states
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
   const [youtubeUrlInput, setYoutubeUrlInput] = useState("");
+  const [activeYoutubeBlock, setActiveYoutubeBlock] = useState<HTMLElement | null>(null);
+
+  const handleCloseModal = () => {
+    setIsYoutubeModalOpen(false);
+    setYoutubeUrlInput("");
+    setActiveYoutubeBlock(null);
+  };
+
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const openYoutubeModal = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      if (editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    }
+    setIsYoutubeModalOpen(true);
+  };
+
+  const [pendingDeleteBlock, setPendingDeleteBlock] = useState<HTMLElement | null>(null);
+  const [isDeleteYoutubeConfirmOpen, setIsDeleteYoutubeConfirmOpen] = useState(false);
+
+  const [activeImageBlock, setActiveImageBlock] = useState<HTMLElement | null>(null);
+  const [pendingDeleteImageBlock, setPendingDeleteImageBlock] = useState<HTMLElement | null>(null);
+  const [isDeleteImageConfirmOpen, setIsDeleteImageConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    (window as any).editYoutubeBlock = (blockElement: HTMLElement) => {
+      setActiveYoutubeBlock(blockElement);
+      const anchor = blockElement.querySelector('a');
+      const url = anchor ? anchor.getAttribute('href') : '';
+      setYoutubeUrlInput(url || '');
+      setIsYoutubeModalOpen(true);
+    };
+    (window as any).confirmDeleteYoutubeBlock = (blockElement: HTMLElement) => {
+      setPendingDeleteBlock(blockElement);
+      setIsDeleteYoutubeConfirmOpen(true);
+    };
+    (window as any).editImageBlock = (blockElement: HTMLElement) => {
+      setActiveImageBlock(blockElement);
+      editorImageInputRef.current?.click();
+    };
+    (window as any).confirmDeleteImageBlock = (blockElement: HTMLElement) => {
+      setPendingDeleteImageBlock(blockElement);
+      setIsDeleteImageConfirmOpen(true);
+    };
+    return () => {
+      delete (window as any).editYoutubeBlock;
+      delete (window as any).confirmDeleteYoutubeBlock;
+      delete (window as any).editImageBlock;
+      delete (window as any).confirmDeleteImageBlock;
+    };
+  }, []);
+
+  interface YoutubeMetadata {
+    title: string;
+    authorName: string;
+    thumbnailUrl: string;
+    videoId: string;
+  }
+
+  const [modalYoutubeMeta, setModalYoutubeMeta] = useState<YoutubeMetadata | null>(null);
+  const [isModalYoutubeLoading, setIsModalYoutubeLoading] = useState(false);
+  const [modalYoutubeError, setModalYoutubeError] = useState<string | null>(null);
+
+  const [mainYoutubeMeta, setMainYoutubeMeta] = useState<YoutubeMetadata | null>(null);
+  const [isMainYoutubeLoading, setIsMainYoutubeLoading] = useState(false);
+  const [mainYoutubeError, setMainYoutubeError] = useState<string | null>(null);
+
+  const extractYoutubeId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  // Modal YouTube oEmbed fetch
+  useEffect(() => {
+    const videoId = extractYoutubeId(youtubeUrlInput);
+    if (!youtubeUrlInput.trim()) {
+      setModalYoutubeMeta(null);
+      setModalYoutubeError(null);
+      return;
+    }
+    if (!videoId) {
+      setModalYoutubeMeta(null);
+      setModalYoutubeError("Format URL YouTube tidak valid.");
+      return;
+    }
+
+    setModalYoutubeError(null);
+    setIsModalYoutubeLoading(true);
+
+    const fetchMeta = async () => {
+      try {
+        const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setModalYoutubeMeta({
+          title: data.title || "",
+          authorName: data.author_name || "",
+          thumbnailUrl: data.thumbnail_url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+          videoId,
+        });
+      } catch {
+        setModalYoutubeMeta({
+          title: `Video YouTube (ID: ${videoId})`,
+          authorName: "YouTube",
+          thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+          videoId,
+        });
+      } finally {
+        setIsModalYoutubeLoading(false);
+      }
+    };
+
+    const timer = setTimeout(fetchMeta, 400);
+    return () => clearTimeout(timer);
+  }, [youtubeUrlInput]);
+
+  // Main Form YouTube oEmbed fetch
+  useEffect(() => {
+    const videoId = extractYoutubeId(fields.youtubeLink);
+    if (!fields.youtubeLink.trim()) {
+      setMainYoutubeMeta(null);
+      setMainYoutubeError(null);
+      return;
+    }
+    if (!videoId) {
+      setMainYoutubeMeta(null);
+      setMainYoutubeError("Format URL YouTube tidak valid.");
+      return;
+    }
+
+    setMainYoutubeError(null);
+    setIsMainYoutubeLoading(true);
+
+    const fetchMeta = async () => {
+      try {
+        const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setMainYoutubeMeta({
+          title: data.title || "",
+          authorName: data.author_name || "",
+          thumbnailUrl: data.thumbnail_url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+          videoId,
+        });
+      } catch {
+        setMainYoutubeMeta({
+          title: `Video YouTube (ID: ${videoId})`,
+          authorName: "YouTube",
+          thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+          videoId,
+        });
+      } finally {
+        setIsMainYoutubeLoading(false);
+      }
+    };
+
+    const timer = setTimeout(fetchMeta, 400);
+    return () => clearTimeout(timer);
+  }, [fields.youtubeLink]);
+
+  // Escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCloseModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Prevent background scroll
+  useEffect(() => {
+    if (isYoutubeModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isYoutubeModalOpen]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -77,6 +278,17 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const editorImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync initial content from DB (only once when loading finishes)
+  useEffect(() => {
+    if (!isLoading && editorRef.current) {
+      editorRef.current.innerHTML = fields.content;
+    }
+  }, [isLoading]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -84,8 +296,6 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
       </div>
     );
   }
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const triggerUpload = () => {
     fileInputRef.current?.click();
@@ -95,6 +305,16 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       alert("Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan.");
+      return;
+    }
+
+    const MAX_SIZE = 1024 * 1024; // 1 MB
+    if (file.size > MAX_SIZE) {
+      showToast({
+        type: "error",
+        title: "Ukuran Gambar Terlalu Besar",
+        description: "Maksimal ukuran gambar sampul yang diperbolehkan adalah 1 MB.",
+      });
       return;
     }
 
@@ -128,45 +348,47 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
     }
   };
 
-  const editorRef = useRef<HTMLDivElement>(null);
-  const editorImageInputRef = useRef<HTMLInputElement>(null);
-
-  // Sync initial content from DB (only once when loading finishes)
-  useEffect(() => {
-    if (!isLoading && editorRef.current) {
-      editorRef.current.innerHTML = fields.content;
-    }
-  }, [isLoading]);
 
   const insertHTML = (html: string) => {
     if (editorRef.current) {
       editorRef.current.focus();
       const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        if (editorRef.current.contains(range.commonAncestorContainer)) {
-          range.deleteContents();
-          
-          const el = document.createElement("div");
-          el.innerHTML = html;
-          const fragment = document.createDocumentFragment();
-          let node;
-          let lastNode;
-          while ((node = el.firstChild)) {
-            lastNode = fragment.appendChild(node);
-          }
-          range.insertNode(fragment);
+      let range: Range | null = null;
 
-          if (lastNode) {
-            range.setStartAfter(lastNode);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
-          
-          handleChange("content", editorRef.current.innerHTML);
-          return;
+      if (savedRangeRef.current) {
+        range = savedRangeRef.current;
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        savedRangeRef.current = null; // clear after restoring
+      } else if (selection && selection.rangeCount > 0) {
+        const currentRange = selection.getRangeAt(0);
+        if (editorRef.current.contains(currentRange.commonAncestorContainer)) {
+          range = currentRange;
         }
+      }
+
+      if (range) {
+        range.deleteContents();
+        
+        const el = document.createElement("div");
+        el.innerHTML = html;
+        const fragment = document.createDocumentFragment();
+        let node;
+        let lastNode;
+        while ((node = el.firstChild)) {
+          lastNode = fragment.appendChild(node);
+        }
+        range.insertNode(fragment);
+
+        if (lastNode) {
+          range.setStartAfter(lastNode);
+          range.collapse(true);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+        
+        handleChange("content", editorRef.current.innerHTML);
+        return;
       }
       // Fallback
       editorRef.current.innerHTML += html;
@@ -205,20 +427,47 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
 
   const handleEditorImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setActiveImageBlock(null);
+      return;
+    }
 
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       alert("Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan.");
+      setActiveImageBlock(null);
+      return;
+    }
+
+    const MAX_SIZE = 1024 * 1024; // 1 MB
+    if (file.size > MAX_SIZE) {
+      showToast({
+        type: "error",
+        title: "Ukuran Gambar Terlalu Besar",
+        description: "Maksimal ukuran gambar konten yang diperbolehkan adalah 1 MB.",
+      });
+      setActiveImageBlock(null);
+      e.target.value = "";
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       if (typeof event.target?.result === "string") {
-        const imgHtml = `<img src="${event.target.result}" alt="Preview" class="max-w-full h-auto rounded-xl my-4 border border-[#E2E8F0] shadow-sm" />`;
-        insertHTML(imgHtml);
+        if (activeImageBlock) {
+          const img = activeImageBlock.querySelector("img");
+          if (img) {
+            img.src = event.target.result;
+          }
+          if (editorRef.current) {
+            handleChange("content", editorRef.current.innerHTML);
+          }
+        } else {
+          const imgHtml = `<div class="my-6 w-full max-w-lg bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all relative" contenteditable="false" draggable="true"><div class="block w-full relative bg-[#F1F5F9]"><img src="${event.target.result}" alt="Preview" class="w-full h-auto block object-contain" /><div class="absolute top-3 right-3 flex gap-2 z-20 editor-actions"><button type="button" onclick="window.editImageBlock(this.closest('[contenteditable=false]'))" class="bg-white text-gray-700 hover:bg-gray-50 rounded-lg p-2 shadow-md flex items-center justify-center cursor-pointer" style="border: none; outline: none;"><span class="material-symbols-outlined text-sm">edit</span></button><button type="button" onclick="window.confirmDeleteImageBlock(this.closest('[contenteditable=false]'))" class="bg-red-600 text-white hover:bg-red-700 rounded-lg p-2 shadow-md flex items-center justify-center cursor-pointer" style="border: none; outline: none;"><span class="material-symbols-outlined text-sm">delete</span></button></div></div><div class="editor-only-overlay absolute inset-0 bg-transparent cursor-pointer" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: transparent; z-index: 10;"></div></div>`;
+          insertHTML(imgHtml + "<p><br></p>");
+        }
       }
+      setActiveImageBlock(null);
     };
     reader.readAsDataURL(file);
     e.target.value = "";
@@ -226,12 +475,30 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
 
   // Insert YouTube video from modal
   const handleInsertYoutube = () => {
-    if (youtubeUrlInput.trim()) {
-      const embedHtml = `<div class="my-4 p-4 bg-[#F1F5F9] rounded-xl border border-[#E2E8F0] flex items-center gap-3 select-none" contenteditable="false"><span class="material-symbols-outlined text-[#00695C] text-2xl">smart_display</span><div><p class="text-xs font-bold text-[#00695C] uppercase tracking-wider">Video YouTube</p><a href="${youtubeUrlInput}" target="_blank" class="text-xs font-semibold text-[#1E293B] hover:underline">${youtubeUrlInput}</a></div></div>`;
-      insertHTML(embedHtml);
+    const videoId = extractYoutubeId(youtubeUrlInput);
+    if (videoId) {
+      const title = modalYoutubeMeta?.title || `Video YouTube (ID: ${videoId})`;
+      const authorName = modalYoutubeMeta?.authorName || "YouTube";
+      const thumbnailUrl = modalYoutubeMeta?.thumbnailUrl || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+      const embedHtml = `<div class="my-6 w-full max-w-lg bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all relative" contenteditable="false" draggable="true" data-youtube-id="${videoId}"><div class="block aspect-video w-full relative bg-[#0F172A]"><img src="${thumbnailUrl}" alt="${title}" class="w-full h-full object-cover opacity-90" /><div class="absolute inset-0 flex items-center justify-center bg-black/10"><div class="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg"><span class="material-symbols-outlined text-[32px] text-white">play_arrow</span></div></div><div class="absolute top-3 right-3 flex gap-2 z-20 editor-actions"><button type="button" onclick="window.editYoutubeBlock(this.closest('[contenteditable=false]'))" class="bg-white text-gray-700 hover:bg-gray-50 rounded-lg p-2 shadow-md flex items-center justify-center cursor-pointer" style="border: none; outline: none;"><span class="material-symbols-outlined text-sm">edit</span></button><button type="button" onclick="window.confirmDeleteYoutubeBlock(this.closest('[contenteditable=false]'))" class="bg-red-600 text-white hover:bg-red-700 rounded-lg p-2 shadow-md flex items-center justify-center cursor-pointer" style="border: none; outline: none;"><span class="material-symbols-outlined text-sm">delete</span></button></div></div><div class="p-4 flex gap-3 items-start bg-white"><div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0"><span class="material-symbols-outlined text-red-600 text-lg">smart_display</span></div><div class="min-w-0 flex-1"><h4 class="text-sm font-bold text-[#1E293B] line-clamp-2 leading-snug">${title}</h4><p class="text-xs text-[#64748B] mt-1 font-semibold">${authorName}</p><a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="text-[11px] text-[#00695C] hover:underline mt-1 block font-semibold truncate">https://www.youtube.com/watch?v=${videoId}</a></div></div><div class="editor-only-overlay absolute inset-0 bg-transparent cursor-pointer" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: transparent; z-index: 10;"></div></div>`;
+
+      if (activeYoutubeBlock) {
+        // Edit mode: replace the outerHTML of the active block
+        activeYoutubeBlock.outerHTML = embedHtml;
+        // Trigger editor input to update state
+        if (editorRef.current) {
+          handleChange("content", editorRef.current.innerHTML);
+        }
+      } else {
+        // Create mode: insert at cursor
+        insertHTML(embedHtml + "<p><br></p>");
+      }
+
       handleChange("youtubeLink", youtubeUrlInput);
       setIsYoutubeModalOpen(false);
       setYoutubeUrlInput("");
+      setActiveYoutubeBlock(null);
     }
   };
 
@@ -262,8 +529,15 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
     <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)] relative">
       
       {/* YouTube insertion modal */}
-      {isYoutubeModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+      {isYoutubeModalOpen && typeof window !== "undefined" && createPortal(
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCloseModal();
+            }
+          }}
+        >
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-[#E2E8F0] space-y-4 font-[family-name:var(--font-poppins)] animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0]/80">
               <h4 className="font-bold text-base text-[#1E293B]">
@@ -271,7 +545,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
               </h4>
               <button
                 type="button"
-                onClick={() => setIsYoutubeModalOpen(false)}
+                onClick={handleCloseModal}
                 className="text-[#64748B] hover:text-[#1E293B] cursor-pointer"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
@@ -288,14 +562,54 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
                 className="w-full px-4 py-3 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none text-sm font-medium text-[#1E293B]"
                 placeholder="https://www.youtube.com/watch?v=..."
               />
+              <p className="text-[10px] text-[#64748B] font-semibold mt-1">
+                Mendukung format: youtube.com/watch?v=..., youtu.be/..., youtube.com/embed/...
+              </p>
+              
+              {/* Validation errors */}
+              {modalYoutubeError && (
+                <p className="text-red-500 text-xs font-semibold mt-1">
+                  {modalYoutubeError}
+                </p>
+              )}
+
+              {/* Loading indicator */}
+              {isModalYoutubeLoading && (
+                <div className="flex items-center gap-2 text-[#00695C] text-xs font-semibold py-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Mengambil informasi video...</span>
+                </div>
+              )}
+
+              {/* oEmbed Preview Card */}
+              {modalYoutubeMeta && !isModalYoutubeLoading && (
+                <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 flex gap-3 items-center">
+                  <div className="w-20 aspect-video rounded-lg overflow-hidden flex-shrink-0 bg-[#E2E8F0] relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={modalYoutubeMeta.thumbnailUrl}
+                      alt={modalYoutubeMeta.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <span className="material-symbols-outlined text-white text-lg select-none">play_arrow</span>
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h5 className="text-xs font-bold text-[#1E293B] line-clamp-1 leading-tight">
+                      {modalYoutubeMeta.title}
+                    </h5>
+                    <p className="text-[10px] text-[#64748B] mt-1 font-semibold">
+                      {modalYoutubeMeta.authorName}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  setIsYoutubeModalOpen(false);
-                  setYoutubeUrlInput("");
-                }}
+                onClick={handleCloseModal}
                 className="px-5 py-2.5 rounded-xl border border-[#E2E8F0] text-xs font-semibold text-[#64748B] hover:bg-[#F1F5F9] cursor-pointer"
               >
                 Batal
@@ -303,14 +617,28 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
               <button
                 type="button"
                 onClick={handleInsertYoutube}
-                className="px-6 py-2.5 bg-[#00695C] text-white rounded-xl text-xs font-bold shadow-md shadow-[#00695C]/10 cursor-pointer hover:opacity-90 transition-all"
+                disabled={!modalYoutubeMeta || isModalYoutubeLoading}
+                className="px-6 py-2.5 bg-[#00695C] text-white rounded-xl text-xs font-bold shadow-md shadow-[#00695C]/10 cursor-pointer hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Sisipkan
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
+      {/* Back button above title */}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="flex items-center gap-2 text-[#718096] hover:text-[#00695C] transition-all font-semibold text-sm cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[20px] select-none">arrow_back</span>
+          <span>Kembali ke Daftar Manajemen</span>
+        </button>
+      </div>
 
       {/* Action Toolbar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-10">
@@ -589,7 +917,6 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
               <span>{fields.shortDescription.length} / 250 Karakter</span>
             </div>
           </div>
-
         </div>
 
         {/* Card 2: Editor (Isi Konten Edukasi) */}
@@ -663,7 +990,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
               {/* Rich text Toolbar extension: youtube */}
               <button
                 type="button"
-                onClick={() => setIsYoutubeModalOpen(true)}
+                onClick={openYoutubeModal}
                 className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-lg border border-[#E2E8F0] text-[11px] font-bold text-[#64748B] hover:text-[#00695C] hover:border-[#00695C] transition-all shadow-sm cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm select-none">smart_display</span>
@@ -781,6 +1108,62 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
           cancel();
         }}
         onCancel={() => setIsCancelOpen(false)}
+      />
+
+      <ConfirmationModal
+        open={isDeleteYoutubeConfirmOpen}
+        title="Hapus Video YouTube?"
+        description="Apakah Anda yakin ingin menghapus video YouTube ini dari materi edukasi?"
+        variant="danger"
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        onConfirm={() => {
+          if (pendingDeleteBlock) {
+            pendingDeleteBlock.remove();
+            if (editorRef.current) {
+              handleChange("content", editorRef.current.innerHTML);
+            }
+          }
+          setIsDeleteYoutubeConfirmOpen(false);
+          setPendingDeleteBlock(null);
+          showToast({
+            type: "success",
+            title: "Berhasil",
+            description: "Video YouTube berhasil dihapus dari konten.",
+          });
+        }}
+        onCancel={() => {
+          setIsDeleteYoutubeConfirmOpen(false);
+          setPendingDeleteBlock(null);
+        }}
+      />
+
+      <ConfirmationModal
+        open={isDeleteImageConfirmOpen}
+        title="Hapus Gambar?"
+        description="Apakah Anda yakin ingin menghapus gambar ini dari materi edukasi?"
+        variant="danger"
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        onConfirm={() => {
+          if (pendingDeleteImageBlock) {
+            pendingDeleteImageBlock.remove();
+            if (editorRef.current) {
+              handleChange("content", editorRef.current.innerHTML);
+            }
+          }
+          setIsDeleteImageConfirmOpen(false);
+          setPendingDeleteImageBlock(null);
+          showToast({
+            type: "success",
+            title: "Berhasil",
+            description: "Gambar berhasil dihapus dari konten.",
+          });
+        }}
+        onCancel={() => {
+          setIsDeleteImageConfirmOpen(false);
+          setPendingDeleteImageBlock(null);
+        }}
       />
     </div>
   );
