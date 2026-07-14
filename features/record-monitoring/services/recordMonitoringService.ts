@@ -75,6 +75,7 @@ const mapPatientRecord = (data: any): PatientRecord => {
       ? new Date(data.diagnosis_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
       : "-",
     emergencyContact,
+    dailyCalorieTarget: data.daily_calorie_target,
     dailySummary: {
       bloodSugar,
       bloodSugarTime,

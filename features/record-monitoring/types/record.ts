@@ -21,6 +21,7 @@ export interface PatientRecord {
   readonly dailySummary: DailySummary;
   readonly diagnosisDate: string;
   readonly emergencyContact: string;
+  readonly dailyCalorieTarget?: number;
 }
 
 export interface BloodSugarLog {
@@ -28,6 +29,7 @@ export interface BloodSugarLog {
   readonly date: string; // e.g. "Hari ini" or "Kemarin"
   readonly before: number; // mg/dL
   readonly after: number; // mg/dL
+  readonly rawDate?: Date;
 }
 
 export interface MealLog {

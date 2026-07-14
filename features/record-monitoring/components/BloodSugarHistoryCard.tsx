@@ -114,12 +114,16 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
 
                 {/* Points on Before Meal */}
                 {beforeCircles.map((pt, i) => (
-                  <circle key={`bef-${i}`} cx={pt.cx} cy={pt.cy} r="4" fill="#FFFFFF" stroke="#00695C" strokeWidth="2" title={`Sebelum: ${pt.val} mg/dL`} />
+                  <circle key={`bef-${i}`} cx={pt.cx} cy={pt.cy} r="4" fill="#FFFFFF" stroke="#00695C" strokeWidth="2">
+                    <title>{`Sebelum: ${pt.val} mg/dL`}</title>
+                  </circle>
                 ))}
 
                 {/* Points on After Meal */}
                 {afterCircles.map((pt, i) => (
-                  <circle key={`aft-${i}`} cx={pt.cx} cy={pt.cy} r="4" fill="#FFFFFF" stroke="#C53030" strokeWidth="2" title={`Sesudah: ${pt.val} mg/dL`} />
+                  <circle key={`aft-${i}`} cx={pt.cx} cy={pt.cy} r="4" fill="#FFFFFF" stroke="#C53030" strokeWidth="2">
+                    <title>{`Sesudah: ${pt.val} mg/dL`}</title>
+                  </circle>
                 ))}
               </svg>
             </div>
