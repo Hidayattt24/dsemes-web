@@ -124,16 +124,25 @@ export function useSettingsForm() {
     }
 
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setIsSaving(false);
-    showToast({
-      type: "success",
-      title: "Berhasil",
-      description: "Kata sandi berhasil diperbarui.",
-    });
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmNewPassword("");
+    try {
+      await settingsService.changePassword(currentPassword, newPassword);
+      showToast({
+        type: "success",
+        title: "Berhasil",
+        description: "Kata sandi berhasil diperbarui.",
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: error.response?.data?.message || "Gagal memperbarui kata sandi.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return {
