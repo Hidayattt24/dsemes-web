@@ -15,6 +15,7 @@ export interface MetricCard {
   readonly icon: string;
   readonly badgeLabel: string;
   readonly badgeVariant: "primary" | "muted" | "warning" | "error";
+  readonly progressBar?: number;
 }
 
 export interface ActivityDataPoint {
