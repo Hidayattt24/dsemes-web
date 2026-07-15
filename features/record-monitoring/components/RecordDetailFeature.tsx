@@ -1,20 +1,26 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useRecordDetail } from "../hooks/useRecordDetail";
-import { RecordDetailProfileCard } from "./RecordDetailProfileCard";
+import { RecordPatientSummaryCard } from "./RecordPatientSummaryCard";
+import { RecordPatientProfileCard } from "./RecordPatientProfileCard";
 import { BloodSugarHistoryCard } from "./BloodSugarHistoryCard";
 import { MealHistoryCard } from "./MealHistoryCard";
 import { ActivityHistoryCard } from "./ActivityHistoryCard";
 import { MedicationComplianceCard } from "./MedicationComplianceCard";
 import { ErrorState } from "@/components/common/ErrorState";
 import { DetailPageLoader } from "@/components/ui/loading";
-import Link from "next/link";
+import { BackButton } from "@/components/common/BackButton";
 
 interface RecordDetailFeatureProps {
   readonly patientId: string;
 }
 
 export function RecordDetailFeature({ patientId }: RecordDetailFeatureProps) {
+  const pathname = usePathname();
+  const isStaff = pathname.startsWith("/staff");
+  const listHref = isStaff ? "/staff/pemantauan-catatan-pasien" : "/admin/pemantauan-catatan-pasien";
+
   const {
     patient,
     bloodSugarLogs,
@@ -36,15 +42,10 @@ export function RecordDetailFeature({ patientId }: RecordDetailFeatureProps) {
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)]">
-      {/* Breadcrumbs & Title Toolbar */}
       <header className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#718096] mb-2">
-            <Link href="/admin/pemantauan-catatan-pasien" className="hover:text-[#00695C] transition-colors">
-              Data Pasien
-            </Link>
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
-            <span className="text-[#00695C] font-bold">{patient.name}</span>
+          <div className="mb-2">
+            <BackButton href={listHref} label="Data Pasien" />
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -54,18 +55,18 @@ export function RecordDetailFeature({ patientId }: RecordDetailFeatureProps) {
             </span>
           </div>
           <p className="text-xs font-medium text-[#718096] mt-1">
-            ID: P-00{patient.id} • {patient.puskesmas}
+            {patient.puskesmas}
           </p>
         </div>
       </header>
 
-      {/* Patient Overview Card */}
-      <RecordDetailProfileCard patient={patient} />
+      <RecordPatientSummaryCard patient={patient} />
 
-      {/* Grid Layout for Charts & Lists */}
+      <RecordPatientProfileCard patient={patient} />
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-12">
         <BloodSugarHistoryCard logs={bloodSugarLogs} />
-        <MealHistoryCard logs={mealLogs} />
+        <MealHistoryCard logs={mealLogs} targetCalories={patient.dailyCalorieTarget} />
         <ActivityHistoryCard logs={activityLogs} />
         <MedicationComplianceCard logs={medicationLogs} />
       </div>

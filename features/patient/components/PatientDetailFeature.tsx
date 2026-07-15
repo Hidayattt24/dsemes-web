@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { usePatientDetail } from "../hooks/usePatientDetail";
 import { PatientProfileCard } from "./PatientProfileCard";
 import { PatientPersonalInfoCard } from "./PatientPersonalInfoCard";
+import { PatientSummaryCard } from "./PatientSummaryCard";
 import { PatientBloodSugarChart } from "./PatientBloodSugarChart";
 import { PatientCalorieChart } from "./PatientCalorieChart";
 import { PatientEducationActivity } from "./PatientEducationActivity";
@@ -21,7 +22,7 @@ interface PatientDetailFeatureProps {
 
 export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
   const router = useRouter();
-  const { patient, isLoading, error, refetch } = usePatientDetail(patientId);
+  const { patient, bloodSugar, meals, activities, isLoading, error, refetch } = usePatientDetail(patientId);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { showToast } = useToast();
@@ -69,6 +70,9 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
 
       </div>
 
+      {/* Patient Health Summary Card Grid */}
+      <PatientSummaryCard patient={patient} />
+
       {/* Profile summary bento cards */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-4">
@@ -82,13 +86,13 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
       {/* Metrics & Analytics section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-12">
-          <PatientBloodSugarChart />
+          <PatientBloodSugarChart data={bloodSugar} />
         </div>
         <div className="lg:col-span-7">
-          <PatientCalorieChart />
+          <PatientCalorieChart data={meals} patient={patient} />
         </div>
         <div className="lg:col-span-5">
-          <PatientEducationActivity />
+          <PatientEducationActivity data={activities} />
         </div>
       </div>
 

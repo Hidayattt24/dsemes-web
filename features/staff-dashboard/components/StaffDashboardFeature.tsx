@@ -9,12 +9,21 @@ import { TrendPatientTable } from "./TrendPatientTable";
 export function StaffDashboardFeature() {
   const {
     isLoading,
+    hasError,
     summaryCards,
     physicalActivity,
     foodIntake,
     medicationAdherence,
     priorityPatients,
     trendPatients,
+    foodRange,
+    activityRange,
+    adherenceRange,
+    trendRange,
+    setFoodRange,
+    setActivityRange,
+    setAdherenceRange,
+    setTrendRange,
   } = useStaffDashboard();
 
   return (
@@ -28,7 +37,7 @@ export function StaffDashboardFeature() {
       </div>
 
       {/* Summary Cards */}
-      <DashboardSummaryCards cards={summaryCards} loading={isLoading} />
+      <DashboardSummaryCards cards={summaryCards} loading={isLoading} hasError={hasError} />
 
       {/* Population Trends & Distribution Charts */}
       <div className="space-y-6">
@@ -40,13 +49,19 @@ export function StaffDashboardFeature() {
           physicalActivity={physicalActivity}
           foodIntake={foodIntake}
           medicationAdherence={medicationAdherence}
+          foodRange={foodRange}
+          activityRange={activityRange}
+          adherenceRange={adherenceRange}
+          onFoodRangeChange={setFoodRange}
+          onActivityRangeChange={setActivityRange}
+          onAdherenceRangeChange={setAdherenceRange}
         />
       </div>
 
       {/* Monitoring Tables (Stacked Vertically, Full Width) */}
       <div className="flex flex-col gap-8 w-full">
         <PriorityPatientTable patients={priorityPatients} loading={isLoading} />
-        <TrendPatientTable patients={trendPatients} loading={isLoading} />
+        <TrendPatientTable patients={trendPatients} loading={isLoading} trendRange={trendRange} onTrendRangeChange={setTrendRange} />
       </div>
     </div>
   );

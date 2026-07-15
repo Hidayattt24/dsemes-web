@@ -23,7 +23,6 @@ export function IncreasingTrendTable({ patients, loading }: IncreasingTrendTable
           <Avatar src={row.avatarUrl} name={row.name} size={36} />
           <div>
             <p className="font-semibold text-sm text-[#1A202C]">{row.name}</p>
-            <p className="text-xs text-[#718096]">ID: P-00{row.id}</p>
           </div>
         </div>
       ),
@@ -32,9 +31,9 @@ export function IncreasingTrendTable({ patients, loading }: IncreasingTrendTable
       key: "prevAvg",
       header: "Rerata Sebelumnya",
       render: (row) => {
-        const currentAvg = parseInt(row.dailySummary.bloodSugar) || 120;
-        const diff = (parseInt(row.id) * 7) % 25 + 10;
-        const prevAvg = currentAvg - diff;
+        const avg = row.dailySummary.avgBloodSugar;
+        const latest = parseInt(row.dailySummary.bloodSugar) || 0;
+        const prevAvg = avg ? Math.round(avg) : Math.max(latest - 20, 80);
         return <span className="text-sm text-[#718096] font-medium">{prevAvg} mg/dL</span>;
       },
     },
@@ -42,18 +41,19 @@ export function IncreasingTrendTable({ patients, loading }: IncreasingTrendTable
       key: "avgCurrent",
       header: "Rerata Saat Ini",
       render: (row) => {
-        const currentAvg = parseInt(row.dailySummary.bloodSugar) || 120;
-        return <span className="font-bold text-sm text-red-600">{currentAvg} mg/dL</span>;
+        const latest = parseInt(row.dailySummary.bloodSugar) || 0;
+        return <span className="font-bold text-sm text-red-600">{latest} mg/dL</span>;
       },
     },
     {
       key: "increasePercent",
       header: "Persentase Kenaikan",
       render: (row) => {
-        const currentAvg = parseInt(row.dailySummary.bloodSugar) || 120;
-        const diff = (parseInt(row.id) * 7) % 25 + 10;
-        const prevAvg = currentAvg - diff;
-        const percent = (diff / prevAvg) * 100;
+        const latest = parseInt(row.dailySummary.bloodSugar) || 0;
+        const avg = row.dailySummary.avgBloodSugar;
+        const prevAvg = avg ? Math.round(avg) : Math.max(latest - 20, 80);
+        const diff = latest - prevAvg;
+        const percent = prevAvg > 0 ? (diff / prevAvg) * 100 : 0;
         return (
           <span className="font-extrabold text-sm text-red-600">
             +{percent.toFixed(1)}%
@@ -65,11 +65,14 @@ export function IncreasingTrendTable({ patients, loading }: IncreasingTrendTable
       key: "trend",
       header: "Indikator Tren",
       render: (row) => {
-        const diff = (parseInt(row.id) * 7) % 25 + 10;
+        const latest = parseInt(row.dailySummary.bloodSugar) || 0;
+        const avg = row.dailySummary.avgBloodSugar;
+        const prevAvg = avg ? Math.round(avg) : Math.max(latest - 20, 80);
+        const diff = latest - prevAvg;
         return (
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#9B2C2C] bg-[#FFF5F5] px-2.5 py-1 rounded-full border border-red-100">
             <span className="material-symbols-outlined text-[14px] select-none">trending_up</span>
-            <span>Meningkat (+{diff} mg/dL)</span>
+            <span>Meningkat (+{Math.abs(diff)} mg/dL)</span>
           </span>
         );
       },

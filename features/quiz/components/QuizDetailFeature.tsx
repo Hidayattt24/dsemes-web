@@ -8,6 +8,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { ErrorState } from "@/components/common/ErrorState";
 import { useState } from "react";
 import { useToast } from "@/components/ui/Toast";
+import { BackButton } from "@/components/common/BackButton";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { useRouter, usePathname } from "next/navigation";
@@ -78,13 +79,12 @@ export function QuizDetailFeature({ quizId }: QuizDetailFeatureProps) {
       {/* Page Header & Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <Link
-            href={isStaff ? "/staff/manajemen-kuisioner" : ROUTES.MANAJEMEN_KUISIONER}
-            className="flex items-center gap-2 text-[#00695C] hover:underline text-xs font-semibold mb-2"
-          >
-            <span className="material-symbols-outlined text-sm select-none">arrow_back</span>
-            <span>Kembali ke Manajemen Kuesioner</span>
-          </Link>
+          <div className="mb-2">
+            <BackButton
+              href={isStaff ? "/staff/manajemen-kuisioner" : ROUTES.MANAJEMEN_KUISIONER}
+              label="Manajemen Kuesioner"
+            />
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-2xl font-bold text-[#1A202C]">Hasil Kuesioner Pasien</h2>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#F0F9F8] text-[#00695C] border border-[#B2DFDB]/20">

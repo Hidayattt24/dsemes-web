@@ -1,10 +1,13 @@
 import { Select } from "@/components/ui/Select";
+import type { QuizSortBy } from "../types/quiz";
 
 interface QuizFiltersProps {
   readonly searchQuery: string;
   readonly filterStatus: "Semua" | "Terbit" | "Draft";
+  readonly sortBy: QuizSortBy;
   readonly onSearchChange: (val: string) => void;
   readonly onStatusChange: (val: "Semua" | "Terbit" | "Draft") => void;
+  readonly onSortChange: (val: QuizSortBy) => void;
 }
 
 const statusOptions = [
@@ -13,11 +16,19 @@ const statusOptions = [
   { value: "Draft", label: "Draft" },
 ] as const;
 
+const sortOptions = [
+  { value: "newest", label: "Terbaru" },
+  { value: "oldest", label: "Terlama" },
+  { value: "title", label: "A-Z" },
+] as const;
+
 export function QuizFilters({
   searchQuery,
   filterStatus,
+  sortBy,
   onSearchChange,
   onStatusChange,
+  onSortChange,
 }: QuizFiltersProps) {
   return (
     <div className="bg-white rounded-2xl p-5 border border-[#E2E8F0] shadow-sm flex flex-col sm:flex-row gap-4 items-center w-full">
@@ -35,8 +46,18 @@ export function QuizFilters({
         />
       </div>
 
+      {/* Sort By */}
+      <div className="w-full sm:w-48">
+        <Select
+          value={sortBy}
+          onChange={(val) => onSortChange(val as QuizSortBy)}
+          options={sortOptions}
+          placeholder="Urutkan"
+        />
+      </div>
+
       {/* Status Filter */}
-      <div className="w-full sm:w-64">
+      <div className="w-full sm:w-48">
         <Select
           value={filterStatus}
           onChange={(val) => onStatusChange(val as "Semua" | "Terbit" | "Draft")}

@@ -33,14 +33,22 @@ export function ActivityBarChart({
       {/* Chart Main Area */}
       <div className="flex-1 flex gap-4 h-64 relative items-stretch">
         {/* Y-axis Labels */}
-        <div className="flex flex-col justify-between text-[10px] font-bold text-[#718096] text-right w-10 select-none pb-6">
-          <span>3.0k</span>
-          <span>2.4k</span>
-          <span>1.8k</span>
-          <span>1.2k</span>
-          <span>600</span>
-          <span>0</span>
-        </div>
+        {(() => {
+          const maxValue = data.length > 0 ? Math.max(...data.map(p => p.value)) : 0;
+          const stepsCount = 5;
+          const stepVal = maxValue > 0 ? Math.ceil(maxValue / stepsCount) : 100;
+          const axisLabels = Array.from({ length: stepsCount + 1 }).map((_, idx) => {
+            const val = (stepsCount - idx) * stepVal;
+            return val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toString();
+          });
+          return (
+            <div className="flex flex-col justify-between text-[10px] font-bold text-[#718096] text-right w-10 select-none pb-6">
+              {axisLabels.map((lbl, idx) => (
+                <span key={idx}>{lbl}</span>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Chart Grid and Bars Area */}
         <div className="flex-1 flex flex-col justify-between relative pb-6">

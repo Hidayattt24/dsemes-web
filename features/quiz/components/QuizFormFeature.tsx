@@ -2,7 +2,7 @@
 
 import { useQuizForm } from "../hooks/useQuizForm";
 import { QuizQuestionCard } from "./QuizQuestionCard";
-import Link from "next/link";
+import { BackButton } from "@/components/common/BackButton";
 import { ROUTES } from "@/constants/routes";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
@@ -11,12 +11,6 @@ import { Select } from "@/components/ui/Select";
 interface QuizFormFeatureProps {
   readonly quizId?: string;
 }
-
-const linkedArticleOptions = [
-  { value: "1", label: "Pencegahan Diabetes Tipe 2" },
-  { value: "2", label: "Pola Makan Sehat untuk Pasien" },
-  { value: "3", label: "Pentingnya Aktivitas Fisik Harian" },
-] as const;
 
 const difficultyOptions = [
   { value: "Mudah", label: "Mudah" },
@@ -27,6 +21,7 @@ const difficultyOptions = [
 export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
   const {
     fields,
+    articleOptions,
     isLoading,
     isSaving,
     handleChange,
@@ -62,13 +57,9 @@ export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
       {/* Page Header & Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-[#E2E8F0] pb-4">
         <div>
-          <Link
-            href={ROUTES.MANAJEMEN_KUISIONER}
-            className="flex items-center gap-2 text-[#00695C] hover:underline text-xs font-semibold mb-2"
-          >
-            <span className="material-symbols-outlined text-sm select-none">arrow_back</span>
-            <span>Kembali ke Manajemen Kuesioner</span>
-          </Link>
+          <div className="mb-2">
+            <BackButton href={ROUTES.MANAJEMEN_KUISIONER} label="Manajemen Kuesioner" />
+          </div>
           <h2 className="text-2xl font-bold text-[#1A202C]">
             {quizId ? "Edit Kuesioner" : "Tambah Kuesioner Baru"}
           </h2>
@@ -131,7 +122,7 @@ export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
               <Select
                 value={fields.linkedArticleId}
                 onChange={(val) => handleChange("linkedArticleId", val)}
-                options={linkedArticleOptions}
+                options={articleOptions}
                 placeholder="Pilih Materi Edukasi"
                 required
               />

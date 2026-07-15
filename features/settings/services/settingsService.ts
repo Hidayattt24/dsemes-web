@@ -1,24 +1,71 @@
 import type { SystemSettings } from "../types/settings";
+import { axiosInstance } from "@/lib/axios";
+import { tokenService } from "@/utils/token";
 
-const MOCK_SETTINGS: SystemSettings = {
-  name: "Super Admin DSMES",
-  username: "admin_dsmes",
-  email: "admin@dsmes.aceh.go.id",
-  whatsapp: "+62 812 3456 7890",
-  jabatan: "Koordinator Sistem Informasi",
-  bio: "Pengelola data edukasi diabetes untuk wilayah Provinsi Aceh.",
-  profilePhoto: "https://lh3.googleusercontent.com/aida-public/AB6AXuBgXQXLVFGk1Nrd-ADH3h_MNcdMj_qPog-L4rHBMCV-Vsm_ZdGgHkT9DALy4_bkKhZalkTAm_8ofXGwPTB_RWBmX45Qb5VoWXN-HBG2QODw_C-IfJXyIEtO0WWNvuFGdfhEGTdb-Ti_seazXi-IIFL91t2nV6yiAIxci7JvsBtGPYN1DENDbnjslIuujTvgaRbKHyReJPrEVDPMBC7xn2cm52cdiZVwJ8RoPvoZt_bckjEkzeGtZtbGV5G4HT3053vPLTNI2G1hkPRx",
+function getMeEndpoint(): string {
+  const token = tokenService.getAccessToken();
+  if (!token) return "/admin/me"; // fallback
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+    const role = JSON.parse(jsonPayload).role;
+    return role === "admin" ? "/admin/me" : "/staff/me";
+  } catch {
+    return "/admin/me";
+  }
+}
+
+const mapSettingsFromBackend = (data: any): SystemSettings => {
+  return {
+    name: data.full_name || "",
+    username: data.username || "",
+    email: data.email || "",
+    whatsapp: data.whatsapp_number || "",
+    jabatan: data.position_title || "",
+    bio: data.short_bio || "",
+    profilePhoto: data.profile_photo_url || "",
+  };
+};
+
+const mapSettingsToBackend = (settings: SystemSettings) => {
+  return {
+    full_name: settings.name,
+    username: settings.username,
+    email: settings.email,
+    whatsapp_number: settings.whatsapp,
+    position_title: settings.jabatan,
+    short_bio: settings.bio,
+    profile_photo_url: settings.profilePhoto,
+  };
 };
 
 export const settingsService = {
   async getSettings(): Promise<SystemSettings> {
-    await new Promise((r) => setTimeout(r, 200));
-    return { ...MOCK_SETTINGS };
+    const endpoint = getMeEndpoint();
+    const res = await axiosInstance.get(endpoint);
+    return mapSettingsFromBackend(res.data.data);
   },
 
   async saveSettings(settings: SystemSettings): Promise<SystemSettings> {
-    await new Promise((r) => setTimeout(r, 300));
-    Object.assign(MOCK_SETTINGS, settings);
-    return { ...MOCK_SETTINGS };
+    const endpoint = getMeEndpoint();
+    const payload = mapSettingsToBackend(settings);
+    const res = await axiosInstance.put(endpoint, payload);
+    return mapSettingsFromBackend(res.data.data);
+  },
+
+  async changePassword(current: string, newPass: string): Promise<void> {
+    const endpoint = `${getMeEndpoint()}/password`;
+    await axiosInstance.put(endpoint, {
+      current_password: current,
+      new_password: newPass,
+    });
   },
 } as const;

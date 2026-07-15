@@ -22,23 +22,25 @@ export function VerificationCodeInput({
 }: VerificationCodeInputProps) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const digits = value.padEnd(DIGIT_COUNT, "").split("").slice(0, DIGIT_COUNT);
+  const digits = Array.from({ length: DIGIT_COUNT }, (_, i) => value[i] || "");
 
   const focusAt = (index: number): void =>
     inputRefs.current[Math.max(0, Math.min(index, DIGIT_COUNT - 1))]?.focus();
 
   const handleChange = (index: number, char: string): void => {
     if (!/^\d$/.test(char)) return;
-    const next = digits.map((d, i) => (i === index ? char : d)).join("").trimEnd();
-    onChange(next);
+    const nextDigits = [...digits];
+    nextDigits[index] = char;
+    onChange(nextDigits.join(""));
     if (index < DIGIT_COUNT - 1) focusAt(index + 1);
   };
 
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === "Backspace") {
       if (digits[index]) {
-        const next = digits.map((d, i) => (i === index ? "" : d)).join("").trimEnd();
-        onChange(next);
+        const nextDigits = [...digits];
+        nextDigits[index] = "";
+        onChange(nextDigits.join(""));
       } else {
         focusAt(index - 1);
       }

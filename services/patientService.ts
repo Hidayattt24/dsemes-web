@@ -1,169 +1,127 @@
+import { axiosInstance } from "@/lib/axios";
 import type { Patient, PatientStats } from "@/types/patient";
 
-/**
- * Mock patient database based on the Stitch UI/UX design.
- */
-const MOCK_PATIENTS: readonly Patient[] = [
-  {
-    id: "1",
-    name: "Ahmad Nurrahman",
-    age: 54,
-    gender: "Laki-laki",
-    status: "Aktif",
-    lastActive: "Hari ini, 09:24",
-    initials: "AN",
-    whatsapp: "0811-9921-001",
-    height: 170,
-    weight: 72,
-    bloodType: "A",
-    registeredAt: "12 Jan 2023",
-    compliance: 90,
-    interventionType: "Mobile App",
-    diabetesType: "Diabetes Tipe 2",
-    doctor: "Dr. Ahmad Faisal",
-    puskesmas: "Puskesmas Kuta Alam",
-    address: "Jl. Diponegoro No. 45, Banda Aceh",
-    email: "ahmad.nur@gmail.com",
-    accountStatus: "Terverifikasi",
-    nik: "1171011204720001",
-    bpjs: "0001248593851",
-    emergencyName: "Fatimah Nurrahman",
-    emergencyRelation: "Istri",
-    emergencyPhone: "0811-9921-002",
-  },
-  {
-    id: "2",
-    name: "Siti Maryam",
-    age: 42,
-    gender: "Perempuan",
-    status: "Aktif",
-    lastActive: "Kemarin",
-    initials: "SM",
-    whatsapp: "0812-3456-7890",
-    height: 158,
-    weight: 62,
-    bloodType: "O",
-    registeredAt: "01 Sep 2023",
-    compliance: 85,
-    interventionType: "Mobile App",
-    diabetesType: "Diabetes Tipe 2",
-    doctor: "Dr. Ahmad Faisal",
-    puskesmas: "Puskesmas Kuta Alam",
-    address: "Jl. T. Nyak Arief No. 123, Banda Aceh",
-    email: "siti.maryam@gmail.com",
-    accountStatus: "Terverifikasi",
-    nik: "1171010109840002",
-    bpjs: "0001248593852",
-    emergencyName: "Budi Amin",
-    emergencyRelation: "Suami",
-    emergencyPhone: "0812-9900-1122",
-    avatarUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBonHLOi4DDR8Fl6O72N8wIWCIp9Ym2wPa1_3ST_Z2K8fJvYa2863-5Y0LRfVmavV-p0Fy0LS2-oH461IazfxZAiYY0BcqzJt-7gpWA0dTtpkAPKJ53BIDfL_TYSca0G0KHXKr97AfLSZ_RW1Q6GG5U6nKnAMo-NEVKQwqllgbhO0cgm80p2sM0RyTeBI6KTWOyMGI6zXUJokQOJlsBSxGG9FEtglu-HJ8fRF0thI6vI48rloIsrpsyQ2urYhat0TddrT4iOpvIpLYD",
-  },
-  {
-    id: "3",
-    name: "Bambang Kusuma",
-    age: 61,
-    gender: "Laki-laki",
-    status: "Nonaktif",
-    lastActive: "3 hari lalu",
-    initials: "BK",
-    whatsapp: "0813-8822-003",
-    height: 165,
-    weight: 68,
-    bloodType: "B",
-    registeredAt: "15 Apr 2023",
-    compliance: 60,
-    interventionType: "Web App",
-    diabetesType: "Diabetes Tipe 1",
-    doctor: "Dr. Sarah Amanda",
-    puskesmas: "Puskesmas Baiturrahman",
-    address: "Jl. Gajah Mada No. 12, Banda Aceh",
-    email: "bambang.k@gmail.com",
-    accountStatus: "Menunggu",
-    nik: "1171011506650003",
-    bpjs: "0001248593853",
-    emergencyName: "Hendrawan Kusuma",
-    emergencyRelation: "Anak Kandung",
-    emergencyPhone: "0813-8822-004",
-  },
-  {
-    id: "4",
-    name: "Farah Hani",
-    age: 38,
-    gender: "Perempuan",
-    status: "Aktif",
-    lastActive: "05 Okt 2023",
-    initials: "FH",
-    whatsapp: "0815-7733-004",
-    height: 160,
-    weight: 55,
-    bloodType: "AB",
-    registeredAt: "10 Okt 2022",
-    compliance: 95,
-    interventionType: "Mobile App",
-    diabetesType: "Diabetes Gestasional",
-    doctor: "Dr. Ahmad Faisal",
-    puskesmas: "Puskesmas Syiah Kuala",
-    address: "Jl. Teuku Umar No. 88, Banda Aceh",
-    email: "farah.hani@gmail.com",
-    accountStatus: "Terverifikasi",
-    nik: "1171012210880004",
-    bpjs: "0001248593854",
-    emergencyName: "Rudi Hartono",
-    emergencyRelation: "Suami",
-    emergencyPhone: "0815-7733-005",
-  },
-  {
-    id: "5",
-    name: "Siti Aminah",
-    age: 62,
-    gender: "Perempuan",
-    status: "Aktif",
-    lastActive: "Hari ini, 08:15",
-    initials: "SA",
-    whatsapp: "0812-3456-7890",
-    height: 158,
-    weight: 62,
-    bloodType: "O",
-    registeredAt: "12 Jan 2023",
-    compliance: 85,
-    interventionType: "Mobile App",
-    diabetesType: "Diabetes Tipe 2",
-    doctor: "Dr. Ahmad Faisal",
-    puskesmas: "Puskesmas Kuta Alam",
-    address: "Jl. T. Nyak Arief No. 123, Banda Aceh",
-    email: "sitiaminah@gmail.com",
-    accountStatus: "Terverifikasi",
-    nik: "1171010109610005",
-    bpjs: "0001248593855",
-    emergencyName: "Budi Amin",
-    emergencyRelation: "Suami",
-    emergencyPhone: "0812-9900-1122",
-    avatarUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBonHLOi4DDR8Fl6O72N8wIWCIp9Ym2wPa1_3ST_Z2K8fJvYa2863-5Y0LRfVmavV-p0Fy0LS2-oH461IazfxZAiYY0BcqzJt-7gpWA0dTtpkAPKJ53BIDfL_TYSca0G0KHXKr97AfLSZ_RW1Q6GG5U6nKnAMo-NEVKQwqllgbhO0cgm80p2sM0RyTeBI6KTWOyMGI6zXUJokQOJlsBSxGG9FEtglu-HJ8fRF0thI6vI48rloIsrpsyQ2urYhat0TddrT4iOpvIpLYD",
-  },
-];
+function mapBackendPatientToFrontend(p: any): Patient {
+  // Initials
+  const names = p.full_name ? p.full_name.split(" ") : ["P"];
+  const initials = names.map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
+
+  // Age calculation
+  let age = 0;
+  if (p.date_of_birth) {
+    const dob = new Date(p.date_of_birth);
+    const ageDifMs = Date.now() - dob.getTime();
+    const ageDate = new Date(ageDifMs);
+    age = Math.abs(ageDate.getUTCFullYear() - 1970);
+  }
+
+  // Doctor/Staff and Puskesmas
+  const doctor = p.assigned_staff?.full_name ?? "Dr. Ahmad Faisal";
+  const puskesmas = p.assigned_staff?.position_title ?? "Puskesmas Kuta Alam";
+
+  return {
+    id: String(p.id),
+    name: p.full_name ?? "",
+    age,
+    gender: p.gender === "laki_laki" || p.gender === "Laki-laki" ? "Laki-laki" : "Perempuan",
+    status: p.status === "aktif" || p.status === "Aktif" ? "Aktif" : "Nonaktif",
+    lastActive: p.last_active_at ? new Date(p.last_active_at).toLocaleDateString("id-ID") : "Belum aktif",
+    initials,
+    whatsapp: p.whatsapp_number ?? "",
+    height: p.height_cm ?? 0,
+    weight: p.weight_kg ?? 0,
+    bloodType: p.blood_type ?? "O",
+    registeredAt: p.created_at ? new Date(p.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "",
+    compliance: p.compliance ?? 0,
+    interventionType: p.intervention_type ?? "Mobile App",
+    diabetesType: p.diabetes_type ?? "Diabetes Tipe 2",
+    doctor,
+    puskesmas,
+    address: p.address ?? "",
+    email: p.email ?? "",
+    accountStatus: p.status === "aktif" || p.status === "Aktif" ? "Terverifikasi" : "Belum Terverifikasi",
+    nik: p.nik ?? "",
+    bpjs: p.bpjs ?? "",
+    emergencyName: p.emergency_name ?? "",
+    emergencyRelation: p.emergency_relation ?? "",
+    emergencyPhone: p.emergency_phone ?? "",
+    avatarUrl: p.profile_photo_url || undefined,
+    
+    // Extended Information
+    patientCode: p.patient_code ?? "",
+    diagnosisDate: p.diagnosis_date ?? "",
+    currentMedication: p.current_medication ?? "",
+    allergies: p.allergies ?? "",
+    smokingStatus: p.smoking_status ?? "",
+    physicalActivityLevel: p.physical_activity_level ?? "",
+
+    // Summary Stats
+    latestBloodSugar: p.latest_blood_sugar,
+    averageBloodSugar: p.average_blood_sugar,
+    latestWeight: p.latest_weight,
+    bmi: p.bmi,
+    latestActivityTime: p.latest_activity_time,
+    latestActivityName: p.latest_activity_name,
+  };
+}
 
 export const patientService = {
-  /** Fetch all patients (simulated asynchronous call). */
-  async getPatients(): Promise<Patient[]> {
-    await new Promise((r) => setTimeout(r, 400));
-    return [...MOCK_PATIENTS];
-  },
-
-  /** Fetch a specific patient by ID. */
-  async getPatientById(id: string): Promise<Patient | null> {
-    await new Promise((r) => setTimeout(r, 300));
-    const patient = MOCK_PATIENTS.find((p) => p.id === id);
-    return patient ?? null;
-  },
-
-  /** Fetch statistics summary for the patient metrics. */
-  async getPatientStats(): Promise<PatientStats> {
-    await new Promise((r) => setTimeout(r, 450));
+  /** Fetch patients with backend filtering and pagination */
+  async getPatients(params?: {
+    search?: string;
+    gender?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ patients: Patient[]; total: number }> {
+    const res = await axiosInstance.get("/admin/patients", { params });
+    const items = res.data?.data ?? [];
+    const total = res.data?.meta?.total ?? items.length;
     return {
-      totalPatients: 1284,
-      activePatients: 942,
-      averageAge: 48,
+      patients: items.map(mapBackendPatientToFrontend),
+      total,
     };
+  },
+
+  /** Fetch a specific patient by ID */
+  async getPatientById(id: string): Promise<Patient | null> {
+    try {
+      const res = await axiosInstance.get(`/admin/patients/${id}`);
+      if (res.data?.success && res.data?.data) {
+        return mapBackendPatientToFrontend(res.data.data);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  /** Fetch statistics summary for the patient metrics */
+  async getPatientStats(): Promise<PatientStats> {
+    const res = await axiosInstance.get("/admin/patients/stats");
+    const data = res.data?.data;
+    return {
+      totalPatients: data?.total_patients ?? 0,
+      activePatients: data?.active_patients ?? 0,
+      averageAge: data?.average_age ?? 0,
+    };
+  },
+
+  /** Fetch patient blood sugar history */
+  async getPatientBloodSugar(id: string): Promise<any[]> {
+    const res = await axiosInstance.get(`/admin/patients/${id}/blood-sugar`, { params: { limit: 100 } });
+    return res.data?.data ?? [];
+  },
+
+  /** Fetch patient meal logs (past 30 days) */
+  async getPatientMeals(id: string): Promise<any[]> {
+    const res = await axiosInstance.get(`/admin/patients/${id}/meals`);
+    return res.data?.data ?? [];
+  },
+
+  /** Fetch patient activities timeline */
+  async getPatientActivities(id: string): Promise<any[]> {
+    const res = await axiosInstance.get(`/admin/patients/${id}/activities`);
+    return res.data?.data ?? [];
   },
 } as const;

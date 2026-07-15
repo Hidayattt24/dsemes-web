@@ -11,8 +11,10 @@ export interface LoginCredentials {
 export interface AuthUser {
   readonly id: string;
   readonly name: string;
+  readonly email?: string;
   readonly role: string;
   readonly puskesmas: string;
+  readonly positionTitle?: string;
   readonly avatarUrl?: string;
 }
 

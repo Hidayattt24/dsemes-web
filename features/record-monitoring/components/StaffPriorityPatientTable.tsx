@@ -23,7 +23,6 @@ export function StaffPriorityPatientTable({ patients, loading }: StaffPriorityPa
           <Avatar src={row.avatarUrl} name={row.name} size={36} />
           <div>
             <p className="font-semibold text-sm text-[#1A202C]">{row.name}</p>
-            <p className="text-xs text-[#718096]">ID: P-00{row.id}</p>
           </div>
         </div>
       ),
@@ -72,11 +71,17 @@ export function StaffPriorityPatientTable({ patients, loading }: StaffPriorityPa
       key: "compliance",
       header: "Status Kepatuhan",
       render: (row) => {
-        const compl = parseInt(row.id) % 3 === 0 ? "Tidak Patuh" : parseInt(row.id) % 2 === 0 ? "Kurang Patuh" : "Patuh";
+        const compl = row.compliance;
+        let label = "Patuh";
         let badgeVariant: "primary" | "warning" | "error" = "primary";
-        if (compl === "Kurang Patuh") badgeVariant = "warning";
-        else if (compl === "Tidak Patuh") badgeVariant = "error";
-        return <Badge variant={badgeVariant}>{compl}</Badge>;
+        if (compl < 40) {
+          label = "Tidak Patuh";
+          badgeVariant = "error";
+        } else if (compl < 70) {
+          label = "Kurang Patuh";
+          badgeVariant = "warning";
+        }
+        return <Badge variant={badgeVariant}>{label}</Badge>;
       },
     },
     {

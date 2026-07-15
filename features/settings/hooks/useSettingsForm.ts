@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { settingsService } from "../services/settingsService";
 import type { SystemSettings } from "../types/settings";
+import { useAuthStore } from "@/lib/stores/authStore";
 import { useToast } from "@/components/ui/Toast";
 
 export function useSettingsForm() {
@@ -78,6 +79,18 @@ export function useSettingsForm() {
       const updated = await settingsService.saveSettings(fields);
       setInitialFields(updated);
       setFields(updated);
+
+      // Sync auth store so header/navbar reflect changes immediately
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        useAuthStore.getState().setUser({
+          ...currentUser,
+          name: updated.name,
+          positionTitle: updated.jabatan || undefined,
+          avatarUrl: updated.profilePhoto || undefined,
+        });
+      }
+
       showToast({
         type: "success",
         title: "Berhasil",
@@ -124,16 +137,25 @@ export function useSettingsForm() {
     }
 
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setIsSaving(false);
-    showToast({
-      type: "success",
-      title: "Berhasil",
-      description: "Kata sandi berhasil diperbarui.",
-    });
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmNewPassword("");
+    try {
+      await settingsService.changePassword(currentPassword, newPassword);
+      showToast({
+        type: "success",
+        title: "Berhasil",
+        description: "Kata sandi berhasil diperbarui.",
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: error.response?.data?.message || "Gagal memperbarui kata sandi.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return {

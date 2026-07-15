@@ -10,19 +10,72 @@ interface SugarPoint {
   readonly val: string;
 }
 
-export function PatientBloodSugarChart() {
+interface PatientBloodSugarChartProps {
+  readonly data?: any[];
+}
+
+export function PatientBloodSugarChart({ data = [] }: PatientBloodSugarChartProps) {
   const [selectedRange, setSelectedRange] = useState<"7" | "30" | "90">("7");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const sugarData: readonly SugarPoint[] = [
-    { day: "Sen", label: "Senin", x: 71, y: 220, val: "110 mg/dL" },
-    { day: "Sel", label: "Selasa", x: 214, y: 180, val: "130 mg/dL" },
-    { day: "Rab", label: "Rabu", x: 357, y: 160, val: "140 mg/dL" },
-    { day: "Kam", label: "Kamis", x: 500, y: 200, val: "120 mg/dL" },
-    { day: "Jum", label: "Jumat", x: 643, y: 110, val: "145 mg/dL" },
-    { day: "Sab", label: "Sabtu", x: 785, y: 190, val: "125 mg/dL" },
-    { day: "Min", label: "Minggu", x: 928, y: 90, val: "150 mg/dL" },
-  ];
+  // Map the past 7 days based on the logs
+  const daysIndo = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  const fullDaysIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const xCoords = [71, 214, 357, 500, 643, 785, 928];
+
+  // Filter logs for stats based on the selected range
+  const limitDays = parseInt(selectedRange);
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - limitDays);
+
+  const filteredLogs = data.filter((log: any) => {
+    return new Date(log.measured_at) >= cutoffDate;
+  });
+
+  const hasData = filteredLogs.length > 0;
+
+  // Calculate statistics from filteredLogs
+  const totalCount = filteredLogs.length;
+  const glucoseValues = filteredLogs.map((log: any) => log.glucose_value);
+  const avgBloodSugar = totalCount > 0 ? Math.round(glucoseValues.reduce((a, b) => a + b, 0) / totalCount) : null;
+  const maxBloodSugar = totalCount > 0 ? Math.max(...glucoseValues) : null;
+  const minBloodSugar = totalCount > 0 ? Math.min(...glucoseValues) : null;
+
+  // Generate 7 data points representing the last 7 calendar days
+  const sugarData: SugarPoint[] = Array.from({ length: 7 }).map((_, idx) => {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - (6 - idx));
+    const dayName = daysIndo[targetDate.getDay()];
+    const label = fullDaysIndo[targetDate.getDay()];
+
+    const dateStr = targetDate.toDateString();
+    const dayLogs = data.filter((log: any) => new Date(log.measured_at).toDateString() === dateStr);
+    
+    let value = 120; // default/fallback
+    if (dayLogs.length > 0) {
+      value = Math.round(dayLogs.reduce((sum, log) => sum + log.glucose_value, 0) / dayLogs.length);
+    } else {
+      value = 0;
+    }
+
+    const clamped = Math.max(70, Math.min(220, value));
+    const y = 250 - ((clamped - 70) / 150) * 180;
+
+    return {
+      day: dayName,
+      label,
+      x: xCoords[idx],
+      y,
+      val: `${value} mg/dL`,
+    };
+  });
+
+  // Generate SVG path for the line (only if data exists)
+  const linePath = hasData ? `M ${sugarData.filter(p => p.y !== 250).map(p => `${p.x},${p.y}`).join(" L ")}` : "";
+  // Generate SVG path for the gradient area under the line
+  const areaPath = hasData && sugarData.filter(p => p.y !== 250).length > 0
+    ? `M ${sugarData.filter(p => p.y !== 250)[0].x},300 L ${sugarData.filter(p => p.y !== 250).map(p => `${p.x},${p.y}`).join(" L ")} L ${sugarData.filter(p => p.y !== 250)[sugarData.filter(p => p.y !== 250).length - 1].x},300 Z`
+    : "";
 
   return (
     <div className="premium-card p-8">
@@ -74,113 +127,148 @@ export function PatientBloodSugarChart() {
           <line stroke="#E5E7EB" strokeDasharray="4,4" x1="0" x2="1000" y1="150" y2="150"></line>
           <line stroke="#E5E7EB" strokeDasharray="4,4" x1="0" x2="1000" y1="225" y2="225"></line>
 
-          {/* Gradient Area */}
-          <path
-            d="M 71,220 C 142,200 142,180 214,180 C 285,180 285,160 357,160 C 428,160 428,200 500,200 C 571,200 571,110 643,110 C 714,110 714,190 785,190 C 856,190 856,90 928,90 L 928,300 L 71,300 Z"
-            fill="url(#areaGradient)"
-          />
+          {!hasData ? (
+            /* Modern Empty State Text Overlay inside SVG */
+            <g>
+              <rect x="250" y="90" width="500" height="120" rx="16" fill="#F8F9FA" stroke="#E2E8F0" strokeWidth="1" />
+              <text
+                x="500"
+                y="140"
+                fill="#4A5568"
+                fontSize="14"
+                fontWeight="bold"
+                textAnchor="middle"
+                fontFamily="Poppins, sans-serif"
+              >
+                Belum Ada Catatan Gula Darah
+              </text>
+              <text
+                x="500"
+                y="165"
+                fill="#718096"
+                fontSize="11"
+                textAnchor="middle"
+                fontFamily="Poppins, sans-serif"
+              >
+                Catatan riwayat gula darah pasien akan muncul di sini setelah diinput.
+              </text>
+            </g>
+          ) : (
+            <>
+              {/* Gradient Area */}
+              {areaPath && <path d={areaPath} fill="url(#areaGradient)" />}
 
-          {/* Main Smooth Path Line */}
-          <path
-            d="M 71,220 C 142,200 142,180 214,180 C 285,180 285,160 357,160 C 428,160 428,200 500,200 C 571,200 571,110 643,110 C 714,110 714,190 785,190 C 856,190 856,90 928,90"
-            fill="none"
-            stroke="#00695C"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="3"
-          />
-
-          {/* Render static circles */}
-          {sugarData.map((pt, idx) => (
-            <circle
-              key={pt.day}
-              cx={pt.x}
-              cy={pt.y}
-              fill="#ffffff"
-              r={hoveredIndex === idx ? "4.5" : "5"}
-              stroke={hoveredIndex === idx ? "#0F766E" : "#00695C"}
-              strokeWidth={hoveredIndex === idx ? "1.5" : "2.5"}
-            />
-          ))}
-
-          {/* Hover State: Render dashed line and interactive popover tooltip */}
-          {hoveredIndex !== null && (() => {
-            const active = sugarData[hoveredIndex];
-            const ry = active.y - 45;
-            return (
-              <g>
-                {/* Vertical Hover Guide Line */}
-                <line
-                  x1={active.x}
-                  y1="75"
-                  x2={active.x}
-                  y2="225"
-                  stroke="#0F766E"
-                  strokeWidth="1.5"
-                  strokeDasharray="3,3"
+              {/* Main Smooth Path Line */}
+              {linePath && (
+                <path
+                  d={linePath}
+                  fill="none"
+                  stroke="#00695C"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="3"
                 />
+              )}
 
-                {/* Outer Ring Circle Indicator */}
-                <circle cx={active.x} cy={active.y} r="8" fill="#0F766E" fillOpacity="0.2" />
-                <circle cx={active.x} cy={active.y} r="4.5" fill="#0F766E" stroke="#ffffff" strokeWidth="1.5" />
-
-                {/* Tooltip Capsule floating above the node */}
-                <g>
-                  {/* Capsule Body */}
-                  <rect
-                    x={active.x - 60}
-                    y={ry}
-                    width="120"
-                    height="28"
-                    rx="14"
-                    fill="#1A202C"
-                  />
-                  {/* Capsule Pointer */}
-                  <polygon
-                    points={`${active.x - 5},${ry + 28} ${active.x + 5},${ry + 28} ${active.x},${ry + 33}`}
-                    fill="#1A202C"
-                  />
-                  {/* Tooltip Content */}
-                  <text
-                    x={active.x}
-                    y={ry + 17}
+              {/* Render circles only for days that have data */}
+              {sugarData.map((pt, idx) => {
+                const dayLogsExist = data.some((log: any) => new Date(log.measured_at).toDateString() === pt.day);
+                if (!dayLogsExist) return null;
+                return (
+                  <circle
+                    key={pt.day}
+                    cx={pt.x}
+                    cy={pt.y}
                     fill="#ffffff"
-                    fontSize="10"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    fontFamily="Poppins, sans-serif"
-                  >
-                    {active.label}: {active.val}
-                  </text>
-                </g>
-              </g>
-            );
-          })()}
+                    r={hoveredIndex === idx ? 4.5 : 5}
+                    stroke={hoveredIndex === idx ? "#0F766E" : "#00695C"}
+                    strokeWidth={hoveredIndex === idx ? 1.5 : 2.5}
+                  />
+                );
+              })}
 
-          {/* Invisible larger hover target circles for easier interactivity */}
-          {sugarData.map((pt, idx) => (
-            <circle
-              key={`target-${pt.day}`}
-              cx={pt.x}
-              cy={pt.y}
-              r="20"
-              fill="transparent"
-              className="cursor-pointer"
-              onMouseEnter={() => setHoveredIndex(idx)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            />
-          ))}
+              {/* Hover State: Render dashed line and interactive popover tooltip */}
+              {hoveredIndex !== null && (() => {
+                const active = sugarData[hoveredIndex];
+                const dayLogsExist = data.some((log: any) => new Date(log.measured_at).toDateString() === active.day);
+                if (!dayLogsExist) return null;
+                const ry = active.y - 45;
+                return (
+                  <g>
+                    {/* Vertical Hover Guide Line */}
+                    <line
+                      x1={active.x}
+                      y1="75"
+                      x2={active.x}
+                      y2="225"
+                      stroke="#0F766E"
+                      strokeWidth="1.5"
+                      strokeDasharray="3,3"
+                    />
+
+                    {/* Outer Ring Circle Indicator */}
+                    <circle cx={active.x} cy={active.y} r="8" fill="#0F766E" fillOpacity="0.2" />
+                    <circle cx={active.x} cy={active.y} r="4.5" fill="#0F766E" stroke="#ffffff" strokeWidth="1.5" />
+
+                    {/* Tooltip Capsule floating above the node */}
+                    <g>
+                      {/* Capsule Body */}
+                      <rect
+                        x={active.x - 60}
+                        y={ry}
+                        width="120"
+                        height="28"
+                        rx="14"
+                        fill="#1A202C"
+                      />
+                      {/* Capsule Pointer */}
+                      <polygon
+                        points={`${active.x - 5},${ry + 28} ${active.x + 5},${ry + 28} ${active.x},${ry + 33}`}
+                        fill="#1A202C"
+                      />
+                      {/* Tooltip Content */}
+                      <text
+                        x={active.x}
+                        y={ry + 17}
+                        fill="#ffffff"
+                        fontSize="10"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                        fontFamily="Poppins, sans-serif"
+                      >
+                        {active.label}: {active.val}
+                      </text>
+                    </g>
+                  </g>
+                );
+              })()}
+
+              {/* Invisible larger hover target circles for easier interactivity */}
+              {sugarData.map((pt, idx) => {
+                const dayLogsExist = data.some((log: any) => new Date(log.measured_at).toDateString() === pt.day);
+                if (!dayLogsExist) return null;
+                return (
+                  <circle
+                    key={`target-${pt.day}`}
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="20"
+                    fill="transparent"
+                    className="cursor-pointer"
+                    onMouseEnter={() => setHoveredIndex(idx)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                  />
+                );
+              })}
+            </>
+          )}
         </svg>
 
         {/* Days Legend perfectly aligned with points */}
         <div className="grid grid-cols-7 text-center text-[10px] uppercase font-bold text-[#718096]/70 tracking-widest mt-4 font-[family-name:var(--font-poppins)]">
-          <span>Sen</span>
-          <span>Sel</span>
-          <span>Rab</span>
-          <span>Kam</span>
-          <span>Jum</span>
-          <span>Sab</span>
-          <span>Min</span>
+          {sugarData.map(p => (
+            <span key={p.day}>{p.day}</span>
+          ))}
         </div>
       </div>
 
@@ -191,8 +279,14 @@ export function PatientBloodSugarChart() {
             Rata-rata Gula Darah
           </p>
           <p className="font-semibold text-2xl text-[#1A202C] font-[family-name:var(--font-poppins)]">
-            126{" "}
-            <span className="text-sm font-medium text-[#718096]">mg/dL</span>
+            {avgBloodSugar !== null ? (
+              <>
+                {avgBloodSugar}{" "}
+                <span className="text-sm font-medium text-[#718096]">mg/dL</span>
+              </>
+            ) : (
+              <span className="text-[#A0AEC0]">-</span>
+            )}
           </p>
         </div>
 
@@ -201,8 +295,14 @@ export function PatientBloodSugarChart() {
             Nilai Tertinggi
           </p>
           <p className="font-semibold text-2xl text-[#1A202C] font-[family-name:var(--font-poppins)]">
-            180{" "}
-            <span className="text-sm font-medium text-[#718096]">mg/dL</span>
+            {maxBloodSugar !== null ? (
+              <>
+                {maxBloodSugar}{" "}
+                <span className="text-sm font-medium text-[#718096]">mg/dL</span>
+              </>
+            ) : (
+              <span className="text-[#A0AEC0]">-</span>
+            )}
           </p>
         </div>
 
@@ -211,8 +311,14 @@ export function PatientBloodSugarChart() {
             Nilai Terendah
           </p>
           <p className="font-semibold text-2xl text-[#1A202C] font-[family-name:var(--font-poppins)]">
-            95{" "}
-            <span className="text-sm font-medium text-[#718096]">mg/dL</span>
+            {minBloodSugar !== null ? (
+              <>
+                {minBloodSugar}{" "}
+                <span className="text-sm font-medium text-[#718096]">mg/dL</span>
+              </>
+            ) : (
+              <span className="text-[#A0AEC0]">-</span>
+            )}
           </p>
         </div>
 
@@ -221,7 +327,7 @@ export function PatientBloodSugarChart() {
             Total Pencatatan
           </p>
           <p className="font-semibold text-2xl text-[#1A202C] font-[family-name:var(--font-poppins)]">
-            21{" "}
+            {totalCount}{" "}
             <span className="text-sm font-medium text-[#718096]">Kali</span>
           </p>
         </div>

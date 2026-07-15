@@ -1,3 +1,4 @@
+import { axiosInstance } from "@/lib/axios";
 import type {
   ActivityDataPoint,
   DashboardStats,
@@ -7,36 +8,32 @@ import type {
 
 /**
  * Dashboard API service.
- * Stub data matches the Stitch design wireframe exactly.
  */
 
 export const dashboardService = {
   /** Fetch headline statistics for the 4 metric cards. */
   async getDashboardStats(): Promise<DashboardStats> {
-    await new Promise((r) => setTimeout(r, 600));
+    const res = await axiosInstance.get("/admin/dashboard");
+    const data = res.data?.data;
     return {
-      totalPasien:   1284,
-      pasienAktif:   942,
-      artikelEdukasi: 156,
+      totalPasien:   data?.total_patients ?? 0,
+      pasienAktif:   data?.active_patients ?? 0,
+      artikelEdukasi: data?.total_articles ?? 0,
       puskesmas:     24,
     };
   },
-
   /** Fetch 7-day activity chart data. */
   async getActivityChart(): Promise<ActivityDataPoint[]> {
-    await new Promise((r) => setTimeout(r, 400));
-    return [
-      { day: "Sen", value: 1200, heightPercent: 40 },
-      { day: "Sel", value: 1950, heightPercent: 65 },
-      { day: "Rab", value: 1650, heightPercent: 55 },
-      { day: "Kam", value: 2400, heightPercent: 80 },
-      { day: "Jum", value: 2100, heightPercent: 70 },
-      { day: "Sab", value: 2850, heightPercent: 95 },
-      { day: "Min", value: 2550, heightPercent: 85 },
-    ];
+    const res = await axiosInstance.get("/admin/dashboard/activity-chart");
+    const list = res.data?.data ?? [];
+    return list.map((item: any) => ({
+      day: item.day,
+      value: Number(item.value ?? 0),
+      heightPercent: Number(item.height_percent ?? 10),
+    }));
   },
 
-  /** Fetch 12-month patient growth data. */
+  /** Fetch 12-month patient growth data. (Unused but kept for consistency) */
   async getPatientGrowth(year: number): Promise<PatientGrowthDataPoint[]> {
     await new Promise((r) => setTimeout(r, 400));
     void year;
@@ -58,29 +55,28 @@ export const dashboardService = {
 
   /** Fetch top education articles. */
   async getTopArticles(): Promise<TopArticle[]> {
-    await new Promise((r) => setTimeout(r, 500));
-    return [
-      {
-        id:              "1",
-        title:           "Panduan Nutrisi Penderita Diabetes Tipe 2",
-        category:        "Nutrisi",
-        categoryVariant: "primary",
-        readCount:       2415,
-      },
-      {
-        id:              "2",
-        title:           "Olahraga Rutin Menjaga Gula Darah",
-        category:        "Aktivitas",
-        categoryVariant: "warning",
-        readCount:       1890,
-      },
-      {
-        id:              "3",
-        title:           "Mengenal Alat Pemantauan Mandiri",
-        category:        "Medis",
-        categoryVariant: "error",
-        readCount:       1542,
-      },
-    ];
+    const res = await axiosInstance.get("/admin/dashboard/top-articles");
+    const list = res.data?.data ?? [];
+    return list.map((item: any) => {
+      let categoryVariant: "primary" | "warning" | "error" | "muted" = "primary";
+      const cat = item.category?.toLowerCase() ?? "";
+      if (cat.includes("aktivitas") || cat.includes("olahraga")) {
+        categoryVariant = "warning";
+      } else if (cat.includes("medis") || cat.includes("obat")) {
+        categoryVariant = "error";
+      } else if (cat.includes("nutrisi") || cat.includes("diet")) {
+        categoryVariant = "primary";
+      } else {
+        categoryVariant = "muted";
+      }
+      return {
+        id: item.id,
+        title: item.title,
+        category: item.category ?? "Edukasi",
+        categoryVariant,
+        readCount: Number(item.read_count ?? 0),
+        thumbnailUrl: item.thumbnail_url,
+      };
+    });
   },
 } as const;

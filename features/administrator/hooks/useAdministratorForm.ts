@@ -3,36 +3,33 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { administratorService } from "../services/administratorService";
-import type { Administrator } from "../types/administrator";
 import { useToast } from "@/components/ui/Toast";
 
 interface FormFields {
-  readonly name: string;
+  readonly fullName: string;
   readonly username: string;
   readonly email: string;
-  readonly whatsapp: string;
-  readonly password?: string;
-  readonly confirmPassword?: string;
-  readonly role: "Monitoring Staff";
-  readonly status: "Aktif" | "Nonaktif";
-  readonly permissions: string[];
-  readonly notes?: string;
+  readonly whatsappNumber: string;
+  readonly password: string;
+  readonly confirmPassword: string;
+  readonly role: "admin" | "staff";
+  readonly positionTitle: string;
+  readonly shortBio: string;
 }
 
 export function useAdministratorForm(adminId?: string) {
   const router = useRouter();
   const { showToast } = useToast();
   const [fields, setFields] = useState<FormFields>({
-    name: "",
+    fullName: "",
     username: "",
     email: "",
-    whatsapp: "",
+    whatsappNumber: "",
     password: "",
     confirmPassword: "",
-    role: "Monitoring Staff",
-    status: "Aktif",
-    permissions: ["baca_pasien"],
-    notes: "",
+    role: "staff",
+    positionTitle: "",
+    shortBio: "",
   });
 
   const [isLoading, setIsLoading] = useState(!!adminId);
@@ -45,20 +42,18 @@ export function useAdministratorForm(adminId?: string) {
     const loadAdmin = async () => {
       setIsLoading(true);
       try {
-        const list = await administratorService.getAdministrators();
-        const found = list.find((a) => a.id === adminId);
+        const found = await administratorService.getById(adminId);
         if (found) {
           setFields({
-            name: found.name,
+            fullName: found.fullName,
             username: found.username,
             email: found.email,
-            whatsapp: found.whatsapp,
+            whatsappNumber: found.whatsappNumber,
             password: "",
             confirmPassword: "",
             role: found.role,
-            status: found.status,
-            permissions: ["baca_pasien", "edit_pasien"],
-            notes: found.notes ?? "",
+            positionTitle: found.positionTitle,
+            shortBio: found.shortBio,
           });
         }
       } catch {
@@ -71,25 +66,15 @@ export function useAdministratorForm(adminId?: string) {
     loadAdmin();
   }, [adminId]);
 
-  const handleChange = (key: keyof FormFields, val: any) => {
+  const handleChange = (key: keyof FormFields, val: string) => {
     setFields((prev) => ({ ...prev, [key]: val }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
-
-  const handleTogglePermission = (permission: string) => {
-    setFields((prev) => {
-      const current = prev.permissions;
-      const next = current.includes(permission)
-        ? current.filter((p) => p !== permission)
-        : [...current, permission];
-      return { ...prev, permissions: next };
-    });
   };
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof FormFields, string>> = {};
 
-    if (!fields.name.trim()) newErrors.name = "Nama lengkap wajib diisi.";
+    if (!fields.fullName.trim()) newErrors.fullName = "Nama lengkap wajib diisi.";
     if (!fields.username.trim()) newErrors.username = "Username wajib diisi.";
     if (!fields.email.trim()) {
       newErrors.email = "Email wajib diisi.";
@@ -100,16 +85,16 @@ export function useAdministratorForm(adminId?: string) {
     if (!adminId) {
       if (!fields.password) {
         newErrors.password = "Password wajib diisi.";
-      } else if (fields.password.length < 8) {
-        newErrors.password = "Password minimal 8 karakter.";
+      } else if (fields.password.length < 6) {
+        newErrors.password = "Password minimal 6 karakter.";
       }
 
       if (fields.password !== fields.confirmPassword) {
         newErrors.confirmPassword = "Konfirmasi password tidak cocok.";
       }
     } else {
-      if (fields.password && fields.password.length < 8) {
-        newErrors.password = "Password minimal 8 karakter.";
+      if (fields.password && fields.password.length < 6) {
+        newErrors.password = "Password minimal 6 karakter.";
       }
       if (fields.password && fields.password !== fields.confirmPassword) {
         newErrors.confirmPassword = "Konfirmasi password tidak cocok.";
@@ -125,30 +110,45 @@ export function useAdministratorForm(adminId?: string) {
 
     setIsSaving(true);
     try {
-      const payload: Partial<Administrator> & { id?: string } = {
-        name: fields.name,
-        username: fields.username,
-        email: fields.email,
-        whatsapp: fields.whatsapp,
-        role: fields.role,
-        status: fields.status,
-        notes: fields.notes,
-      };
-
       if (adminId) {
-        payload.id = adminId;
+        await administratorService.update(adminId, {
+          full_name: fields.fullName,
+          username: fields.username,
+          email: fields.email,
+          whatsapp_number: fields.whatsappNumber,
+          position_title: fields.positionTitle || undefined,
+          short_bio: fields.shortBio || undefined,
+        });
+        showToast({
+          type: "success",
+          title: "Berhasil",
+          description: "Staff Monitoring berhasil diperbarui.",
+        });
+      } else {
+        await administratorService.create({
+          full_name: fields.fullName,
+          username: fields.username,
+          email: fields.email,
+          password: fields.password,
+          whatsapp_number: fields.whatsappNumber,
+          role: fields.role,
+          position_title: fields.positionTitle || undefined,
+          short_bio: fields.shortBio || undefined,
+        });
+        showToast({
+          type: "success",
+          title: "Berhasil",
+          description: "Staff Monitoring berhasil ditambahkan.",
+        });
       }
-
-      await administratorService.saveAdministrator(payload);
-      showToast({
-        type: "success",
-        title: "Berhasil",
-        description: adminId ? "Staff Monitoring berhasil diperbarui." : "Staff Monitoring berhasil ditambahkan.",
-      });
       router.push("/admin/administrator");
       router.refresh();
     } catch {
-      // Error handling
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: "Terjadi kesalahan saat menyimpan data.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -160,7 +160,6 @@ export function useAdministratorForm(adminId?: string) {
     isSaving,
     errors,
     handleChange,
-    handleTogglePermission,
     save,
     cancel: () => router.push("/admin/administrator"),
   };

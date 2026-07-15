@@ -1,5 +1,4 @@
 import { DataTable, type TableColumn } from "@/components/common/DataTable";
-import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import type { PriorityPatient } from "../hooks/useStaffDashboard";
 import Link from "next/link";
@@ -9,6 +8,19 @@ interface PriorityPatientTableProps {
   readonly loading: boolean;
 }
 
+function GlucoseBadge({ status, value }: { readonly status: string; readonly value: number | null }) {
+  if (status === "sangat_tinggi") {
+    return <Badge variant="error">Sangat Tinggi</Badge>;
+  }
+  if (status === "tinggi" || (value !== null && value > 140)) {
+    return <Badge variant="warning">Tinggi</Badge>;
+  }
+  if (status === "rendah") {
+    return <Badge variant="error">Rendah</Badge>;
+  }
+  return <Badge variant="muted">Normal</Badge>;
+}
+
 export function PriorityPatientTable({ patients, loading }: PriorityPatientTableProps) {
   const columns: TableColumn<PriorityPatient>[] = [
     {
@@ -16,10 +28,12 @@ export function PriorityPatientTable({ patients, loading }: PriorityPatientTable
       header: "Nama Pasien",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <Avatar src={row.avatarUrl} name={row.name} size={36} />
+          <div className="w-9 h-9 rounded-full bg-[#00695C] flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {row.name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()}
+          </div>
           <div>
             <p className="font-semibold text-sm text-[#1A202C]">{row.name}</p>
-            <p className="text-xs text-[#718096]">ID: P-00{row.id}</p>
+            <p className="text-xs text-[#718096]">Kepatuhan: {row.compliance}%</p>
           </div>
         </div>
       ),
@@ -28,22 +42,22 @@ export function PriorityPatientTable({ patients, loading }: PriorityPatientTable
       key: "bloodSugar",
       header: "Gula Darah Terakhir",
       render: (row) => (
-        <span className="font-bold text-sm text-red-600">{row.bloodSugar} mg/dL</span>
+        <span className="font-bold text-sm" style={{ color: row.bloodSugar !== null && row.bloodSugar > 180 ? "#DC2626" : "#D97706" }}>
+          {row.bloodSugar !== null ? `${row.bloodSugar} mg/dL` : "-"}
+        </span>
       ),
     },
     {
       key: "risk",
       header: "Tingkat Risiko",
-      render: (row) => (
-        <Badge variant={row.bloodSugar > 180 ? "error" : "warning"}>
-          {row.bloodSugar > 180 ? "Sangat Tinggi" : "Tinggi"}
-        </Badge>
-      ),
+      render: (row) => <GlucoseBadge status={row.glucoseStatus} value={row.bloodSugar} />,
     },
     {
-      key: "time",
+      key: "reason",
       header: "Catatan Terakhir",
-      render: (row) => <span className="text-xs text-[#718096] font-medium">{row.time}</span>,
+      render: (row) => (
+        <span className="text-xs text-[#718096] font-medium line-clamp-2 max-w-[200px]">{row.reason}</span>
+      ),
     },
     {
       key: "status",

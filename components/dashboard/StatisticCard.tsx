@@ -36,6 +36,21 @@ export function StatisticCard({ card }: StatisticCardProps) {
       <p className="text-3xl font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
         {typeof card.value === "number" ? card.value.toLocaleString("id-ID") : card.value}
       </p>
+
+      {/* Optional Progress Bar */}
+      {card.progressBar !== undefined && (
+        <div className="w-full mt-4">
+          <div className="w-full bg-[#E2E8F0] rounded-full h-2 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(Math.max(card.progressBar, 0), 100)}%`,
+                backgroundColor: isPrimary ? "#00695C" : "#F59E0B",
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

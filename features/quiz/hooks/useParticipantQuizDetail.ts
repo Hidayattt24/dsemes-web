@@ -1,4 +1,7 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { quizService } from "../services/quizService";
 import type { ParticipantQuizDetail } from "../types/quiz";
 
@@ -13,6 +16,9 @@ export function useParticipantQuizDetail(
   quizId: string,
   participantId: string
 ): UseParticipantQuizDetailReturn {
+  const pathname = usePathname();
+  const rolePrefix: 'admin' | 'staff' = pathname.startsWith("/admin") ? "admin" : "staff";
+
   const [detail, setDetail] = useState<ParticipantQuizDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +27,7 @@ export function useParticipantQuizDetail(
     setIsLoading(true);
     setError(null);
     try {
-      const data = await quizService.getParticipantDetail(quizId, participantId);
+      const data = await quizService.getParticipantDetail(quizId, participantId, rolePrefix);
       if (data) {
         setDetail(data);
       } else {
@@ -32,7 +38,7 @@ export function useParticipantQuizDetail(
     } finally {
       setIsLoading(false);
     }
-  }, [quizId, participantId]);
+  }, [quizId, participantId, rolePrefix]);
 
   useEffect(() => {
     if (quizId && participantId) {

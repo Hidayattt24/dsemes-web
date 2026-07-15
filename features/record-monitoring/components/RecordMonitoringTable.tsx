@@ -3,17 +3,107 @@
 import { DataTable, type TableColumn } from "@/components/common/DataTable";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import type { PatientRecord } from "../types/record";
+import type { PatientRecord, PaginationMeta } from "../types/record";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface RecordMonitoringTableProps {
   readonly patients: PatientRecord[];
   readonly loading: boolean;
+  readonly sortBy?: string;
+  readonly sortOrder?: string;
+  readonly pagination?: PaginationMeta;
+  readonly onSort?: (key: string) => void;
+  readonly onPageChange?: (page: number) => void;
 }
 
-export function RecordMonitoringTable({ patients, loading }: RecordMonitoringTableProps) {
+function SortToolbar({ sortBy, sortOrder, onSort }: {
+  sortBy?: string;
+  sortOrder?: string;
+  onSort?: (key: string) => void;
+}) {
+  const sorts = [
+    { key: "name", label: "Nama" },
+    { key: "newest", label: "Terbaru" },
+    { key: "oldest", label: "Terlama" },
+    { key: "latest_record", label: "Aktivitas Terakhir" },
+    { key: "highest_blood_sugar", label: "Gula Darah" },
+  ];
+
+  return (
+    <div className="flex items-center gap-2 px-8 py-3 border-b border-[#E2E8F0] bg-[#FAFBFC]">
+      <span className="text-xs font-bold text-[#718096] uppercase tracking-wider mr-2">Urutkan:</span>
+      {sorts.map((s) => {
+        const isActive = sortBy === s.key;
+        return (
+          <button
+            key={s.key}
+            onClick={() => onSort?.(s.key)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              isActive
+                ? "bg-[#00695C] text-white shadow-sm"
+                : "bg-white text-[#4A5568] border border-[#E2E8F0] hover:bg-[#F4F6F8]"
+            }`}
+          >
+            {s.label}
+            {isActive && (
+              <span className="material-symbols-outlined text-[12px] ml-1 align-text-bottom">
+                {sortOrder === "asc" ? "arrow_upward" : "arrow_downward"}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function PaginationBar({ pagination, onPageChange }: {
+  pagination: PaginationMeta;
+  onPageChange: (page: number) => void;
+}) {
+  const { page, total_pages, total } = pagination;
+  if (total_pages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between px-8 py-4 border-t border-[#E2E8F0] bg-white">
+      <span className="text-sm text-[#718096]">
+        Total {total} pasien
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-sm disabled:opacity-40 hover:bg-[#F4F6F8] transition-colors cursor-pointer disabled:cursor-not-allowed"
+        >
+          Sebelumnya
+        </button>
+        <span className="text-sm font-semibold text-[#1A202C] px-3">
+          {page} / {total_pages}
+        </span>
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= total_pages}
+          className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-sm disabled:opacity-40 hover:bg-[#F4F6F8] transition-colors cursor-pointer disabled:cursor-not-allowed"
+        >
+          Selanjutnya
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function RecordMonitoringTable({
+  patients,
+  loading,
+  sortBy,
+  sortOrder,
+  pagination,
+  onSort,
+  onPageChange,
+}: RecordMonitoringTableProps) {
   const pathname = usePathname();
+
   const columns: TableColumn<PatientRecord>[] = [
     {
       key: "patient",
@@ -23,7 +113,6 @@ export function RecordMonitoringTable({ patients, loading }: RecordMonitoringTab
           <Avatar src={row.avatarUrl} name={row.name} size={40} />
           <div>
             <p className="font-semibold text-sm text-[#1A202C]">{row.name}</p>
-            <p className="text-xs text-[#718096]">ID: P-00{row.id}</p>
           </div>
         </div>
       ),
@@ -100,13 +189,21 @@ export function RecordMonitoringTable({ patients, loading }: RecordMonitoringTab
   ];
 
   return (
-    <DataTable<PatientRecord>
-      columns={columns}
-      data={patients}
-      keyExtract={(row) => row.id}
-      loading={loading}
-      emptyTitle="Tidak ada catatan"
-      emptyMessage="Belum ada data catatan monitoring yang cocok."
-    />
+    <div>
+      {onSort && (
+        <SortToolbar sortBy={sortBy} sortOrder={sortOrder} onSort={onSort} />
+      )}
+      <DataTable<PatientRecord>
+        columns={columns}
+        data={patients}
+        keyExtract={(row) => row.id}
+        loading={loading}
+        emptyTitle="Tidak ada catatan"
+        emptyMessage="Belum ada data catatan monitoring yang cocok."
+      />
+      {pagination && onPageChange && (
+        <PaginationBar pagination={pagination} onPageChange={onPageChange} />
+      )}
+    </div>
   );
 }

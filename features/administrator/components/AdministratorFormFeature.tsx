@@ -1,9 +1,9 @@
 "use client";
 
 import { useAdministratorForm } from "../hooks/useAdministratorForm";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useState, useEffect } from "react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { BackButton } from "@/components/common/BackButton";
 
 import { FormLoader } from "@/components/ui/loading";
 
@@ -18,7 +18,6 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
     isSaving,
     errors,
     handleChange: baseHandleChange,
-    handleTogglePermission: baseHandleTogglePermission,
     save,
     cancel,
   } = useAdministratorForm(adminId);
@@ -32,11 +31,6 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
 
   const handleChange = (key: any, val: any) => {
     baseHandleChange(key, val);
-    setIsDirty(true);
-  };
-
-  const handleTogglePermission = (permission: string) => {
-    baseHandleTogglePermission(permission);
     setIsDirty(true);
   };
 
@@ -65,6 +59,11 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
 
   return (
     <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)] relative">
+      {/* Back button */}
+      <div className="mb-4">
+        <BackButton href="/admin/administrator" label="Manajemen Administrator" />
+      </div>
+
       {/* Action Toolbar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-10">
         <div>
@@ -108,16 +107,16 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
               </label>
               <input
                 type="text"
-                value={fields.name}
-                onChange={(e) => handleChange("name", e.target.value)}
+                value={fields.fullName}
+                onChange={(e) => handleChange("fullName", e.target.value)}
                 placeholder="Masukkan nama lengkap"
                 className={[
                   "w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]",
-                  errors.name ? "border-red-500" : "",
+                  errors.fullName ? "border-red-500" : "",
                 ].join(" ")}
               />
-              {errors.name && (
-                <p className="text-red-500 text-xs font-semibold">{errors.name}</p>
+              {errors.fullName && (
+                <p className="text-red-500 text-xs font-semibold">{errors.fullName}</p>
               )}
             </div>
 
@@ -168,8 +167,8 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
               </label>
               <input
                 type="tel"
-                value={fields.whatsapp}
-                onChange={(e) => handleChange("whatsapp", e.target.value)}
+                value={fields.whatsappNumber}
+                onChange={(e) => handleChange("whatsappNumber", e.target.value)}
                 placeholder="Contoh: 081234567890"
                 className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]"
               />
@@ -194,7 +193,7 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
                   type={showPassword ? "text" : "password"}
                   value={fields.password}
                   onChange={(e) => handleChange("password", e.target.value)}
-                  placeholder="Minimal 8 karakter"
+                  placeholder="Minimal 6 karakter"
                   className={[
                     "w-full pl-5 pr-12 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]",
                     errors.password ? "border-red-500" : "",
@@ -251,98 +250,80 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
         {/* Card 3: Status & Peran */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] p-8 shadow-sm space-y-6">
           <div className="border-b border-[#E2E8F0]/60 pb-3">
-            <h3 className="text-base font-bold text-[#1E293B]">Status & Peran</h3>
+            <h3 className="text-base font-bold text-[#1E293B]">Status & Informasi Tambahan</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Peran Sistem */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Peran Sistem
+                Peran Sistem <span className="text-red-500">*</span>
               </label>
+              {adminId ? (
               <input
                 type="text"
-                value={fields.role}
+                value="Staff"
                 readOnly
                 disabled
                 className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] outline-none text-sm font-semibold text-[#64748B] bg-[#F8FAFC] cursor-not-allowed"
               />
-            </div>
-
-            {/* Status Akun */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Status Akun
-              </label>
-              <div className="flex gap-6 pt-3">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="Aktif"
-                    checked={fields.status === "Aktif"}
-                    onChange={() => handleChange("status", "Aktif")}
-                    className="text-[#00695C] border-[#E2E8F0] focus:ring-[#00695C] w-5 h-5 cursor-pointer accent-[#00695C]"
-                  />
-                  <span className="text-sm font-semibold text-[#1A202C] group-hover:text-[#00695C] transition-colors">
-                    Aktif
-                  </span>
-                </label>
-
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="Nonaktif"
-                    checked={fields.status === "Nonaktif"}
-                    onChange={() => handleChange("status", "Nonaktif")}
-                    className="text-[#00695C] border-[#E2E8F0] focus:ring-[#00695C] w-5 h-5 cursor-pointer accent-[#00695C]"
-                  />
-                  <span className="text-sm font-semibold text-[#718096] group-hover:text-[#00695C] transition-colors">
-                    Nonaktif
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {/* Hak Akses / Permissions */}
-            <div className="space-y-3 md:col-span-2 pt-2">
-              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Hak Akses Khusus (Opsional)
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[
-                  { id: "baca_pasien", label: "Baca Data Pasien" },
-                  { id: "edit_pasien", label: "Edit/Ubah Data Pasien" },
-                  { id: "manajemen_edukasi", label: "Manajemen Edukasi" },
-                  { id: "manajemen_kuesioner", label: "Manajemen Kuesioner" },
-                ].map((perm) => (
-                  <label key={perm.id} className="flex items-center gap-3 cursor-pointer group">
+              ) : (
+                <div className="flex gap-6 pt-3">
+                  <label className="flex items-center gap-3 cursor-pointer group">
                     <input
-                      type="checkbox"
-                      checked={fields.permissions.includes(perm.id)}
-                      onChange={() => handleTogglePermission(perm.id)}
-                      className="rounded border-[#E2E8F0] text-[#00695C] focus:ring-[#00695C] cursor-pointer accent-[#00695C] w-4.5 h-4.5"
+                      type="radio"
+                      name="role"
+                      value="admin"
+                      checked={fields.role === "admin"}
+                      onChange={() => handleChange("role", "admin")}
+                      className="text-[#00695C] border-[#E2E8F0] focus:ring-[#00695C] w-5 h-5 cursor-pointer accent-[#00695C]"
                     />
-                    <span className="text-xs font-semibold text-[#4A5568] group-hover:text-[#00695C] transition-colors">
-                      {perm.label}
+                    <span className="text-sm font-semibold text-[#1A202C] group-hover:text-[#00695C] transition-colors">
+                      Admin
                     </span>
                   </label>
-                ))}
-              </div>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="staff"
+                      checked={fields.role === "staff"}
+                      onChange={() => handleChange("role", "staff")}
+                      className="text-[#00695C] border-[#E2E8F0] focus:ring-[#00695C] w-5 h-5 cursor-pointer accent-[#00695C]"
+                    />
+                    <span className="text-sm font-semibold text-[#718096] group-hover:text-[#00695C] transition-colors">
+                      Staff
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
 
-            {/* Catatan Tambahan (Opsional) */}
-            <div className="space-y-2 md:col-span-2 pt-2">
+            {/* Jabatan / Posisi */}
+            <div className="space-y-2">
               <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Catatan Tambahan (Opsional)
+                Jabatan / Posisi
               </label>
-              <textarea
-                value={fields.notes || ""}
-                onChange={(e) => handleChange("notes", e.target.value)}
-                placeholder="Masukkan catatan tambahan jika diperlukan..."
-                rows={3}
-                className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B] resize-none"
+              <input
+                type="text"
+                value={fields.positionTitle}
+                onChange={(e) => handleChange("positionTitle", e.target.value)}
+                placeholder="Contoh: Kepala Puskesmas"
+                className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]"
+              />
+            </div>
+
+            {/* Bio Singkat */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                Bio Singkat
+              </label>
+              <input
+                type="text"
+                value={fields.shortBio}
+                onChange={(e) => handleChange("shortBio", e.target.value)}
+                placeholder="Deskripsi singkat"
+                className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]"
               />
             </div>
           </div>
@@ -384,7 +365,7 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
         cancelText="Lanjut Mengedit"
         onConfirm={() => {
           setIsCancelOpen(false);
-          setIsDirty(false); // bypass beforeunload
+          setIsDirty(false);
           cancel();
         }}
         onCancel={() => setIsCancelOpen(false)}

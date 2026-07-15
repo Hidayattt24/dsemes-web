@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { patientService } from "@/services/patientService";
 import type { Patient, PatientStats } from "@/types/patient";
 
@@ -37,15 +37,27 @@ export function usePatients(): UsePatientsReturn {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
+  const [totalCount, setTotalCount] = useState(0);
+
   const fetchData = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
-      const [patientList, statsSummary] = await Promise.all([
-        patientService.getPatients(),
+      const genderParam = genderFilter === "Laki-laki" ? "laki_laki" : genderFilter === "Perempuan" ? "perempuan" : genderFilter;
+      const statusParam = statusFilter === "Aktif" ? "aktif" : statusFilter === "Nonaktif" ? "nonaktif" : statusFilter;
+
+      const [patientListRes, statsSummary] = await Promise.all([
+        patientService.getPatients({
+          search: searchQuery,
+          status: statusParam,
+          gender: genderParam,
+          page: currentPage,
+          limit: itemsPerPage,
+        }),
         patientService.getPatientStats(),
       ]);
-      setPatients(patientList);
+      setPatients(patientListRes.patients);
+      setTotalCount(patientListRes.total);
       setStats(statsSummary);
     } catch {
       setError("Gagal memuat data pasien.");
@@ -54,27 +66,10 @@ export function usePatients(): UsePatientsReturn {
     }
   };
 
+  // Re-fetch when parameters change
   useEffect(() => {
     void fetchData();
-  }, []);
-
-  // Filter patients locally
-  const filteredPatients = useMemo(() => {
-    return patients.filter((patient) => {
-      const matchesSearch =
-        patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        patient.puskesmas.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        patient.doctor.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === "Semua" || patient.status === statusFilter;
-
-      const matchesGender =
-        genderFilter === "Semua" || patient.gender === genderFilter;
-
-      return matchesSearch && matchesStatus && matchesGender;
-    });
-  }, [patients, searchQuery, statusFilter, genderFilter]);
+  }, [searchQuery, statusFilter, genderFilter, currentPage]);
 
   // Handle page resets when filters change
   useEffect(() => {
@@ -82,18 +77,12 @@ export function usePatients(): UsePatientsReturn {
   }, [searchQuery, statusFilter, genderFilter]);
 
   // Pagination calculation
-  const totalCount = filteredPatients.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
   const startItem = totalCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalCount);
 
-  const paginatedPatients = useMemo(() => {
-    const startIdx = (currentPage - 1) * itemsPerPage;
-    return filteredPatients.slice(startIdx, startIdx + itemsPerPage);
-  }, [filteredPatients, currentPage, itemsPerPage]);
-
   return {
-    patients: paginatedPatients,
+    patients,
     stats,
     isLoading,
     error,

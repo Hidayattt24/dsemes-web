@@ -21,27 +21,37 @@ export function RecordMonitoringFeature() {
     stats,
     isLoading,
     searchQuery,
-    dateFilter,
     complianceFilter,
     riskFilter,
+    genderFilter,
+    bloodSugarStatusFilter,
+    sortBy,
+    sortOrder,
+    pagination,
     setSearchQuery,
-    setDateFilter,
     setComplianceFilter,
     setRiskFilter,
+    setGenderFilter,
+    setBloodSugarStatusFilter,
+    setSortBy,
+    setSortOrder,
+    setPage,
   } = useRecordMonitoring();
 
-  // Filter lists for specialized tabs
   const priorityPatients = patients.filter(
     (p) => p.dailySummary.status === "Tinggi" || p.dailySummary.status === "Waspada"
   );
 
   const trendPatients = patients.filter(
-    (p) => parseInt(p.id) % 2 !== 0 // odd IDs represent increasing trend for demonstration
+    (p) => {
+      const bs = p.dailySummary.avgBloodSugar;
+      const latest = parseInt(p.dailySummary.bloodSugar) || 0;
+      return bs ? latest > bs * 1.1 : false;
+    }
   );
 
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)]">
-      {/* Title Header */}
       <div>
         <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight">
           Monitoring Record Pasien
@@ -51,28 +61,27 @@ export function RecordMonitoringFeature() {
         </p>
       </div>
 
-      {/* Stats Bento Grid */}
       <RecordMonitoringStats stats={stats} />
 
-      {/* Filter panel */}
       <RecordMonitoringFilters
         searchQuery={searchQuery}
-        dateFilter={dateFilter}
         complianceFilter={complianceFilter}
         riskFilter={riskFilter}
+        genderFilter={genderFilter}
+        bloodSugarStatusFilter={bloodSugarStatusFilter}
         onSearchChange={setSearchQuery}
-        onDateChange={setDateFilter}
         onComplianceChange={setComplianceFilter}
         onRiskChange={setRiskFilter}
+        onGenderChange={setGenderFilter}
+        onBloodSugarStatusChange={setBloodSugarStatusFilter}
       />
 
-      {/* Tab Selector (only visible in Staff layout) */}
       {isStaff && (
         <MonitoringTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
           tabs={[
-            { id: "semua", label: "Semua Pasien", icon: "group", badgeCount: patients.length },
+            { id: "semua", label: "Semua Pasien", icon: "group", badgeCount: pagination.total },
             {
               id: "prioritas",
               label: "Pasien Prioritas Hari Ini",
@@ -89,12 +98,19 @@ export function RecordMonitoringFeature() {
         />
       )}
 
-      {/* Main Table Card */}
       <div className="premium-card overflow-hidden">
         {isStaff ? (
           <>
             {activeTab === "semua" && (
-              <RecordMonitoringTable patients={patients} loading={isLoading} />
+              <RecordMonitoringTable
+                patients={patients}
+                loading={isLoading}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                pagination={pagination}
+                onSort={setSortBy}
+                onPageChange={setPage}
+              />
             )}
             {activeTab === "prioritas" && (
               <StaffPriorityPatientTable patients={priorityPatients} loading={isLoading} />

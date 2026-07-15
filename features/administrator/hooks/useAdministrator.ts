@@ -1,72 +1,83 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { administratorService } from "../services/administratorService";
 import type { Administrator } from "../types/administrator";
 
 export function useAdministrator() {
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
-  // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("Semua");
-  const [statusFilter, setStatusFilter] = useState("Semua");
+  const [statusFilter, setStatusFilter] = useState("");
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await administratorService.getAdministrators();
-      setAdministrators(data);
+      const result = await administratorService.list({
+        search: searchQuery || undefined,
+        status: statusFilter ? statusFilter.toLowerCase() : undefined,
+        role: "staff",
+        page,
+        limit,
+      });
+      const staffItems = result.items.filter((item) => item.role === "staff");
+      setAdministrators(staffItems);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
     } catch {
       // Error handling
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchQuery, statusFilter, page, limit]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter]);
 
   const deleteAdmin = async (id: string) => {
     try {
-      await administratorService.deleteAdministrator(id);
+      await administratorService.remove(id);
       await loadData();
     } catch {
       // Error handling
     }
   };
 
-  // Filtered List
-  const filteredAdministrators = administrators.filter((admin) => {
-    const matchSearch =
-      admin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      admin.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      admin.email.toLowerCase().includes(searchQuery.toLowerCase());
+  const toggleStatus = async (id: string) => {
+    try {
+      await administratorService.toggleStatus(id);
+      await loadData();
+    } catch {
+      // Error handling
+    }
+  };
 
-    const matchRole = roleFilter === "Semua" || admin.role === roleFilter;
-    const matchStatus = statusFilter === "Semua" || admin.status === statusFilter;
-
-    return matchSearch && matchRole && matchStatus;
-  });
-
-  // Stats
-  const totalCount = administrators.length;
   const activeCount = administrators.filter((a) => a.status === "Aktif").length;
 
   return {
-    administrators: filteredAdministrators,
-    totalCount,
+    administrators,
+    totalCount: total,
     activeCount,
     isLoading,
+    page,
+    setPage,
+    totalPages,
     searchQuery,
     setSearchQuery,
-    roleFilter,
-    setRoleFilter,
     statusFilter,
     setStatusFilter,
     deleteAdmin,
+    toggleStatus,
     refetch: loadData,
   };
 }

@@ -31,6 +31,22 @@ export interface Patient {
 
   // Avatar Image URL
   readonly avatarUrl?: string;
+
+  // Extended Information
+  readonly patientCode?: string;
+  readonly diagnosisDate?: string;
+  readonly currentMedication?: string;
+  readonly allergies?: string;
+  readonly smokingStatus?: string;
+  readonly physicalActivityLevel?: string;
+
+  // Patient Summary Stats
+  readonly latestBloodSugar?: number;
+  readonly averageBloodSugar?: number;
+  readonly latestWeight?: number;
+  readonly bmi?: number;
+  readonly latestActivityTime?: string;
+  readonly latestActivityName?: string;
 }
 
 export interface PatientStats {
