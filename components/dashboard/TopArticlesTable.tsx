@@ -31,7 +31,7 @@ const columns: TableColumn<TopArticle>[] = [
   {
     key:    "category",
     header: "Kategori",
-    render: (row) => <Badge variant={row.categoryVariant}>{row.category}</Badge>,
+    render: (row) => <Badge variant="primary">{row.category}</Badge>,
   },
   {
     key:    "readCount",
