@@ -82,7 +82,7 @@ function mapQuizFromApi(api: ApiQuizDetailResponse): Quiz {
     linkedArticleTitle: api.linked_article_title,
     difficulty: api.difficulty as Quiz["difficulty"],
     passingScore: api.passing_score,
-    status: (api.status === "terbit" ? "Terbit" : "Draft") as Quiz["status"],
+    status: api.status as Quiz["status"],
     questions: (api.questions ?? []).map((q) => ({
       id: q.id,
       questionText: q.question_text,
@@ -111,7 +111,7 @@ function mapQuizListItemFromApi(api: ApiQuizResponse): Quiz {
     linkedArticleTitle: api.linked_article_title,
     difficulty: api.difficulty as Quiz["difficulty"],
     passingScore: api.passing_score,
-    status: (api.status === "terbit" ? "Terbit" : "Draft") as Quiz["status"],
+    status: api.status as Quiz["status"],
     // For list view, questions array length comes from question_count
     questions: Array.from({ length: api.question_count ?? 0 }, (_, i) => ({
       id: `placeholder_${i}`,
