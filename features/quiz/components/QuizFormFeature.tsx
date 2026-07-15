@@ -2,7 +2,7 @@
 
 import { useQuizForm } from "../hooks/useQuizForm";
 import { QuizQuestionCard } from "./QuizQuestionCard";
-import Link from "next/link";
+import { BackButton } from "@/components/common/BackButton";
 import { ROUTES } from "@/constants/routes";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
@@ -57,13 +57,9 @@ export function QuizFormFeature({ quizId }: QuizFormFeatureProps) {
       {/* Page Header & Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-[#E2E8F0] pb-4">
         <div>
-          <Link
-            href={ROUTES.MANAJEMEN_KUISIONER}
-            className="flex items-center gap-2 text-[#00695C] hover:underline text-xs font-semibold mb-2"
-          >
-            <span className="material-symbols-outlined text-sm select-none">arrow_back</span>
-            <span>Kembali ke Manajemen Kuesioner</span>
-          </Link>
+          <div className="mb-2">
+            <BackButton href={ROUTES.MANAJEMEN_KUISIONER} label="Manajemen Kuesioner" />
+          </div>
           <h2 className="text-2xl font-bold text-[#1A202C]">
             {quizId ? "Edit Kuesioner" : "Tambah Kuesioner Baru"}
           </h2>

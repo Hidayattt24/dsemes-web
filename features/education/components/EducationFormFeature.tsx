@@ -4,7 +4,7 @@ import { useEducationForm } from "../hooks/useEducationForm";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useState, useRef, useEffect } from "react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { useRouter } from "next/navigation";
+import { BackButton } from "@/components/common/BackButton";
 import { ROUTES } from "@/constants/routes";
 import { useToast } from "@/components/ui/Toast";
 import { createPortal } from "react-dom";
@@ -14,7 +14,6 @@ interface EducationFormFeatureProps {
 }
 
 export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
-  const router = useRouter();
   const { showToast } = useToast();
   const {
     fields,
@@ -65,14 +64,6 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
   const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
   const [newCategoryInput, setNewCategoryInput] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleBack = () => {
-    if (typeof document !== "undefined" && document.referrer && document.referrer.includes(window.location.host)) {
-      router.back();
-    } else {
-      router.push(ROUTES.MANAJEMEN_EDUKASI);
-    }
-  };
 
   // YouTube modal states
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
@@ -630,14 +621,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
 
       {/* Back button above title */}
       <div className="mb-4">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="flex items-center gap-2 text-[#718096] hover:text-[#00695C] transition-all font-semibold text-sm cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[20px] select-none">arrow_back</span>
-          <span>Kembali ke Daftar Manajemen</span>
-        </button>
+        <BackButton href={ROUTES.MANAJEMEN_EDUKASI} label="Manajemen Edukasi" />
       </div>
 
       {/* Action Toolbar */}

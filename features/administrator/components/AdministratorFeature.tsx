@@ -12,10 +12,18 @@ import { useToast } from "@/components/ui/Toast";
 import { Select } from "@/components/ui/Select";
 
 const statusOptions = [
-  { value: "Semua", label: "Semua Status" },
+  { value: "", label: "Semua Status" },
   { value: "Aktif", label: "Aktif" },
   { value: "Nonaktif", label: "Nonaktif" },
 ] as const;
+
+const PAGE_SIZE = 10;
+
+function formatRole(role: string): string {
+  if (role === "admin") return "Admin";
+  if (role === "staff") return "Staff";
+  return role;
+}
 
 export function AdministratorFeature() {
   const {
@@ -23,6 +31,9 @@ export function AdministratorFeature() {
     totalCount,
     activeCount,
     isLoading,
+    page,
+    setPage,
+    totalPages,
     searchQuery,
     setSearchQuery,
     statusFilter,
@@ -59,13 +70,13 @@ export function AdministratorFeature() {
   // Define Table Columns
   const columns: TableColumn<Administrator>[] = [
     {
-      key: "name",
+      key: "fullName",
       header: "Nama Lengkap",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <Avatar name={row.name} size={36} />
+          <Avatar name={row.fullName} size={36} />
           <span className="text-sm font-semibold text-[#1A202C] font-[family-name:var(--font-poppins)]">
-            {row.name}
+            {row.fullName}
           </span>
         </div>
       ),
@@ -89,11 +100,11 @@ export function AdministratorFeature() {
       ),
     },
     {
-      key: "whatsapp",
+      key: "whatsappNumber",
       header: "Nomor WhatsApp",
       render: (row) => (
         <span className="text-sm text-[#1A202C] font-medium font-[family-name:var(--font-poppins)]">
-          {row.whatsapp || "-"}
+          {row.whatsappNumber || "-"}
         </span>
       ),
     },
@@ -112,7 +123,7 @@ export function AdministratorFeature() {
       header: "Peran",
       render: (row) => (
         <span className="px-3 py-1 bg-[#EBF8FF] text-[#2B6CB0] rounded-full text-[10px] font-bold uppercase tracking-wider font-[family-name:var(--font-poppins)]">
-          {row.role}
+          {formatRole(row.role)}
         </span>
       ),
       className: "w-44",
@@ -252,6 +263,39 @@ export function AdministratorFeature() {
           emptyMessage="Belum ada administrator yang sesuai dengan kriteria."
         />
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-lg border border-[#E2E8F0] text-sm font-medium text-[#1A202C] hover:bg-[#F4F6F8] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Sebelumnya
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`w-10 h-10 rounded-lg text-sm font-semibold cursor-pointer ${
+                p === page
+                  ? "bg-[#00695C] text-white"
+                  : "border border-[#E2E8F0] text-[#1A202C] hover:bg-[#F4F6F8]"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page >= totalPages}
+            className="px-4 py-2 rounded-lg border border-[#E2E8F0] text-sm font-medium text-[#1A202C] hover:bg-[#F4F6F8] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Selanjutnya
+          </button>
+        </div>
+      )}
 
       <ConfirmationModal
         open={deleteId !== null}

@@ -8,7 +8,7 @@ import { ActivityHistoryCard } from "./ActivityHistoryCard";
 import { MedicationComplianceCard } from "./MedicationComplianceCard";
 import { ErrorState } from "@/components/common/ErrorState";
 import { DetailPageLoader } from "@/components/ui/loading";
-import Link from "next/link";
+import { BackButton } from "@/components/common/BackButton";
 
 interface RecordDetailFeatureProps {
   readonly patientId: string;
@@ -39,12 +39,8 @@ export function RecordDetailFeature({ patientId }: RecordDetailFeatureProps) {
       {/* Breadcrumbs & Title Toolbar */}
       <header className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#718096] mb-2">
-            <Link href="/admin/pemantauan-catatan-pasien" className="hover:text-[#00695C] transition-colors">
-              Data Pasien
-            </Link>
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
-            <span className="text-[#00695C] font-bold">{patient.name}</span>
+          <div className="mb-2">
+            <BackButton href="/admin/pemantauan-catatan-pasien" label="Data Pasien" />
           </div>
 
           <div className="flex flex-wrap items-center gap-3">

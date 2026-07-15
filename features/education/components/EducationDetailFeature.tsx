@@ -5,6 +5,7 @@ import { useEducationDetail } from "../hooks/useEducationDetail";
 import { educationService } from "../services/educationService";
 import type { EducationArticle } from "../types/education";
 import { ErrorState } from "@/components/common/ErrorState";
+import { BackButton } from "@/components/common/BackButton";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
@@ -65,13 +66,9 @@ export function EducationDetailFeature({ articleId }: EducationDetailFeatureProp
     <section className="max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)] p-6 space-y-8">
       {/* Breadcrumbs & Actions Row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <nav className="flex items-center gap-2 text-[13px] text-[#718096]">
-          <Link href={ROUTES.MANAJEMEN_EDUKASI} className="hover:text-[#00695C] transition-colors">
-            Manajemen Edukasi
-          </Link>
-          <span className="material-symbols-outlined text-[16px] select-none">chevron_right</span>
-          <span className="text-[#00695C] font-medium">Detail Artikel</span>
-        </nav>
+        <div>
+          <BackButton href={ROUTES.MANAJEMEN_EDUKASI} label="Manajemen Edukasi" />
+        </div>
         <div className="flex items-center gap-3">
           {/* Edit */}
           <button
