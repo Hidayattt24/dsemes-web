@@ -1,11 +1,13 @@
 export interface DailySummary {
-  readonly bloodSugar: string; // e.g. "145 mg/dL"
-  readonly bloodSugarTime: string; // e.g. "2 jam lalu"
-  readonly meal: string; // e.g. "1.250 kcal"
-  readonly mealType: string; // e.g. "Makan Siang"
-  readonly activity: string; // e.g. "30 Menit"
-  readonly activityType: string; // e.g. "Jalan Kaki"
+  readonly bloodSugar: string;
+  readonly bloodSugarTime: string;
+  readonly meal: string;
+  readonly mealType: string;
+  readonly activity: string;
+  readonly activityType: string;
   readonly status: "Stabil" | "Waspada" | "Tinggi" | "Normal";
+  readonly bloodSugarStatus?: string;
+  readonly avgBloodSugar?: number;
 }
 
 export interface PatientRecord {
@@ -13,6 +15,7 @@ export interface PatientRecord {
   readonly name: string;
   readonly age: number;
   readonly gender: "Laki-laki" | "Perempuan";
+  readonly dateOfBirth: string;
   readonly address: string;
   readonly initials: string;
   readonly puskesmas: string;
@@ -22,13 +25,54 @@ export interface PatientRecord {
   readonly diagnosisDate: string;
   readonly emergencyContact: string;
   readonly dailyCalorieTarget?: number;
+  readonly compliance: number;
+  readonly lastActiveAt?: string;
+
+  readonly whatsapp: string;
+  readonly height: number;
+  readonly weight: number;
+  readonly bloodType: string;
+  readonly registeredAt: string;
+  readonly interventionType: string;
+  readonly diabetesType: string;
+  readonly doctor: string;
+  readonly email: string;
+  readonly accountStatus: string;
+  readonly nik: string;
+  readonly bpjs: string;
+  readonly emergencyName: string;
+  readonly emergencyRelation: string;
+  readonly emergencyPhone: string;
+  readonly patientCode: string;
+  readonly currentMedication: string;
+  readonly allergies: string;
+  readonly smokingStatus: string;
+  readonly physicalActivityLevel: string;
+  readonly latestBloodSugar?: number;
+  readonly averageBloodSugar?: number;
+  readonly latestWeight?: number;
+  readonly bmi?: number;
+  readonly latestActivityTime?: string;
+  readonly latestActivityName?: string;
+}
+
+export interface PaginationMeta {
+  readonly page: number;
+  readonly per_page: number;
+  readonly total: number;
+  readonly total_pages: number;
+}
+
+export interface PatientListResponse {
+  readonly items: PatientRecord[];
+  readonly pagination: PaginationMeta;
 }
 
 export interface BloodSugarLog {
   readonly id: string;
-  readonly date: string; // e.g. "Hari ini" or "Kemarin"
-  readonly before: number; // mg/dL
-  readonly after: number; // mg/dL
+  readonly date: string;
+  readonly before: number;
+  readonly after: number;
   readonly rawDate?: Date;
 }
 
@@ -36,8 +80,8 @@ export interface MealLog {
   readonly id: string;
   readonly type: "Sarapan" | "Siang" | "Cemilan" | "Malam";
   readonly title: string;
-  readonly time: string; // e.g. "07:30 WIB"
-  readonly calories: number; // kcal
+  readonly time: string;
+  readonly calories: number;
 }
 
 export interface ActivityLog {
@@ -45,17 +89,17 @@ export interface ActivityLog {
   readonly name: string;
   readonly time: string;
   readonly intensity: "Ringan" | "Sedang" | "Berat";
-  readonly duration: number; // minutes
-  readonly caloriesBurned: number; // kcal
+  readonly duration: number;
+  readonly caloriesBurned: number;
 }
 
 export interface MedicationLog {
   readonly id: string;
   readonly name: string;
-  readonly dosage: string; // e.g. "500mg"
-  readonly time: string; // e.g. "Sesudah Makan (08:00)"
+  readonly dosage: string;
+  readonly time: string;
   readonly status: "Diminum" | "Terlewat" | "Mendatang";
-  readonly dateGroup: string; // e.g. "Hari Ini, 24 Okt" or "Kemarin, 23 Okt"
+  readonly dateGroup: string;
 }
 
 export interface RecordMonitoringStats {
@@ -63,4 +107,20 @@ export interface RecordMonitoringStats {
   readonly totalMealRecords: number;
   readonly totalActivityRecords: number;
   readonly totalMedicationRecords: number;
+}
+
+export interface PatientListParams {
+  readonly page?: number;
+  readonly limit?: number;
+  readonly search?: string;
+  readonly gender?: string;
+  readonly status?: string;
+  readonly sort_by?: string;
+  readonly sort_order?: string;
+  readonly blood_sugar_status?: string;
+  readonly risk_level?: string;
+  readonly compliance_min?: number;
+  readonly compliance_max?: number;
+  readonly age_min?: number;
+  readonly age_max?: number;
 }

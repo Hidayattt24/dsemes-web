@@ -1,32 +1,25 @@
-import type { Quiz } from "../types/quiz";
+import type { Quiz, PaginationMeta } from "../types/quiz";
 import Link from "next/link";
-import { ROUTES } from "@/constants/routes";
-import { useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 
 interface QuizTableProps {
   readonly quizzes: readonly Quiz[];
+  readonly pagination: PaginationMeta;
   readonly onDeleteClick: (id: string) => void;
+  readonly onPageChange: (page: number) => void;
 }
 
-export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
+export function QuizTable({ quizzes, pagination, onDeleteClick, onPageChange }: QuizTableProps) {
   const pathname = usePathname();
   const isStaff = pathname.startsWith("/staff");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
-  const totalPages = Math.ceil(quizzes.length / itemsPerPage) || 1;
-  const paginatedQuizzes = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return quizzes.slice(start, start + itemsPerPage);
-  }, [quizzes, currentPage]);
 
   const handlePrevPage = () => {
-    setCurrentPage((p) => Math.max(p - 1, 1));
+    if (pagination.page > 1) onPageChange(pagination.page - 1);
   };
 
   const handleNextPage = () => {
-    setCurrentPage((p) => Math.min(p + 1, totalPages));
+    if (pagination.page < pagination.total_pages) onPageChange(pagination.page + 1);
   };
 
   return (
@@ -35,7 +28,7 @@ export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
       <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F8FAFC]">
         <h3 className="text-base font-bold text-[#1A202C]">Daftar Kuesioner</h3>
         <span className="text-xs font-semibold text-[#718096]">
-          Total: {quizzes.length} Kuesioner
+          Total: {pagination.total} Kuesioner
         </span>
       </div>
 
@@ -54,14 +47,14 @@ export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
             </tr>
           </thead>
           <tbody className="text-sm font-medium text-[#1A202C] divide-y divide-[#E2E8F0]/60">
-            {paginatedQuizzes.length === 0 ? (
+            {quizzes.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-8 px-6 text-center text-[#718096]">
                   Tidak ada kuesioner ditemukan.
                 </td>
               </tr>
             ) : (
-              paginatedQuizzes.map((quiz) => (
+              quizzes.map((quiz) => (
                 <tr key={quiz.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="py-4 px-6 font-semibold text-[#00695C] hover:underline">
                     <Link href={isStaff ? `/staff/manajemen-kuisioner/${quiz.id}` : `${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}`}>{quiz.title}</Link>
@@ -121,27 +114,27 @@ export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
       </div>
 
       {/* Pagination Footer */}
-      {totalPages > 1 && (
+      {pagination.total_pages > 1 && (
         <div className="p-4 border-t border-[#E2E8F0] flex justify-between items-center bg-[#F8FAFC] text-xs font-semibold text-[#718096]">
           <span>
-            Menampilkan {(currentPage - 1) * itemsPerPage + 1}-
-            {Math.min(currentPage * itemsPerPage, quizzes.length)} dari {quizzes.length} data
+            Menampilkan {(pagination.page - 1) * pagination.per_page + 1}-
+            {Math.min(pagination.page * pagination.per_page, pagination.total)} dari {pagination.total} data
           </span>
           <div className="flex gap-1">
             <button
               onClick={handlePrevPage}
-              disabled={currentPage === 1}
+              disabled={pagination.page === 1}
               className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E2E8F0] text-[#718096] hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm select-none">chevron_left</span>
             </button>
-            {Array.from({ length: totalPages }).map((_, idx) => (
+            {Array.from({ length: pagination.total_pages }).map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => setCurrentPage(idx + 1)}
+                onClick={() => onPageChange(idx + 1)}
                 className={[
                   "w-8 h-8 flex items-center justify-center rounded-lg font-bold transition-colors cursor-pointer",
-                  currentPage === idx + 1
+                  pagination.page === idx + 1
                     ? "bg-[#00695C] text-white"
                     : "border border-[#E2E8F0] text-[#1A202C] hover:bg-slate-100",
                 ].join(" ")}
@@ -151,7 +144,7 @@ export function QuizTable({ quizzes, onDeleteClick }: QuizTableProps) {
             ))}
             <button
               onClick={handleNextPage}
-              disabled={currentPage === totalPages}
+              disabled={pagination.page === pagination.total_pages}
               className="w-8 h-8 flex items-center justify-center rounded-lg border border-[#E2E8F0] text-[#718096] hover:bg-slate-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm select-none">chevron_right</span>

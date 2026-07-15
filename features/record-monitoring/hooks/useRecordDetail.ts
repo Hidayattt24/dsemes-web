@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { recordMonitoringService } from "../services/recordMonitoringService";
 import type {
   PatientRecord,
@@ -22,30 +23,33 @@ interface UseRecordDetailReturn {
 }
 
 export function useRecordDetail(patientId: string): UseRecordDetailReturn {
+  const pathname = usePathname();
+  const rolePrefix: 'admin' | 'staff' = pathname.startsWith("/staff") ? "staff" : "admin";
+
   const [patient, setPatient] = useState<PatientRecord | null>(null);
   const [bloodSugarLogs, setBloodSugarLogs] = useState<BloodSugarLog[]>([]);
   const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const p = await recordMonitoringService.getPatientRecordById(patientId);
+      const p = await recordMonitoringService.getPatientRecordById(patientId, rolePrefix);
       if (!p) {
         setError("Pasien tidak ditemukan.");
         return;
       }
-      
+
       const [bs, meals, acts, meds] = await Promise.all([
-        recordMonitoringService.getBloodSugarLogs(patientId),
-        recordMonitoringService.getMealLogs(patientId),
-        recordMonitoringService.getActivityLogs(patientId),
-        recordMonitoringService.getMedicationLogs(patientId),
+        recordMonitoringService.getBloodSugarLogs(patientId, rolePrefix),
+        recordMonitoringService.getMealLogs(patientId, rolePrefix),
+        recordMonitoringService.getActivityLogs(patientId, rolePrefix),
+        recordMonitoringService.getMedicationLogs(patientId, rolePrefix),
       ]);
 
       setPatient(p);
@@ -58,13 +62,13 @@ export function useRecordDetail(patientId: string): UseRecordDetailReturn {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [patientId, rolePrefix]);
 
   useEffect(() => {
     if (patientId) {
       fetchData();
     }
-  }, [patientId]);
+  }, [patientId, fetchData]);
 
   return {
     patient,

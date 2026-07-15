@@ -65,3 +65,21 @@ export interface ParticipantQuizDetail {
   readonly quizTitle: string;
   readonly questionAnalysis: readonly ParticipantQuestionAnalysis[];
 }
+
+export interface PaginationMeta {
+  readonly page: number;
+  readonly per_page: number;
+  readonly total: number;
+  readonly total_pages: number;
+}
+
+export type QuizSortBy = "newest" | "oldest" | "title";
+
+export interface QuizListParams {
+  readonly page?: number;
+  readonly limit?: number;
+  readonly search?: string;
+  readonly status?: string;
+  readonly sort_by?: QuizSortBy;
+  readonly sort_order?: "asc" | "desc";
+}

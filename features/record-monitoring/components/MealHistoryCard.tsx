@@ -91,8 +91,8 @@ export function MealHistoryCard({ logs = [], targetCalories }: MealHistoryCardPr
           </div>
         ) : (
           <ul className="divide-y divide-[#E2E8F0]/40">
-            {logs.map((log) => (
-              <li key={log.id} className="flex justify-between items-center py-3.5 hover:bg-[#F8FAFC] px-2 rounded-xl transition-colors">
+            {logs.map((log, idx) => (
+              <li key={log.id || `meal-${idx}`} className="flex justify-between items-center py-3.5 hover:bg-[#F8FAFC] px-2 rounded-xl transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#F4F6F8] flex items-center justify-center text-[#718096] flex-shrink-0">
                     <span className="material-symbols-outlined text-[20px]">{getIcon(log.type)}</span>

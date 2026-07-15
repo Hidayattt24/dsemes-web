@@ -87,8 +87,8 @@ export function ActivityHistoryCard({ logs = [] }: ActivityHistoryCardProps) {
           </div>
         ) : (
           <ul className="divide-y divide-[#E2E8F0]/40">
-            {logs.map((log) => (
-              <li key={log.id} className="flex justify-between items-center py-3 px-1.5 hover:bg-[#F8FAFC] rounded-xl transition-colors">
+            {logs.map((log, idx) => (
+              <li key={log.id || `activity-${idx}`} className="flex justify-between items-center py-3 px-1.5 hover:bg-[#F8FAFC] rounded-xl transition-colors">
                 <div>
                   <p className="text-sm font-semibold text-[#1A202C]">{log.name}</p>
                   <div className="flex gap-2 items-center mt-1">

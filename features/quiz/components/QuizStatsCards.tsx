@@ -69,10 +69,7 @@ export function QuizStatsCards({ stats }: QuizStatsCardsProps) {
         </div>
         <div className="z-10">
           <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">Rata-rata Skor</p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl font-bold">{displayStats.averageScore}%</p>
-            <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">+2% bln ini</span>
-          </div>
+          <p className="text-3xl font-bold">{displayStats.averageScore}%</p>
         </div>
       </div>
     </div>

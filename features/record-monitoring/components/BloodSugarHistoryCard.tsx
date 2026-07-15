@@ -161,8 +161,8 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
                 </td>
               </tr>
             ) : (
-              logs.slice(0, 4).map((log) => (
-                <tr key={log.id} className="border-b border-[#E2E8F0]/40 hover:bg-[#F4F6F8]/30 transition-colors">
+              logs.slice(0, 4).map((log, idx) => (
+                <tr key={log.id || `bs-${idx}`} className="border-b border-[#E2E8F0]/40 hover:bg-[#F4F6F8]/30 transition-colors">
                   <td className="py-3 px-2 text-[#1A202C]">{log.date}</td>
                   <td className="py-3 px-2 text-[#1A202C]">{log.before} mg/dL</td>
                   <td className={`py-3 px-2 ${log.after > 140 ? "text-[#C53030] font-bold" : "text-[#1A202C]"}`}>

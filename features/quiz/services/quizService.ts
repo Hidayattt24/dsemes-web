@@ -4,6 +4,8 @@ import type {
   QuizParticipant,
   ParticipantQuizDetail,
   ParticipantQuestionAnalysis,
+  PaginationMeta,
+  QuizListParams,
 } from "../types/quiz";
 import { axiosInstance } from "@/lib/axios";
 
@@ -165,19 +167,33 @@ function mapQuestionAnalysisFromApi(
 // ── Service ───────────────────────────────────────────────────────────────────
 
 export const quizService = {
-  /** Get all quizzes (flat list, no questions array) */
-  async getQuizzes(): Promise<Quiz[]> {
-    const res = await axiosInstance.get("/admin/quiz", {
-      params: { limit: 200 },
+  /** Get paginated quizzes (flat list, no questions array) */
+  async getQuizzes(
+    params: QuizListParams = {},
+    rolePrefix: 'admin' | 'staff' = 'staff'
+  ): Promise<{ items: Quiz[]; pagination: PaginationMeta }> {
+    const res = await axiosInstance.get(`/${rolePrefix}/quiz`, {
+      params: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 10,
+        search: params.search || undefined,
+        status: params.status || undefined,
+        sort_by: params.sort_by || undefined,
+        sort_order: params.sort_order || undefined,
+      },
     });
     const items: ApiQuizResponse[] = res.data.data ?? [];
-    return items.map(mapQuizListItemFromApi);
+    const meta = res.data?.meta ?? { page: 1, per_page: 10, total: 0, total_pages: 0 };
+    return {
+      items: items.map(mapQuizListItemFromApi),
+      pagination: meta,
+    };
   },
 
   /** Get single quiz by ID (includes full questions) */
-  async getQuizById(id: string): Promise<Quiz | null> {
+  async getQuizById(id: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<Quiz | null> {
     try {
-      const res = await axiosInstance.get(`/admin/quiz/${id}`);
+      const res = await axiosInstance.get(`/${rolePrefix}/quiz/${id}`);
       const data: ApiQuizDetailResponse = res.data.data;
       return mapQuizFromApi(data);
     } catch {
@@ -230,8 +246,8 @@ export const quizService = {
   },
 
   /** Get statistics summary */
-  async getStats(): Promise<QuizStats> {
-    const res = await axiosInstance.get("/admin/quiz/stats");
+  async getStats(rolePrefix: 'admin' | 'staff' = 'staff'): Promise<QuizStats> {
+    const res = await axiosInstance.get(`/${rolePrefix}/quiz/stats`);
     const data: ApiQuizStats = res.data.data;
     return {
       totalQuizzes: data.total_quizzes,
@@ -243,8 +259,8 @@ export const quizService = {
   },
 
   /** Get participants for a specific quiz */
-  async getParticipantsByQuizId(quizId: string): Promise<QuizParticipant[]> {
-    const res = await axiosInstance.get(`/admin/quiz/${quizId}/participants`);
+  async getParticipantsByQuizId(quizId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<QuizParticipant[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/quiz/${quizId}/participants`);
     const items: ApiParticipantResponse[] = res.data.data ?? [];
     return items.map(mapParticipantFromApi);
   },
@@ -252,11 +268,12 @@ export const quizService = {
   /** Get participant quiz detail (question-by-question analysis) */
   async getParticipantDetail(
     quizId: string,
-    participantId: string
+    participantId: string,
+    rolePrefix: 'admin' | 'staff' = 'staff'
   ): Promise<ParticipantQuizDetail | null> {
     try {
       const res = await axiosInstance.get(
-        `/admin/quiz/${quizId}/participant/${participantId}`
+        `/${rolePrefix}/quiz/${quizId}/participant/${participantId}`
       );
       const data: ApiParticipantDetailResponse = res.data.data;
 

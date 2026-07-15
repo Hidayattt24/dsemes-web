@@ -1,6 +1,8 @@
 import { axiosInstance } from "@/lib/axios";
 import type {
   PatientRecord,
+  PatientListParams,
+  PaginationMeta,
   BloodSugarLog,
   MealLog,
   ActivityLog,
@@ -9,8 +11,7 @@ import type {
 } from "../types/record";
 
 const mapPatientRecord = (data: any): PatientRecord => {
-  // Format age from date_of_birth
-  let age = 50; // default fallback
+  let age = 50;
   if (data.date_of_birth) {
     const dob = new Date(data.date_of_birth);
     const ageDiffMs = Date.now() - dob.getTime();
@@ -18,14 +19,12 @@ const mapPatientRecord = (data: any): PatientRecord => {
     age = Math.abs(ageDate.getUTCFullYear() - 1970);
   }
 
-  // Format emergency contact
   const emergencyContact = data.emergency_phone
     ? `${data.emergency_phone} (${data.emergency_relation ?? "Keluarga"})`
     : "-";
 
-  // Build dailySummary
   const bloodSugar = data.latest_blood_sugar ? `${data.latest_blood_sugar} mg/dL` : "-";
-  
+
   let bloodSugarTime = "-";
   if (data.latest_blood_sugar_time) {
     const bsTime = new Date(data.latest_blood_sugar_time);
@@ -42,7 +41,6 @@ const mapPatientRecord = (data: any): PatientRecord => {
   const activity = data.latest_activity_time ? "30 Menit" : "-";
   const activityType = data.latest_activity_name ?? "-";
 
-  // Map status: Stabil / Waspada / Tinggi / Normal
   let status: "Stabil" | "Waspada" | "Tinggi" | "Normal" = "Normal";
   const statusStr = data.latest_blood_sugar_status ?? "";
   if (statusStr === "tinggi") {
@@ -55,27 +53,60 @@ const mapPatientRecord = (data: any): PatientRecord => {
     status = "Stabil";
   }
 
-  // Initials
   const initials = data.full_name
     ? data.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()
     : "P";
+
+  const doctor = data.assigned_staff?.full_name ?? "Dr. Ahmad Faisal";
+  const puskesmas = data.assigned_staff?.position_title ?? "Puskesmas Ulee Kareng";
+  const registeredAt = data.created_at
+    ? new Date(data.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+    : "-";
 
   return {
     id: data.id,
     name: data.full_name,
     age,
     gender: data.gender === "laki_laki" ? "Laki-laki" : "Perempuan",
+    dateOfBirth: data.date_of_birth ?? "-",
     address: data.address ?? "-",
     initials,
-    puskesmas: "Puskesmas Ulee Kareng",
+    puskesmas,
+    avatarUrl: data.profile_photo_url || undefined,
     lastActive: data.latest_activity_time
       ? new Date(data.latest_activity_time).toLocaleDateString("id-ID", { day: "numeric", month: "short" })
       : "Hari ini",
-    diagnosisDate: data.diagnosis_date
-      ? new Date(data.diagnosis_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
-      : "-",
+    diagnosisDate: data.diagnosis_date ?? "-",
     emergencyContact,
     dailyCalorieTarget: data.daily_calorie_target,
+    compliance: data.compliance ?? 0,
+    lastActiveAt: data.last_active_at,
+    whatsapp: data.whatsapp_number ?? "-",
+    height: data.height_cm ?? 0,
+    weight: data.weight_kg ?? 0,
+    bloodType: data.blood_type ?? "-",
+    registeredAt,
+    interventionType: data.intervention_type ?? "-",
+    diabetesType: data.diabetes_type ?? "-",
+    doctor,
+    email: data.email ?? "-",
+    accountStatus: data.status === "aktif" || data.status === "Aktif" ? "Terverifikasi" : "Belum Terverifikasi",
+    nik: data.nik ?? "-",
+    bpjs: data.bpjs ?? "-",
+    emergencyName: data.emergency_name ?? "-",
+    emergencyRelation: data.emergency_relation ?? "-",
+    emergencyPhone: data.emergency_phone ?? "-",
+    patientCode: data.patient_code ?? "-",
+    currentMedication: data.current_medication ?? "-",
+    allergies: data.allergies ?? "-",
+    smokingStatus: data.smoking_status ?? "-",
+    physicalActivityLevel: data.physical_activity_level ?? "-",
+    latestBloodSugar: data.latest_blood_sugar,
+    averageBloodSugar: data.average_blood_sugar,
+    latestWeight: data.latest_weight,
+    bmi: data.bmi,
+    latestActivityTime: data.latest_activity_time,
+    latestActivityName: data.latest_activity_name,
     dailySummary: {
       bloodSugar,
       bloodSugarTime,
@@ -84,20 +115,42 @@ const mapPatientRecord = (data: any): PatientRecord => {
       activity,
       activityType,
       status,
+      bloodSugarStatus: data.latest_blood_sugar_status,
+      avgBloodSugar: data.average_blood_sugar,
     },
   };
 };
 
 export const recordMonitoringService = {
-  async getPatientRecords(): Promise<PatientRecord[]> {
-    const res = await axiosInstance.get("/admin/patients", { params: { limit: 100 } });
+  async getPatientRecords(params: PatientListParams = {}, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<{ items: PatientRecord[]; pagination: PaginationMeta }> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients`, {
+      params: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 10,
+        search: params.search || undefined,
+        gender: params.gender || undefined,
+        status: params.status || undefined,
+        sort_by: params.sort_by || undefined,
+        sort_order: params.sort_order || undefined,
+        blood_sugar_status: params.blood_sugar_status || undefined,
+        risk_level: params.risk_level || undefined,
+        compliance_min: params.compliance_min,
+        compliance_max: params.compliance_max,
+        age_min: params.age_min,
+        age_max: params.age_max,
+      },
+    });
     const list = res.data?.data ?? [];
-    return list.map(mapPatientRecord);
+    const meta = res.data?.meta ?? { page: 1, per_page: 10, total: 0, total_pages: 0 };
+    return {
+      items: list.map(mapPatientRecord),
+      pagination: meta,
+    };
   },
 
-  async getPatientRecordById(id: string): Promise<PatientRecord | null> {
+  async getPatientRecordById(id: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<PatientRecord | null> {
     try {
-      const res = await axiosInstance.get(`/admin/patients/${id}`);
+      const res = await axiosInstance.get(`/${rolePrefix}/patients/${id}`);
       if (res.data?.data) {
         return mapPatientRecord(res.data.data);
       }
@@ -107,10 +160,10 @@ export const recordMonitoringService = {
     }
   },
 
-  async getBloodSugarLogs(patientId: string): Promise<BloodSugarLog[]> {
-    const res = await axiosInstance.get(`/admin/patients/${patientId}/blood-sugar`, { params: { limit: 100 } });
+  async getBloodSugarLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<BloodSugarLog[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/blood-sugar`, { params: { limit: 100 } });
     const list = res.data?.data ?? [];
-    
+
     const dailyMap: { [key: string]: { before: number; after: number; dateStr: string; rawDate: Date } } = {};
     list.forEach((log: any) => {
       const d = new Date(log.measured_at);
@@ -127,8 +180,8 @@ export const recordMonitoringService = {
     });
 
     return Object.values(dailyMap)
-      .map((item, idx) => ({
-        id: `bs-${idx}`,
+      .map((item) => ({
+        id: `bs-${item.rawDate.getTime()}`,
         date: item.dateStr,
         before: item.before > 0 ? item.before : 100,
         after: item.after > 0 ? item.after : 140,
@@ -137,14 +190,14 @@ export const recordMonitoringService = {
       .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
   },
 
-  async getMealLogs(patientId: string): Promise<MealLog[]> {
-    const res = await axiosInstance.get(`/admin/patients/${patientId}/meals`, { params: { limit: 100 } });
+  async getMealLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<MealLog[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/meals`, { params: { limit: 100 } });
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
       const loggedDate = new Date(log.logged_at);
       const timeStr = loggedDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
       const dateStr = loggedDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
-      
+
       let type: "Sarapan" | "Siang" | "Cemilan" | "Malam" = "Sarapan";
       if (log.meal_type === "makan_siang") type = "Siang";
       else if (log.meal_type === "makan_malam") type = "Malam";
@@ -160,8 +213,8 @@ export const recordMonitoringService = {
     });
   },
 
-  async getActivityLogs(patientId: string): Promise<ActivityLog[]> {
-    const res = await axiosInstance.get(`/admin/patients/${patientId}/activities`, { params: { limit: 100 } });
+  async getActivityLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<ActivityLog[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/activities`, { params: { limit: 100 } });
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
       const loggedDate = new Date(log.logged_at);
@@ -183,8 +236,8 @@ export const recordMonitoringService = {
     });
   },
 
-  async getMedicationLogs(patientId: string): Promise<MedicationLog[]> {
-    const res = await axiosInstance.get(`/admin/patients/${patientId}/medications`, { params: { limit: 100 } });
+  async getMedicationLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<MedicationLog[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/medications`, { params: { limit: 100 } });
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
       let status: "Diminum" | "Terlewat" | "Mendatang" = "Mendatang";
@@ -205,8 +258,8 @@ export const recordMonitoringService = {
     });
   },
 
-  async getStats(): Promise<RecordMonitoringStats> {
-    const res = await axiosInstance.get("/admin/dashboard");
+  async getStats(rolePrefix: 'admin' | 'staff' = 'staff'): Promise<RecordMonitoringStats> {
+    const res = await axiosInstance.get(`/${rolePrefix}/dashboard/stats`);
     const d = res.data?.data ?? {};
     return {
       totalBloodSugarRecords: d.total_sugar_logs ?? 0,

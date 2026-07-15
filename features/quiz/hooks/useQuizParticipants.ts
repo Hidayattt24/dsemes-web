@@ -1,4 +1,7 @@
+"use client";
+
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { quizService } from "../services/quizService";
 import type { Quiz, QuizParticipant } from "../types/quiz";
 
@@ -13,6 +16,9 @@ interface UseQuizParticipantsReturn {
 }
 
 export function useQuizParticipants(quizId: string): UseQuizParticipantsReturn {
+  const pathname = usePathname();
+  const rolePrefix: 'admin' | 'staff' = pathname.startsWith("/admin") ? "admin" : "staff";
+
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [participants, setParticipants] = useState<readonly QuizParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,8 +30,8 @@ export function useQuizParticipants(quizId: string): UseQuizParticipantsReturn {
     setError(null);
     try {
       const [quizDetail, pList] = await Promise.all([
-        quizService.getQuizById(quizId),
-        quizService.getParticipantsByQuizId(quizId),
+        quizService.getQuizById(quizId, rolePrefix),
+        quizService.getParticipantsByQuizId(quizId, rolePrefix),
       ]);
       if (quizDetail) {
         setQuiz(quizDetail);
@@ -38,7 +44,7 @@ export function useQuizParticipants(quizId: string): UseQuizParticipantsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [quizId]);
+  }, [quizId, rolePrefix]);
 
   useEffect(() => {
     if (quizId) {

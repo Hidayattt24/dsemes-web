@@ -1,11 +1,14 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { useQuizList } from "../hooks/useQuizList";
 import { QuizStatsCards } from "./QuizStatsCards";
 import { QuizFilters } from "./QuizFilters";
 import { QuizTable } from "./QuizTable";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { TableLoader } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/Toast";
+import { quizService } from "../services/quizService";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { usePathname } from "next/navigation";
@@ -19,32 +22,57 @@ export function QuizListFeature() {
     isLoading,
     searchQuery,
     filterStatus,
-    deleteId,
-    isDeleting,
+    sortBy,
+    pagination,
+    rolePrefix,
     setSearchQuery,
     setFilterStatus,
-    setDeleteId,
-    handleDelete,
+    setSortBy,
+    setPage,
+    refetch,
   } = useQuizList();
 
   const { showToast } = useToast();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleConfirmDelete = async () => {
-    await handleDelete();
-    showToast({
-      type: "success",
-      title: "Berhasil",
-      description: "Kuesioner berhasil dihapus.",
-    });
-  };
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteId) return;
+    setIsDeleting(true);
+    try {
+      const success = await quizService.deleteQuiz(deleteId);
+      if (success) {
+        showToast({
+          type: "success",
+          title: "Berhasil",
+          description: "Kuesioner berhasil dihapus.",
+        });
+        refetch();
+      }
+    } catch {
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: "Gagal menghapus kuesioner.",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteId(null);
+    }
+  }, [deleteId, showToast, refetch]);
 
   if (isLoading) {
-    // Reusing the TableLoader skeleton loader we created in the refactoring!
-    // Wait! Let's check: did we create a TableLoader? Yes, we did!
-    // But wait, the user's layout has stat cards and tables, which fits nicely.
-    // Let's import the TableLoader.
-    // Or we can import the loaders under components/ui/loading.
-    // Let's import TableLoader.
+    return (
+      <div className="space-y-8 max-w-[1600px] mx-auto w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <div className="h-8 w-64 bg-slate-200 rounded-lg animate-pulse" />
+            <div className="h-4 w-80 bg-slate-100 rounded mt-2 animate-pulse" />
+          </div>
+        </div>
+        <TableLoader />
+      </div>
+    );
   }
 
   return (
@@ -72,32 +100,41 @@ export function QuizListFeature() {
         )}
       </div>
 
-      {/* Stats Cards Bento Grid */}
+      {/* Stats Cards */}
       <QuizStatsCards stats={stats} />
 
       {/* Filter panel */}
       <QuizFilters
         searchQuery={searchQuery}
         filterStatus={filterStatus}
+        sortBy={sortBy}
         onSearchChange={setSearchQuery}
         onStatusChange={setFilterStatus}
+        onSortChange={setSortBy}
       />
 
       {/* Data Table */}
-      <QuizTable quizzes={quizzes} onDeleteClick={setDeleteId} />
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        open={!!deleteId}
-        title="Hapus Kuesioner?"
-        description="Apakah Anda yakin ingin menghapus kuesioner ini? Aksi ini tidak dapat dibatalkan."
-        variant="danger"
-        confirmText="Ya, Hapus"
-        cancelText="Batal"
-        loading={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setDeleteId(null)}
+      <QuizTable
+        quizzes={quizzes}
+        pagination={pagination}
+        onDeleteClick={setDeleteId}
+        onPageChange={setPage}
       />
+
+      {/* Delete Confirmation Modal — admin only */}
+      {!isStaff && (
+        <ConfirmationModal
+          open={!!deleteId}
+          title="Hapus Kuesioner?"
+          description="Apakah Anda yakin ingin menghapus kuesioner ini? Aksi ini tidak dapat dibatalkan."
+          variant="danger"
+          confirmText="Ya, Hapus"
+          cancelText="Batal"
+          loading={isDeleting}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteId(null)}
+        />
+      )}
     </div>
   );
 }
