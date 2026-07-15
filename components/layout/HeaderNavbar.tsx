@@ -11,7 +11,7 @@ export function HeaderNavbar() {
   const { openMobile } = useSidebarStore();
   const pathname = usePathname();
 
-  const doctorAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuDb1KUY-_QSdBdqr2297B6t9UU7Zv4G2xxqAqHFHa17vEkmU84tkQA0wlpfQjEOa2p6JCwBuaAwtxllXhMQJWX-Fh32sGp53qysZvoCzaaMPnUPcGvKzGbUaPuzVLBWnL5YLJHG11W421EfDPx3HK5L7YeILoMbRTD55WXEvXOaztccIYZksiEMRKx1SVjPk-OWY91z6CxUoFiqTatRWYAFmSI6xVdHGinX2J9fIZ3Go0ORDAsMHfSwZIqijQE5lIeqMxayXT_z-Glm";
+  const defaultAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuDb1KUY-_QSdBdqr2297B6t9UU7Zv4G2xxqAqHFHa17vEkmU84tkQA0wlpfQjEOa2p6JCwBuaAwtxllXhMQJWX-Fh32sGp53qysZvoCzaaMPnUPcGvKzGbUaPuzVLBWnL5YLJHG11W421EfDPx3HK5L7YeILoMbRTD55WXEvXOaztccIYZksiEMRKx1SVjPk-OWY91z6CxUoFiqTatRWYAFmSI6xVdHGinX2J9fIZ3Go0ORDAsMHfSwZIqijQE5lIeqMxayXT_z-Glm";
 
   // Match current path to Nav item label for page title
   const getPageTitle = () => {
@@ -52,16 +52,16 @@ export function HeaderNavbar() {
           {/* Desktop User Info */}
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-[#1A202C] font-[family-name:var(--font-poppins)] leading-none">
-              {user?.name ?? "Dr. Ahmad Faisal"}
+              {user?.name ?? "Pengguna"}
             </p>
             <p className="text-[11px] text-[#718096] font-medium font-[family-name:var(--font-poppins)] mt-1.5 leading-none">
-              Dokter Utama
+              {user?.positionTitle ?? (user?.role === "admin" ? "Administrator" : "Staff")}
             </p>
           </div>
           
           <Avatar
-            src={user?.avatarUrl ?? doctorAvatar}
-            name={user?.name ?? "Dr. Ahmad Faisal"}
+            src={user?.avatarUrl ?? defaultAvatar}
+            name={user?.name ?? "Pengguna"}
             size={40}
             showOnline={true}
           />

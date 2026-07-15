@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { settingsService } from "../services/settingsService";
 import type { SystemSettings } from "../types/settings";
+import { useAuthStore } from "@/lib/stores/authStore";
 import { useToast } from "@/components/ui/Toast";
 
 export function useSettingsForm() {
@@ -78,6 +79,18 @@ export function useSettingsForm() {
       const updated = await settingsService.saveSettings(fields);
       setInitialFields(updated);
       setFields(updated);
+
+      // Sync auth store so header/navbar reflect changes immediately
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        useAuthStore.getState().setUser({
+          ...currentUser,
+          name: updated.name,
+          positionTitle: updated.jabatan || undefined,
+          avatarUrl: updated.profilePhoto || undefined,
+        });
+      }
+
       showToast({
         type: "success",
         title: "Berhasil",

@@ -70,6 +70,8 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
             email: staff.email,
             role: staff.role,
             puskesmas: "",
+            positionTitle: staff.position_title ?? undefined,
+            avatarUrl: staff.profile_photo_url ?? undefined,
           });
         } catch (error) {
           console.error("Failed to restore session profile:", error);
@@ -93,7 +95,25 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
     try {
       const response = await authService.login(credentials);
       setUser(response.user);
-      
+
+      // Fetch full profile (position_title, profile_photo_url) after login
+      try {
+        const meEndpoint = response.user.role === "admin" ? "/admin/me" : "/staff/me";
+        const profileRes = await axiosInstance.get(meEndpoint);
+        const staff = profileRes.data.data;
+        setUser({
+          id: staff.id,
+          name: staff.full_name,
+          email: staff.email,
+          role: staff.role,
+          puskesmas: "",
+          positionTitle: staff.position_title ?? undefined,
+          avatarUrl: staff.profile_photo_url ?? undefined,
+        });
+      } catch {
+        // Non-critical — use basic login data
+      }
+
       if (response.user.role === "admin") {
         router.push(ROUTES.DASHBOARD);
       } else if (response.user.role === "staff") {

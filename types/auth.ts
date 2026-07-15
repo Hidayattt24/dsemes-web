@@ -14,6 +14,7 @@ export interface AuthUser {
   readonly email?: string;
   readonly role: string;
   readonly puskesmas: string;
+  readonly positionTitle?: string;
   readonly avatarUrl?: string;
 }
 

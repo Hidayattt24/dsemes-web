@@ -8,7 +8,6 @@ interface AvatarProps {
   readonly className?:  string;
 }
 
-/** Returns initials from a full name (up to 2 chars). */
 function getInitials(name: string): string {
   return name
     .split(" ")
@@ -24,29 +23,28 @@ export function Avatar({
   showOnline = false,
   className  = "",
 }: AvatarProps) {
+  const indicatorSize = Math.max(10, Math.round(size * 0.3));
+
   return (
     <div
-      className={`relative flex-shrink-0 ${className}`}
+      className={`relative flex-shrink-0 overflow-hidden rounded-full ${className}`}
       style={{ width: size, height: size }}
     >
       {src ? (
         <Image
           src={src}
           alt={name}
-          width={size}
-          height={size}
-          className="rounded-full object-cover border-2 border-white shadow-sm"
+          fill
+          sizes={`${size}px`}
+          className="object-cover"
         />
       ) : (
         <div
-          className="flex items-center justify-center rounded-full border-2 border-white shadow-sm bg-[#F0F9F8] text-[#00695C] font-bold select-none"
-          style={{ width: size, height: size, fontSize: size * 0.35 }}
+          className="flex items-center justify-center w-full h-full bg-[#F0F9F8] text-[#00695C] font-bold select-none"
+          style={{ fontSize: size * 0.38 }}
         >
           {getInitials(name)}
         </div>
-      )}
-      {showOnline && (
-        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
       )}
     </div>
   );
