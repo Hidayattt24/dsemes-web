@@ -1,3 +1,5 @@
+import type { CalorieStatusInfo } from "@/types/patient";
+
 export interface DailySummary {
   readonly bloodSugar: string;
   readonly bloodSugarTime: string;
@@ -26,6 +28,8 @@ export interface PatientRecord {
   readonly emergencyContact: string;
   readonly dailyCalorieTarget?: number;
   readonly compliance: number;
+  readonly complianceLabel?: string;
+  readonly complianceBreakdown?: ComplianceBreakdown;
   readonly lastActiveAt?: string;
 
   readonly whatsapp: string;
@@ -54,7 +58,10 @@ export interface PatientRecord {
   readonly bmi?: number;
   readonly latestActivityTime?: string;
   readonly latestActivityName?: string;
+  readonly calorieStatusInfo?: CalorieStatusInfo;
 }
+
+export type { CalorieStatusInfo };
 
 export interface PaginationMeta {
   readonly page: number;
@@ -71,8 +78,13 @@ export interface PatientListResponse {
 export interface BloodSugarLog {
   readonly id: string;
   readonly date: string;
-  readonly before: number;
-  readonly after: number;
+  readonly time: string;
+  readonly glucoseValue: number;
+  readonly measurementTimeType: string;
+  readonly measurementTimeLabel: string;
+  readonly status: string;
+  readonly before?: number;
+  readonly after?: number;
   readonly rawDate?: Date;
 }
 
@@ -109,6 +121,28 @@ export interface RecordMonitoringStats {
   readonly totalMedicationRecords: number;
 }
 
+export interface ComplianceBreakdown {
+  readonly bloodSugarScore: number;
+  readonly foodScore: number;
+  readonly activityScore: number;
+  readonly medicationScore: number;
+}
+
+export interface ActivityAnalyticsItem {
+  readonly count: number;
+  readonly percentage: number;
+}
+
+export interface PatientActivityAnalyticsResponse {
+  readonly totalRecords: number;
+  readonly bloodSugar: ActivityAnalyticsItem;
+  readonly food: ActivityAnalyticsItem;
+  readonly physicalActivity: ActivityAnalyticsItem;
+  readonly medication: ActivityAnalyticsItem;
+  readonly mostUsed: string;
+  readonly leastUsed: string;
+}
+
 export interface PatientListParams {
   readonly page?: number;
   readonly limit?: number;
@@ -124,3 +158,4 @@ export interface PatientListParams {
   readonly age_min?: number;
   readonly age_max?: number;
 }
+

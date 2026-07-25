@@ -21,47 +21,44 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
   cutoffDate.setDate(cutoffDate.getDate() - limitDays);
 
   // Filter logs by date
-  const filtered = logs.filter((log: any) => {
+  const filtered = logs.filter((log) => {
     const logDate = log.rawDate ? new Date(log.rawDate) : new Date();
     return logDate >= cutoffDate;
   });
 
   const hasData = filtered.length > 0;
 
-  // Chart data: sort chronological (ascending) and take last 7 points
+  // Chart data: sort chronological (ascending) and take last 10 points
   const chartLogs = [...filtered]
-    .sort((a: any, b: any) => new Date(a.rawDate).getTime() - new Date(b.rawDate).getTime())
-    .slice(-7);
+    .sort((a, b) => (a.rawDate?.getTime() ?? 0) - (b.rawDate?.getTime() ?? 0))
+    .slice(-10);
 
-  const getBeforeY = (val: number) => {
-    const clamped = Math.max(50, Math.min(250, val));
-    return 110 - ((clamped - 70) / 180) * 80;
-  };
-
-  const getAfterY = (val: number) => {
+  const getY = (val: number) => {
     const clamped = Math.max(50, Math.min(250, val));
     return 110 - ((clamped - 70) / 180) * 80;
   };
 
   const N = chartLogs.length;
-  const beforePoints = N > 0 
-    ? chartLogs.map((p, idx) => `${20 + (idx / Math.max(1, N - 1)) * 300},${getBeforeY(p.before)}`).join(" ")
-    : "";
-  const afterPoints = N > 0 
-    ? chartLogs.map((p, idx) => `${20 + (idx / Math.max(1, N - 1)) * 300},${getAfterY(p.after)}`).join(" ")
+  const linePoints = N > 0 
+    ? chartLogs.map((p, idx) => `${20 + (idx / Math.max(1, N - 1)) * 300},${getY(p.glucoseValue)}`).join(" ")
     : "";
 
-  const beforeCircles = chartLogs.map((p, idx) => ({
-    cx: 20 + (idx / Math.max(1, N - 1)) * 300,
-    cy: getBeforeY(p.before),
-    val: p.before,
-  }));
+  const circles = chartLogs.map((p, idx) => {
+    let strokeColor = "#00695C";
+    if (p.measurementTimeType === "sesudah_makan") {
+      strokeColor = "#C53030";
+    } else if (p.measurementTimeType === "sewaktu") {
+      strokeColor = "#2B6CB0";
+    }
 
-  const afterCircles = chartLogs.map((p, idx) => ({
-    cx: 20 + (idx / Math.max(1, N - 1)) * 300,
-    cy: getAfterY(p.after),
-    val: p.after,
-  }));
+    return {
+      cx: 20 + (idx / Math.max(1, N - 1)) * 300,
+      cy: getY(p.glucoseValue),
+      val: p.glucoseValue,
+      label: p.measurementTimeLabel,
+      strokeColor,
+    };
+  });
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm flex flex-col h-[520px] font-[family-name:var(--font-poppins)]">
@@ -92,37 +89,20 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
                 <line x1="0" y1="60" x2="340" y2="60" stroke="#E2E8F0" strokeWidth="0.5" strokeDasharray="3" />
                 <line x1="0" y1="100" x2="340" y2="100" stroke="#E2E8F0" strokeWidth="0.5" strokeDasharray="3" />
                 
-                {/* Before Meal Line (Teal) */}
-                {beforePoints && (
+                {/* Glucose Value Line */}
+                {linePoints && (
                   <polyline
                     fill="none"
                     stroke="#00695C"
                     strokeWidth="2.5"
-                    points={beforePoints}
+                    points={linePoints}
                   />
                 )}
 
-                {/* After Meal Line (Red) */}
-                {afterPoints && (
-                  <polyline
-                    fill="none"
-                    stroke="#C53030"
-                    strokeWidth="2.5"
-                    points={afterPoints}
-                  />
-                )}
-
-                {/* Points on Before Meal */}
-                {beforeCircles.map((pt, i) => (
-                  <circle key={`bef-${i}`} cx={pt.cx} cy={pt.cy} r="4" fill="#FFFFFF" stroke="#00695C" strokeWidth="2">
-                    <title>{`Sebelum: ${pt.val} mg/dL`}</title>
-                  </circle>
-                ))}
-
-                {/* Points on After Meal */}
-                {afterCircles.map((pt, i) => (
-                  <circle key={`aft-${i}`} cx={pt.cx} cy={pt.cy} r="4" fill="#FFFFFF" stroke="#C53030" strokeWidth="2">
-                    <title>{`Sesudah: ${pt.val} mg/dL`}</title>
+                {/* Points */}
+                {circles.map((pt, i) => (
+                  <circle key={`pt-${i}`} cx={pt.cx} cy={pt.cy} r="4" fill="#FFFFFF" stroke={pt.strokeColor} strokeWidth="2.5">
+                    <title>{`${pt.label}: ${pt.val} mg/dL`}</title>
                   </circle>
                 ))}
               </svg>
@@ -138,35 +118,51 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
                 <span className="w-2.5 h-2.5 rounded-full bg-[#C53030]"></span>
                 Sesudah Makan
               </span>
+              <span className="flex items-center gap-1.5 text-[#2B6CB0]">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#2B6CB0]"></span>
+                Sewaktu Makan
+              </span>
             </div>
           </>
         )}
       </div>
 
-      {/* Small Table */}
-      <div className="overflow-x-auto">
+      {/* Table Section */}
+      <div className="overflow-y-auto max-h-[160px] pr-1">
         <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-[#E2E8F0] text-[#718096] text-xs font-bold uppercase tracking-wider">
-              <th className="py-2 px-2 font-semibold">Tanggal</th>
-              <th className="py-2 px-2 font-semibold">Sebelum (mg/dL)</th>
-              <th className="py-2 px-2 font-semibold">Sesudah (mg/dL)</th>
+          <thead className="sticky top-0 bg-white shadow-sm z-10">
+            <tr className="border-b border-[#E2E8F0] text-[#718096] text-[11px] font-bold uppercase tracking-wider">
+              <th className="py-2 px-2.5 font-semibold">Tanggal</th>
+              <th className="py-2 px-2.5 font-semibold">Jam</th>
+              <th className="py-2 px-2.5 font-semibold">Catat Gula Darah</th>
+              <th className="py-2 px-2.5 font-semibold">Keterangan</th>
             </tr>
           </thead>
-          <tbody className="text-sm font-medium">
+          <tbody className="text-xs font-medium divide-y divide-[#E2E8F0]/40">
             {!hasData ? (
               <tr>
-                <td colSpan={3} className="py-4 text-center text-xs text-[#718096]">
-                  Tidak ada catatan riwayat.
+                <td colSpan={4} className="py-4 text-center text-xs text-[#718096]">
+                  Tidak ada catatan riwayat gula darah.
                 </td>
               </tr>
             ) : (
-              logs.slice(0, 4).map((log, idx) => (
-                <tr key={log.id || `bs-${idx}`} className="border-b border-[#E2E8F0]/40 hover:bg-[#F4F6F8]/30 transition-colors">
-                  <td className="py-3 px-2 text-[#1A202C]">{log.date}</td>
-                  <td className="py-3 px-2 text-[#1A202C]">{log.before} mg/dL</td>
-                  <td className={`py-3 px-2 ${log.after > 140 ? "text-[#C53030] font-bold" : "text-[#1A202C]"}`}>
-                    {log.after} mg/dL
+              logs.map((log, idx) => (
+                <tr key={log.id || `bs-${idx}`} className="hover:bg-[#F4F6F8]/50 transition-colors">
+                  <td className="py-2.5 px-2.5 text-[#1A202C] font-semibold">{log.date}</td>
+                  <td className="py-2.5 px-2.5 text-[#718096]">{log.time}</td>
+                  <td className="py-2.5 px-2.5 font-bold text-[#1A202C]">
+                    {log.glucoseValue} mg/dL
+                  </td>
+                  <td className="py-2.5 px-2.5">
+                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      log.measurementTimeType === "sebelum_makan"
+                        ? "bg-[#F0FDF4] text-[#166534]"
+                        : log.measurementTimeType === "sesudah_makan"
+                        ? "bg-[#FFF5F5] text-[#C53030]"
+                        : "bg-[#EBF8FF] text-[#2B6CB0]"
+                    }`}>
+                      {log.measurementTimeLabel}
+                    </span>
                   </td>
                 </tr>
               ))

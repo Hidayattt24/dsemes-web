@@ -6,6 +6,15 @@ interface PatientPersonalInfoCardProps {
   readonly patient: Patient;
 }
 
+function formatWhatsApp(num?: string) {
+  if (!num || num === "-") return "-";
+  const clean = num.trim();
+  if (clean.startsWith("+62")) return clean;
+  if (clean.startsWith("62")) return `+${clean}`;
+  if (clean.startsWith("0")) return `+62${clean.slice(1)}`;
+  return `+62${clean}`;
+}
+
 export function PatientPersonalInfoCard({ patient }: PatientPersonalInfoCardProps) {
   const genderIcon = patient.gender === "Laki-laki" ? "male" : "female";
 
@@ -17,11 +26,11 @@ export function PatientPersonalInfoCard({ patient }: PatientPersonalInfoCardProp
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* NAMA */}
-        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30">
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
           <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
             <span className="material-symbols-outlined text-[14px]">person</span> Nama
           </p>
-          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)]">{patient.name}</p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">{patient.name}</p>
         </div>
 
         {/* UMUR */}
@@ -37,7 +46,7 @@ export function PatientPersonalInfoCard({ patient }: PatientPersonalInfoCardProp
           <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
             <span className="material-symbols-outlined text-[14px]">chat</span> WhatsApp
           </p>
-          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)]">{patient.whatsapp}</p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)]">{formatWhatsApp(patient.whatsapp)}</p>
         </div>
 
         {/* JENIS KELAMIN */}

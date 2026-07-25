@@ -47,10 +47,23 @@ export interface Patient {
   readonly bmi?: number;
   readonly latestActivityTime?: string;
   readonly latestActivityName?: string;
+  readonly calorieStatusInfo?: CalorieStatusInfo;
+}
+
+export interface CalorieStatusInfo {
+  readonly targetCalories: number;
+  readonly consumedCalories: number;
+  readonly achievementPercentage: number;
+  readonly calorieDifference: number;
+  readonly calorieDifferenceStr: string;
+  readonly calorieStatus: string;
+  readonly calorieStatusCode: "excellent" | "slightly_below" | "below" | "very_low" | "above" | "excessive" | string;
+  readonly calorieDescription: string;
 }
 
 export interface PatientStats {
   readonly totalPatients: number;
   readonly activePatients: number;
-  readonly averageAge: number;
+  readonly youngestAge: number;
+  readonly oldestAge: number;
 }

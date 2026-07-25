@@ -16,8 +16,8 @@ function mapBackendPatientToFrontend(p: any): Patient {
   }
 
   // Doctor/Staff and Puskesmas
-  const doctor = p.assigned_staff?.full_name ?? "Dr. Ahmad Faisal";
-  const puskesmas = p.assigned_staff?.position_title ?? "Puskesmas Kuta Alam";
+  const doctor = p.assigned_staff?.full_name ?? "-";
+  const puskesmas = p.assigned_staff?.position_title ?? "-";
 
   return {
     id: String(p.id),
@@ -62,6 +62,16 @@ function mapBackendPatientToFrontend(p: any): Patient {
     bmi: p.bmi,
     latestActivityTime: p.latest_activity_time,
     latestActivityName: p.latest_activity_name,
+    calorieStatusInfo: p.calorie_status_info ? {
+      targetCalories: p.calorie_status_info.target_calories ?? 2000,
+      consumedCalories: p.calorie_status_info.consumed_calories ?? 0,
+      achievementPercentage: p.calorie_status_info.achievement_percentage ?? 0,
+      calorieDifference: p.calorie_status_info.calorie_difference ?? 0,
+      calorieDifferenceStr: p.calorie_status_info.calorie_difference_str ?? "0 kcal",
+      calorieStatus: p.calorie_status_info.calorie_status ?? "Asupan Sangat Rendah",
+      calorieStatusCode: p.calorie_status_info.calorie_status_code ?? "very_low",
+      calorieDescription: p.calorie_status_info.calorie_description ?? "-",
+    } : undefined,
   };
 }
 
@@ -98,13 +108,33 @@ export const patientService = {
 
   /** Fetch statistics summary for the patient metrics */
   async getPatientStats(): Promise<PatientStats> {
-    const res = await axiosInstance.get("/admin/patients/stats");
-    const data = res.data?.data;
-    return {
-      totalPatients: data?.total_patients ?? 0,
-      activePatients: data?.active_patients ?? 0,
-      averageAge: data?.average_age ?? 0,
-    };
+    try {
+      const res = await axiosInstance.get("/admin/patients/stats");
+      const data = res.data?.data;
+      let youngest = data?.youngest_age ?? 0;
+      let oldest = data?.oldest_age ?? 0;
+
+      // Fallback: If stats returns 0 (e.g., pending backend restart), compute from patient list
+      if ((!youngest || !oldest) && (data?.total_patients ?? 0) > 0) {
+        const patientsRes = await patientService.getPatients({ limit: 100 });
+        const ages = patientsRes.patients
+          .map((p) => p.age)
+          .filter((a) => typeof a === "number" && a > 0);
+        if (ages.length > 0) {
+          youngest = Math.min(...ages);
+          oldest = Math.max(...ages);
+        }
+      }
+
+      return {
+        totalPatients: data?.total_patients ?? 0,
+        activePatients: data?.active_patients ?? 0,
+        youngestAge: youngest,
+        oldestAge: oldest,
+      };
+    } catch {
+      return { totalPatients: 0, activePatients: 0, youngestAge: 0, oldestAge: 0 };
+    }
   },
 
   /** Fetch patient blood sugar history */

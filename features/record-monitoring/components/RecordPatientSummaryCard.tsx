@@ -67,27 +67,92 @@ export function RecordPatientSummaryCard({ patient }: RecordPatientSummaryCardPr
         </div>
       </div>
 
-      <div className="premium-card p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300">
-        <div className="flex items-center justify-between mb-4">
-          <span className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[20px]">task_alt</span>
-          </span>
-          <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full uppercase border border-teal-100">
-            Kepatuhan
-          </span>
-        </div>
-        <div>
-          <h4 className="text-[10px] font-bold text-[#718096] uppercase tracking-widest mb-1">
-            Tingkat Kepatuhan
-          </h4>
-          <p className="text-2xl font-bold text-[#1A202C]">
-            {patient.compliance}%
-          </p>
-          <p className="text-xs text-[#718096] mt-2 font-medium">
-            Target Kalori: {patient.dailyCalorieTarget ?? 2000} kcal
-          </p>
-        </div>
-      </div>
+      {/* 3. Compliance & Calorie Target Status Card */}
+      {(() => {
+        const cal = patient.calorieStatusInfo;
+        const getTheme = (code?: string) => {
+          switch (code) {
+            case "excellent":
+              return {
+                badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                icon: "bg-emerald-50 text-emerald-600",
+                bar: "bg-emerald-500",
+              };
+            case "slightly_below":
+              return {
+                badge: "bg-blue-50 text-blue-700 border-blue-200",
+                icon: "bg-blue-50 text-blue-600",
+                bar: "bg-blue-500",
+              };
+            case "below":
+            case "above":
+              return {
+                badge: "bg-amber-50 text-amber-700 border-amber-200",
+                icon: "bg-amber-50 text-amber-600",
+                bar: "bg-amber-500",
+              };
+            case "very_low":
+            case "excessive":
+            default:
+              return {
+                badge: "bg-rose-50 text-rose-700 border-rose-200",
+                icon: "bg-rose-50 text-rose-600",
+                bar: "bg-rose-500",
+              };
+          }
+        };
+
+        const theme = getTheme(cal?.calorieStatusCode);
+        const achievement = cal?.achievementPercentage ?? 0;
+        const consumed = cal?.consumedCalories ?? 0;
+        const target = cal?.targetCalories ?? (patient.dailyCalorieTarget ?? 2000);
+        const diffStr = cal?.calorieDifferenceStr ?? "0 kcal";
+        const statusLabel = cal?.calorieStatus ?? "Asupan Sangat Rendah";
+        const desc = cal?.calorieDescription ?? "Pasien mengonsumsi kalori sangat rendah dari target.";
+
+        return (
+          <div className="premium-card p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <span className={`w-10 h-10 rounded-full flex items-center justify-center ${theme.icon}`}>
+                <span className="material-symbols-outlined text-[20px]">restaurant</span>
+              </span>
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase border ${theme.badge}`}>
+                {statusLabel}
+              </span>
+            </div>
+            <div>
+              <h4 className="text-[10px] font-bold text-[#718096] uppercase tracking-widest mb-1">
+                Target & Asupan Kalori (Hari Ini)
+              </h4>
+              <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-bold text-[#1A202C]">
+                  {consumed.toLocaleString("id-ID")}{" "}
+                  <span className="text-xs font-semibold text-[#718096]">/ {target.toLocaleString("id-ID")} kcal</span>
+                </p>
+                <span className="text-xs font-extrabold text-[#1A202C]">
+                  {achievement}%
+                </span>
+              </div>
+
+              {/* Progress Bar Indicator */}
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden my-2">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${theme.bar}`}
+                  style={{ width: `${Math.min(100, Math.max(0, achievement))}%` }}
+                />
+              </div>
+
+              <div className="flex justify-between items-center text-[11px] font-semibold text-[#718096] mt-1">
+                <span>Beda: <strong className="text-[#1A202C]">{diffStr}</strong></span>
+                <span>Kepatuhan 7H: <strong className="text-[#00695C]">{patient.compliance}%</strong></span>
+              </div>
+              <p className="text-[11px] text-[#718096] mt-2 font-medium leading-tight">
+                {desc}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="premium-card p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300">
         <div className="flex items-center justify-between mb-4">

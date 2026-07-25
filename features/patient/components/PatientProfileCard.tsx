@@ -38,21 +38,23 @@ export function PatientProfileCard({ patient }: PatientProfileCardProps) {
       </h3>
       <div className="px-4 py-1 bg-[#00695C]/5 rounded-full border border-[#00695C]/10 mb-6">
         <p className="text-[#00695C] font-semibold text-xs tracking-wide font-[family-name:var(--font-poppins)]">
-          # AC-{882900 + parseInt(patient.id)}
+          # {patient.patientCode && patient.patientCode !== "-" ? patient.patientCode : patient.id.slice(0, 5)}
         </p>
       </div>
 
       <div className="space-y-3 w-full">
-        <div className="px-4 py-2.5 bg-green-50 rounded-lg flex items-center justify-center gap-2 border border-green-100">
-          <span className="material-symbols-outlined text-[16px] text-green-700">task_alt</span>
-          <span className="text-[11px] font-bold text-green-700 uppercase tracking-widest font-[family-name:var(--font-poppins)]">
-            Kepatuhan: Patuh ({patient.compliance}%)
-          </span>
-        </div>
-        <div className="px-4 py-2.5 bg-slate-50 rounded-lg flex items-center justify-center gap-2 border border-slate-100">
-          <span className="material-symbols-outlined text-[16px] text-slate-600">smartphone</span>
-          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest font-[family-name:var(--font-poppins)]">
-            Tipe Intervensi: {patient.interventionType}
+        <div className={`px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 border ${
+          patient.compliance >= 75
+            ? "bg-green-50 text-green-700 border-green-100"
+            : patient.compliance >= 60
+            ? "bg-blue-50 text-blue-700 border-blue-100"
+            : patient.compliance >= 40
+            ? "bg-amber-50 text-amber-700 border-amber-100"
+            : "bg-red-50 text-red-700 border-red-100"
+        }`}>
+          <span className="material-symbols-outlined text-[16px]">task_alt</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest font-[family-name:var(--font-poppins)]">
+            Kepatuhan: {patient.compliance >= 75 ? "Patuh" : patient.compliance >= 60 ? "Cukup" : patient.compliance >= 40 ? "Kurang" : "Tidak Patuh"} ({patient.compliance}%)
           </span>
         </div>
       </div>
