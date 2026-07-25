@@ -1,4 +1,4 @@
-import type { EducationArticle, EducationStats } from "../types/education";
+import type { EducationArticle, EducationStats, EducationProgressItem, EducationProgressAnalytics } from "../types/education";
 import { axiosInstance } from "@/lib/axios";
 
 const mapArticleFromBackend = (data: any): EducationArticle => {
@@ -86,6 +86,26 @@ export const educationService = {
       totalCategories: data.total_categories || 0,
       publishedArticles: data.published_articles || 0,
       totalReads: data.total_reads || 0,
+    };
+  },
+
+  /** Get all patients' progress for an education article */
+  async getProgress(articleId: string): Promise<EducationProgressItem[]> {
+    const res = await axiosInstance.get(`/admin/education/${articleId}/progress`);
+    return res.data?.data ?? [];
+  },
+
+  /** Get progress analytics summary for an education article */
+  async getProgressAnalytics(articleId: string): Promise<EducationProgressAnalytics> {
+    const res = await axiosInstance.get(`/admin/education/${articleId}/progress/analytics`);
+    const data = res.data?.data ?? {};
+    return {
+      total_patients: data.total_patients || 0,
+      completed_count: data.completed_count || 0,
+      read_article_count: data.read_article_count || 0,
+      watched_video_count: data.watched_video_count || 0,
+      read_and_video_count: data.read_and_video_count || 0,
+      not_started_count: data.not_started_count || 0,
     };
   },
 };

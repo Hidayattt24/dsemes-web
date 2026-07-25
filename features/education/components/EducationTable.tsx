@@ -126,6 +126,15 @@ export function EducationTable({ articles, loading, onDelete }: EducationTablePr
       header: "Aksi",
       render: (row) => (
         <div className="flex items-center gap-2">
+          {/* Progress Link */}
+          <Link
+            href={`${ROUTES.MANAJEMEN_EDUKASI}/${row.id}/progress`}
+            className="inline-flex items-center gap-1 px-3 py-1.5 border border-[#E2E8F0] rounded-lg hover:bg-[#F0F9F8] hover:border-[#00695C]/30 transition-all text-[#718096] hover:text-[#00695C] text-xs font-bold"
+            title="Lihat Progress Peserta"
+          >
+            <span className="material-symbols-outlined text-[16px]">monitoring</span>
+            Progress
+          </Link>
           {/* Detail Link */}
           <Link
             href={`${ROUTES.MANAJEMEN_EDUKASI}/${row.id}`}
