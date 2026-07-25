@@ -1,4 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
+import type { PatientMeasurement } from "@/types/patient";
 import type {
   PatientRecord,
   PatientListParams,
@@ -8,7 +9,29 @@ import type {
   ActivityLog,
   MedicationLog,
   RecordMonitoringStats,
+  PatientActivityAnalyticsResponse,
 } from "../types/record";
+
+function mapBackendMeasurementToFrontend(m: any): PatientMeasurement {
+  return {
+    id: m.id,
+    patientId: m.patient_id,
+    weightKg: m.weight_kg,
+    heightCm: m.height_cm,
+    bmi: m.bmi,
+    bloodPressureSystolic: m.blood_pressure_systolic,
+    bloodPressureDiastolic: m.blood_pressure_diastolic,
+    bloodSugar: m.blood_sugar,
+    waistCircumferenceCm: m.waist_circumference_cm,
+    dailyCalorieTarget: m.daily_calorie_target,
+    notes: m.notes,
+    recordedById: m.recorded_by_id,
+    recordedByName: m.recorded_by_name ?? "System",
+    recordedByRole: m.recorded_by_role ?? "admin",
+    measuredAt: m.measured_at,
+    createdAt: m.created_at,
+  };
+}
 
 const mapPatientRecord = (data: any): PatientRecord => {
   let age = 50;
@@ -27,19 +50,48 @@ const mapPatientRecord = (data: any): PatientRecord => {
 
   let bloodSugarTime = "-";
   if (data.latest_blood_sugar_time) {
-    const bsTime = new Date(data.latest_blood_sugar_time);
-    bloodSugarTime = bsTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+    const bsDate = new Date(data.latest_blood_sugar_time);
+    const today = new Date();
+    const isToday = bsDate.toDateString() === today.toDateString();
+    if (isToday) {
+      bloodSugarTime = bsDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+    } else {
+      bloodSugarTime = bsDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" }) +
+        " " + bsDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    }
   }
 
-  const meal = data.latest_meal_calories ? `${Math.round(data.latest_meal_calories)} kcal` : "-";
-  const mealType = data.latest_meal_type ? (
-    data.latest_meal_type === "sarapan" ? "Sarapan" :
-    data.latest_meal_type === "makan_siang" ? "Makan Siang" :
-    data.latest_meal_type === "makan_malam" ? "Makan Malam" : "Cemilan"
-  ) : "-";
+  // Show meal type even when calories = 0 (food may not be linked to a food item)
+  const mealTypeLabel = data.latest_meal_type
+    ? (data.latest_meal_type === "sarapan" ? "Sarapan" :
+      data.latest_meal_type === "makan_siang" ? "Makan Siang" :
+      data.latest_meal_type === "makan_malam" ? "Makan Malam" : "Cemilan")
+    : null;
 
-  const activity = data.latest_activity_time ? "30 Menit" : "-";
-  const activityType = data.latest_activity_name ?? "-";
+  const meal = data.latest_meal_type
+    ? (data.latest_meal_calories > 0 ? `${Math.round(data.latest_meal_calories)} kcal` : mealTypeLabel ?? "-")
+    : "-";
+  const mealType = mealTypeLabel ?? "-";
+
+  // Activity: show activity name + relative time
+  let activity = "-";
+  let activityType = "-";
+  if (data.latest_activity_name) {
+    activity = data.latest_activity_name;
+    if (data.latest_activity_time) {
+      const actDate = new Date(data.latest_activity_time);
+      const today = new Date();
+      const diffMs = today.getTime() - actDate.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) {
+        activityType = actDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+      } else if (diffDays === 1) {
+        activityType = "Kemarin";
+      } else {
+        activityType = actDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+      }
+    }
+  }
 
   let status: "Stabil" | "Waspada" | "Tinggi" | "Normal" = "Normal";
   const statusStr = data.latest_blood_sugar_status ?? "";
@@ -57,8 +109,8 @@ const mapPatientRecord = (data: any): PatientRecord => {
     ? data.full_name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase()
     : "P";
 
-  const doctor = data.assigned_staff?.full_name ?? "Dr. Ahmad Faisal";
-  const puskesmas = data.assigned_staff?.position_title ?? "Puskesmas Ulee Kareng";
+  const doctor = data.assigned_staff?.full_name ?? "-";
+  const puskesmas = data.assigned_staff?.position_title ?? "-";
   const registeredAt = data.created_at
     ? new Date(data.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
     : "-";
@@ -80,6 +132,13 @@ const mapPatientRecord = (data: any): PatientRecord => {
     emergencyContact,
     dailyCalorieTarget: data.daily_calorie_target,
     compliance: data.compliance ?? 0,
+    complianceLabel: data.compliance_label || undefined,
+    complianceBreakdown: data.compliance_breakdown ? {
+      bloodSugarScore: data.compliance_breakdown.blood_sugar_score ?? 0,
+      foodScore: data.compliance_breakdown.food_score ?? 0,
+      activityScore: data.compliance_breakdown.activity_score ?? 0,
+      medicationScore: data.compliance_breakdown.medication_score ?? 0,
+    } : undefined,
     lastActiveAt: data.last_active_at,
     whatsapp: data.whatsapp_number ?? "-",
     height: data.height_cm ?? 0,
@@ -107,6 +166,22 @@ const mapPatientRecord = (data: any): PatientRecord => {
     bmi: data.bmi,
     latestActivityTime: data.latest_activity_time,
     latestActivityName: data.latest_activity_name,
+    calorieStatusInfo: data.calorie_status_info ? {
+      targetCalories: data.calorie_status_info.target_calories || 0,
+      consumedCalories: data.calorie_status_info.consumed_calories ?? 0,
+      achievementPercentage: data.calorie_status_info.achievement_percentage ?? 0,
+      calorieDifference: data.calorie_status_info.calorie_difference ?? 0,
+      calorieDifferenceStr: data.calorie_status_info.calorie_difference_str ?? "0 kcal",
+      calorieStatus: data.calorie_status_info.calorie_status ?? "Asupan Sangat Rendah",
+      calorieStatusCode: data.calorie_status_info.calorie_status_code ?? "very_low",
+      calorieDescription: data.calorie_status_info.calorie_description ?? "-",
+    } : undefined,
+    measurements: Array.isArray(data.measurements)
+      ? data.measurements.map(mapBackendMeasurementToFrontend)
+      : undefined,
+    latestMeasurement: data.latest_measurement
+      ? mapBackendMeasurementToFrontend(data.latest_measurement)
+      : undefined,
     dailySummary: {
       bloodSugar,
       bloodSugarTime,
@@ -164,34 +239,35 @@ export const recordMonitoringService = {
     const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/blood-sugar`, { params: { limit: 100 } });
     const list = res.data?.data ?? [];
 
-    const dailyMap: { [key: string]: { before: number; after: number; dateStr: string; rawDate: Date } } = {};
-    list.forEach((log: any) => {
-      const d = new Date(log.measured_at);
-      const dateKey = d.toDateString();
-      const formattedDate = d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
-      if (!dailyMap[dateKey]) {
-        dailyMap[dateKey] = { before: 0, after: 0, dateStr: formattedDate, rawDate: d };
-      }
-      if (log.measurement_time_type === "sebelum_makan") {
-        dailyMap[dateKey].before = log.glucose_value;
-      } else {
-        dailyMap[dateKey].after = log.glucose_value;
-      }
-    });
+    return list.map((log: any) => {
+      const d = log.measured_at ? new Date(log.measured_at) : new Date();
+      const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+      const timeStr = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
 
-    return Object.values(dailyMap)
-      .map((item) => ({
-        id: `bs-${item.rawDate.getTime()}`,
-        date: item.dateStr,
-        before: item.before > 0 ? item.before : 100,
-        after: item.after > 0 ? item.after : 140,
-        rawDate: item.rawDate,
-      }))
-      .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
+      let measurementTimeLabel = "Sebelum Makan";
+      if (log.measurement_time_type === "sesudah_makan") {
+        measurementTimeLabel = "Sesudah Makan";
+      } else if (log.measurement_time_type === "sewaktu") {
+        measurementTimeLabel = "Sewaktu Makan";
+      }
+
+      return {
+        id: log.id,
+        date: dateStr,
+        time: timeStr,
+        glucoseValue: log.glucose_value ?? 0,
+        measurementTimeType: log.measurement_time_type || "sebelum_makan",
+        measurementTimeLabel,
+        status: log.status || "normal",
+        rawDate: d,
+        before: log.measurement_time_type === "sebelum_makan" ? log.glucose_value : 0,
+        after: log.measurement_time_type === "sesudah_makan" ? log.glucose_value : 0,
+      };
+    }).sort((a: any, b: any) => (b.rawDate?.getTime() ?? 0) - (a.rawDate?.getTime() ?? 0));
   },
 
-  async getMealLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<MealLog[]> {
-    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/meals`, { params: { limit: 100 } });
+  async getMealLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff', date?: string): Promise<MealLog[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/meals`, { params: { limit: 100, date: date || undefined } });
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
       const loggedDate = new Date(log.logged_at);
@@ -213,8 +289,8 @@ export const recordMonitoringService = {
     });
   },
 
-  async getActivityLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<ActivityLog[]> {
-    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/activities`, { params: { limit: 100 } });
+  async getActivityLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff', date?: string): Promise<ActivityLog[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/activities`, { params: { limit: 100, date: date || undefined } });
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
       const loggedDate = new Date(log.logged_at);
@@ -236,8 +312,8 @@ export const recordMonitoringService = {
     });
   },
 
-  async getMedicationLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<MedicationLog[]> {
-    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/medications`, { params: { limit: 100 } });
+  async getMedicationLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff', date?: string): Promise<MedicationLog[]> {
+    const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/medications`, { params: { limit: 100, date: date || undefined } });
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
       let status: "Diminum" | "Terlewat" | "Mendatang" = "Mendatang";
@@ -267,5 +343,36 @@ export const recordMonitoringService = {
       totalActivityRecords: d.total_activity_logs ?? 0,
       totalMedicationRecords: d.total_medication_logs ?? 0,
     };
+  },
+
+  async getActivityAnalytics(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff', days: number = 7): Promise<PatientActivityAnalyticsResponse | null> {
+    try {
+      const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/activity-analytics?days=${days}`);
+      const d = res.data?.data;
+      if (!d) return null;
+      return {
+        totalRecords: d.total_records ?? 0,
+        bloodSugar: {
+          count: d.blood_sugar?.count ?? 0,
+          percentage: d.blood_sugar?.percentage ?? 0,
+        },
+        food: {
+          count: d.food?.count ?? 0,
+          percentage: d.food?.percentage ?? 0,
+        },
+        physicalActivity: {
+          count: d.physical_activity?.count ?? 0,
+          percentage: d.physical_activity?.percentage ?? 0,
+        },
+        medication: {
+          count: d.medication?.count ?? 0,
+          percentage: d.medication?.percentage ?? 0,
+        },
+        mostUsed: d.most_used || "-",
+        leastUsed: d.least_used || "-",
+      };
+    } catch {
+      return null;
+    }
   },
 } as const;

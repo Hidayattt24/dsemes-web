@@ -1,24 +1,51 @@
 import type {
-  Quiz,
+  QuestionnaireRecord,
   QuizStats,
   QuizParticipant,
   ParticipantQuizDetail,
   ParticipantQuestionAnalysis,
   PaginationMeta,
   QuizListParams,
+  QuestionCategoryItem,
+  QuestionItem,
+  QuestionChoice,
 } from "../types/quiz";
 import { axiosInstance } from "@/lib/axios";
 
-// ── Types matching the backend response ──────────────────────────────────────
+interface ApiChoiceResponse {
+  readonly id: string;
+  readonly option_text: string;
+  readonly is_correct: boolean;
+  readonly display_order: number;
+}
 
-interface ApiQuizResponse {
+interface ApiQuestionResponse {
+  readonly id: string;
+  readonly question_text: string;
+  readonly explanation?: string;
+  readonly display_order: number;
+  readonly choices: readonly ApiChoiceResponse[];
+}
+
+interface ApiCategoryResponse {
   readonly id: string;
   readonly title: string;
-  readonly linked_article_id: string;
-  readonly linked_article_title: string;
-  readonly difficulty: string;
-  readonly passing_score: number;
+  readonly description?: string;
+  readonly display_order: number;
+  readonly questions: readonly ApiQuestionResponse[];
+}
+
+interface ApiQuestionnaireResponse {
+  readonly id: string;
+  readonly title: string;
+  readonly type: "PRE_TEST" | "POST_TEST";
+  readonly description?: string;
+  readonly education_id?: string;
+  readonly education_title?: string;
+  readonly passing_score?: number;
+  readonly difficulty?: string;
   readonly status: string;
+  readonly category_count: number;
   readonly question_count: number;
   readonly participant_count: number;
   readonly average_score: number | null;
@@ -27,17 +54,8 @@ interface ApiQuizResponse {
   readonly updated_at: string;
 }
 
-interface ApiQuizDetailResponse extends ApiQuizResponse {
-  readonly questions: readonly {
-    readonly id: string;
-    readonly question_text: string;
-    readonly option_a: string;
-    readonly option_b: string;
-    readonly option_c: string;
-    readonly option_d: string;
-    readonly correct_option: "A" | "B" | "C" | "D";
-    readonly explanation?: string;
-  }[];
+interface ApiQuestionnaireDetailResponse extends ApiQuestionnaireResponse {
+  readonly categories: readonly ApiCategoryResponse[];
 }
 
 interface ApiParticipantResponse {
@@ -74,53 +92,60 @@ interface ApiQuizStats {
   readonly average_score: number;
 }
 
-// ── Mapper functions ─────────────────────────────────────────────────────────
+function mapQuestionnaireFromApi(api: ApiQuestionnaireDetailResponse): QuestionnaireRecord {
+  const categories: QuestionCategoryItem[] = (api.categories ?? []).map((cat) => ({
+    id: cat.id,
+    title: cat.title,
+    description: cat.description,
+    displayOrder: cat.display_order,
+    questions: (cat.questions ?? []).map((q): QuestionItem => ({
+      id: q.id,
+      questionText: q.question_text,
+      explanation: q.explanation,
+      displayOrder: q.display_order,
+      choices: (q.choices ?? []).map((c): QuestionChoice => ({
+        id: c.id,
+        optionText: c.option_text,
+        isCorrect: c.is_correct,
+        displayOrder: c.display_order,
+      })),
+    })),
+  }));
 
-function mapQuizFromApi(api: ApiQuizDetailResponse): Quiz {
   return {
     id: api.id,
     title: api.title,
-    linkedArticleId: api.linked_article_id,
-    linkedArticleTitle: api.linked_article_title,
-    difficulty: api.difficulty as Quiz["difficulty"],
+    type: api.type,
+    description: api.description,
+    educationId: api.education_id,
+    educationTitle: api.education_title,
     passingScore: api.passing_score,
-    status: api.status as Quiz["status"],
-    questions: (api.questions ?? []).map((q) => ({
-      id: q.id,
-      questionText: q.question_text,
-      options: {
-        A: q.option_a,
-        B: q.option_b,
-        C: q.option_c,
-        D: q.option_d,
-      },
-      correctOption: q.correct_option,
-      explanation: q.explanation,
-    })),
+    difficulty: api.difficulty as QuestionnaireRecord["difficulty"],
+    status: api.status as QuestionnaireRecord["status"],
+    categoryCount: api.category_count,
+    questionCount: api.question_count,
     participantCount: api.participant_count,
     averageScore: api.average_score,
     createdBy: api.created_by ?? "-",
     createdAt: api.created_at,
     updatedAt: api.updated_at,
+    categories,
   };
 }
 
-function mapQuizListItemFromApi(api: ApiQuizResponse): Quiz {
+function mapQuestionnaireListItemFromApi(api: ApiQuestionnaireResponse): QuestionnaireRecord {
   return {
     id: api.id,
     title: api.title,
-    linkedArticleId: api.linked_article_id,
-    linkedArticleTitle: api.linked_article_title,
-    difficulty: api.difficulty as Quiz["difficulty"],
+    type: api.type,
+    description: api.description,
+    educationId: api.education_id,
+    educationTitle: api.education_title,
     passingScore: api.passing_score,
-    status: api.status as Quiz["status"],
-    // For list view, questions array length comes from question_count
-    questions: Array.from({ length: api.question_count ?? 0 }, (_, i) => ({
-      id: `placeholder_${i}`,
-      questionText: "",
-      options: { A: "", B: "", C: "", D: "" },
-      correctOption: "A" as const,
-    })),
+    difficulty: api.difficulty as QuestionnaireRecord["difficulty"],
+    status: api.status as QuestionnaireRecord["status"],
+    categoryCount: api.category_count ?? 0,
+    questionCount: api.question_count ?? 0,
     participantCount: api.participant_count,
     averageScore: api.average_score,
     createdBy: api.created_by ?? "-",
@@ -164,78 +189,81 @@ function mapQuestionAnalysisFromApi(
   };
 }
 
-// ── Service ───────────────────────────────────────────────────────────────────
-
 export const quizService = {
-  /** Get paginated quizzes (flat list, no questions array) */
+  /** Get paginated questionnaires */
   async getQuizzes(
     params: QuizListParams = {},
-    rolePrefix: 'admin' | 'staff' = 'staff'
-  ): Promise<{ items: Quiz[]; pagination: PaginationMeta }> {
+    rolePrefix: "admin" | "staff" = "staff"
+  ): Promise<{ items: QuestionnaireRecord[]; pagination: PaginationMeta }> {
     const res = await axiosInstance.get(`/${rolePrefix}/quiz`, {
       params: {
         page: params.page ?? 1,
         limit: params.limit ?? 10,
         search: params.search || undefined,
+        type: params.type || undefined,
         status: params.status || undefined,
         sort_by: params.sort_by || undefined,
         sort_order: params.sort_order || undefined,
       },
     });
-    const items: ApiQuizResponse[] = res.data.data ?? [];
+    const items: ApiQuestionnaireResponse[] = res.data.data ?? [];
     const meta = res.data?.meta ?? { page: 1, per_page: 10, total: 0, total_pages: 0 };
     return {
-      items: items.map(mapQuizListItemFromApi),
+      items: items.map(mapQuestionnaireListItemFromApi),
       pagination: meta,
     };
   },
 
-  /** Get single quiz by ID (includes full questions) */
-  async getQuizById(id: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<Quiz | null> {
+  /** Get single questionnaire by ID */
+  async getQuizById(id: string, rolePrefix: "admin" | "staff" = "admin"): Promise<QuestionnaireRecord | null> {
     try {
       const res = await axiosInstance.get(`/${rolePrefix}/quiz/${id}`);
-      const data: ApiQuizDetailResponse = res.data.data;
-      return mapQuizFromApi(data);
+      const data: ApiQuestionnaireDetailResponse = res.data.data;
+      return mapQuestionnaireFromApi(data);
     } catch {
       return null;
     }
   },
 
-  /** Save (Create or Update) quiz */
-  async saveQuiz(
-    quiz: Partial<Quiz> & { id?: string }
-  ): Promise<Quiz> {
-    const statusNormalized =
-      quiz.status === "Terbit" ? "Terbit" : "Draft";
-
-    const payload = {
-      title: quiz.title ?? "",
-      linked_article_id: quiz.linkedArticleId ?? "",
-      difficulty: quiz.difficulty ?? "Sedang",
-      passing_score: quiz.passingScore ?? 80,
-      status: statusNormalized,
-      questions: (quiz.questions ?? []).map((q) => ({
-        question_text: q.questionText,
-        option_a: q.options.A,
-        option_b: q.options.B,
-        option_c: q.options.C,
-        option_d: q.options.D,
-        correct_option: q.correctOption,
-        explanation: q.explanation ?? "",
-      })),
-    };
-
+  /** Save (Create or Update) questionnaire */
+  async saveQuestionnaire(
+    payload: {
+      id?: string;
+      title: string;
+      type: "PRE_TEST" | "POST_TEST";
+      description?: string;
+      education_id?: string | null;
+      passing_score?: number | null;
+      difficulty?: string | null;
+      status: string;
+      categories: {
+        title: string;
+        description?: string;
+        display_order: number;
+        questions: {
+          question_text: string;
+          explanation?: string;
+          display_order: number;
+          choices: {
+            option_text: string;
+            is_correct: boolean;
+            display_order: number;
+          }[];
+        }[];
+      }[];
+    }
+  ): Promise<QuestionnaireRecord> {
     let res;
-    if (quiz.id) {
-      res = await axiosInstance.put(`/admin/quiz/${quiz.id}`, payload);
+    if (payload.id) {
+      res = await axiosInstance.put(`/admin/quiz/${payload.id}`, payload);
     } else {
       res = await axiosInstance.post("/admin/quiz", payload);
     }
-    const data: ApiQuizDetailResponse = res.data.data;
-    return mapQuizFromApi(data);
+    const data: ApiQuestionnaireDetailResponse = res.data.data;
+    return mapQuestionnaireFromApi(data);
   },
 
-  /** Delete quiz */
+  /** Delete questionnaire */
   async deleteQuiz(id: string): Promise<boolean> {
     try {
       await axiosInstance.delete(`/admin/quiz/${id}`);
@@ -246,7 +274,7 @@ export const quizService = {
   },
 
   /** Get statistics summary */
-  async getStats(rolePrefix: 'admin' | 'staff' = 'staff'): Promise<QuizStats> {
+  async getStats(rolePrefix: "admin" | "staff" = "staff"): Promise<QuizStats> {
     const res = await axiosInstance.get(`/${rolePrefix}/quiz/stats`);
     const data: ApiQuizStats = res.data.data;
     return {
@@ -258,18 +286,18 @@ export const quizService = {
     };
   },
 
-  /** Get participants for a specific quiz */
-  async getParticipantsByQuizId(quizId: string, rolePrefix: 'admin' | 'staff' = 'staff'): Promise<QuizParticipant[]> {
+  /** Get participants for a specific questionnaire */
+  async getParticipantsByQuizId(quizId: string, rolePrefix: "admin" | "staff" = "staff"): Promise<QuizParticipant[]> {
     const res = await axiosInstance.get(`/${rolePrefix}/quiz/${quizId}/participants`);
     const items: ApiParticipantResponse[] = res.data.data ?? [];
     return items.map(mapParticipantFromApi);
   },
 
-  /** Get participant quiz detail (question-by-question analysis) */
+  /** Get participant questionnaire detail */
   async getParticipantDetail(
     quizId: string,
     participantId: string,
-    rolePrefix: 'admin' | 'staff' = 'staff'
+    rolePrefix: "admin" | "staff" = "staff"
   ): Promise<ParticipantQuizDetail | null> {
     try {
       const res = await axiosInstance.get(

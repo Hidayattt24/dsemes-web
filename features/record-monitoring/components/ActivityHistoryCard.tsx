@@ -4,9 +4,12 @@ import type { ActivityLog } from "../types/record";
 
 interface ActivityHistoryCardProps {
   readonly logs: ActivityLog[];
+  readonly selectedDate?: string;
+  readonly onDateChange?: (date: string) => void;
+  readonly isLoading?: boolean;
 }
 
-export function ActivityHistoryCard({ logs = [] }: ActivityHistoryCardProps) {
+export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isLoading }: ActivityHistoryCardProps) {
   const hasData = logs.length > 0;
 
   // Group activities by date
@@ -21,10 +24,13 @@ export function ActivityHistoryCard({ logs = [] }: ActivityHistoryCardProps) {
     dailyMap[dateStr].duration += log.duration;
   });
 
-  // Generate 5 days of chart bars ending today
+  // Base date for 5-day chart
+  const baseDate = selectedDate ? new Date(selectedDate) : new Date();
+
+  // Generate 5 days of chart bars ending on selected date
   const daysIndo = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
   const chartBars = Array.from({ length: 5 }).map((_, idx) => {
-    const targetDate = new Date();
+    const targetDate = new Date(baseDate);
     targetDate.setDate(targetDate.getDate() - (4 - idx));
     const dayLabel = daysIndo[targetDate.getDay()];
     const dateStr = targetDate.toDateString();
@@ -43,20 +49,37 @@ export function ActivityHistoryCard({ logs = [] }: ActivityHistoryCardProps) {
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm flex flex-col h-[520px] font-[family-name:var(--font-poppins)]">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
         <h3 className="text-base font-bold text-[#1A202C] flex items-center gap-2">
           <span className="material-symbols-outlined text-[#166534]">directions_run</span>
           Riwayat Aktivitas Fisik
         </h3>
+
+        {onDateChange && (
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm text-[#718096]">calendar_today</span>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="text-xs font-medium border border-[#E2E8F0] rounded-lg px-2.5 py-1 bg-[#F8FAFC] text-[#4A5568] focus:outline-none focus:ring-1 focus:ring-[#00695C] cursor-pointer"
+            />
+          </div>
+        )}
       </div>
 
       {/* Styled Bar Chart */}
       <div className="flex-1 w-full bg-[#F8FAFC] rounded-xl mb-4 p-4 border border-[#E2E8F0] flex flex-col justify-end">
-        {!hasData ? (
+        {isLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00695C] mb-2"></div>
+            <p className="text-xs text-[#718096]">Memuat catatan aktivitas...</p>
+          </div>
+        ) : !hasData ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
             <span className="material-symbols-outlined text-[#718096] text-3xl mb-2">directions_run</span>
             <p className="font-semibold text-sm text-[#4A5568]">Belum Ada Catatan Aktivitas</p>
-            <p className="text-xs text-[#718096] mt-1">Data grafik durasi aktivitas fisik pasien akan muncul di sini.</p>
+            <p className="text-xs text-[#718096] mt-1">Data grafik durasi aktivitas fisik pasien pada tanggal ini akan muncul di sini.</p>
           </div>
         ) : (
           <div className="flex-1 flex items-end justify-around pb-2">
@@ -81,9 +104,13 @@ export function ActivityHistoryCard({ logs = [] }: ActivityHistoryCardProps) {
 
       {/* Activity Log List */}
       <div className="overflow-y-auto pr-1 h-[170px]">
-        {!hasData ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center text-center p-6 h-full min-h-[120px]">
-            <p className="text-xs text-[#718096]">Tidak ada riwayat aktivitas fisik.</p>
+            <p className="text-xs text-[#718096]">Memuat data...</p>
+          </div>
+        ) : !hasData ? (
+          <div className="flex flex-col items-center justify-center text-center p-6 h-full min-h-[120px]">
+            <p className="text-xs text-[#718096]">Tidak ada riwayat aktivitas fisik pada tanggal ini.</p>
           </div>
         ) : (
           <ul className="divide-y divide-[#E2E8F0]/40">

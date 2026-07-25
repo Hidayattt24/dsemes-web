@@ -9,6 +9,7 @@ import type {
   MealLog,
   ActivityLog,
   MedicationLog,
+  PatientActivityAnalyticsResponse,
 } from "../types/record";
 
 interface UseRecordDetailReturn {
@@ -17,10 +18,31 @@ interface UseRecordDetailReturn {
   readonly mealLogs: MealLog[];
   readonly activityLogs: ActivityLog[];
   readonly medicationLogs: MedicationLog[];
+  readonly activityAnalytics: PatientActivityAnalyticsResponse | null;
+  readonly analyticsDays: number;
+  readonly setAnalyticsDays: (days: number) => void;
+  readonly isAnalyticsLoading: boolean;
   readonly isLoading: boolean;
   readonly error: string | null;
   readonly refetch: () => void;
+  readonly mealDate: string;
+  readonly setMealDate: (date: string) => void;
+  readonly activityDate: string;
+  readonly setActivityDate: (date: string) => void;
+  readonly medicationDate: string;
+  readonly setMedicationDate: (date: string) => void;
+  readonly isMealLoading: boolean;
+  readonly isActivityLoading: boolean;
+  readonly isMedicationLoading: boolean;
 }
+
+const getTodayStr = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export function useRecordDetail(patientId: string): UseRecordDetailReturn {
   const pathname = usePathname();
@@ -31,8 +53,18 @@ export function useRecordDetail(patientId: string): UseRecordDetailReturn {
   const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
+  const [activityAnalytics, setActivityAnalytics] = useState<PatientActivityAnalyticsResponse | null>(null);
+  const [analyticsDays, setAnalyticsDays] = useState<number>(7);
+
+  const [mealDate, setMealDate] = useState<string>(getTodayStr());
+  const [activityDate, setActivityDate] = useState<string>(getTodayStr());
+  const [medicationDate, setMedicationDate] = useState<string>(getTodayStr());
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isMealLoading, setIsMealLoading] = useState(false);
+  const [isActivityLoading, setIsActivityLoading] = useState(false);
+  const [isMedicationLoading, setIsMedicationLoading] = useState(false);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -45,11 +77,12 @@ export function useRecordDetail(patientId: string): UseRecordDetailReturn {
         return;
       }
 
-      const [bs, meals, acts, meds] = await Promise.all([
+      const [bs, meals, acts, meds, analytics] = await Promise.all([
         recordMonitoringService.getBloodSugarLogs(patientId, rolePrefix),
-        recordMonitoringService.getMealLogs(patientId, rolePrefix),
-        recordMonitoringService.getActivityLogs(patientId, rolePrefix),
-        recordMonitoringService.getMedicationLogs(patientId, rolePrefix),
+        recordMonitoringService.getMealLogs(patientId, rolePrefix, mealDate),
+        recordMonitoringService.getActivityLogs(patientId, rolePrefix, activityDate),
+        recordMonitoringService.getMedicationLogs(patientId, rolePrefix, medicationDate),
+        recordMonitoringService.getActivityAnalytics(patientId, rolePrefix, analyticsDays),
       ]);
 
       setPatient(p);
@@ -57,18 +90,55 @@ export function useRecordDetail(patientId: string): UseRecordDetailReturn {
       setMealLogs(meals);
       setActivityLogs(acts);
       setMedicationLogs(meds);
+      setActivityAnalytics(analytics);
     } catch {
       setError("Gagal memuat detail catatan monitoring.");
     } finally {
       setIsLoading(false);
     }
-  }, [patientId, rolePrefix]);
+  }, [patientId, rolePrefix, mealDate, activityDate, medicationDate, analyticsDays]);
 
   useEffect(() => {
     if (patientId) {
       fetchData();
     }
-  }, [patientId, fetchData]);
+  }, [patientId]);
+
+  const handleSetMealDate = useCallback((date: string) => {
+    setMealDate(date);
+    if (!patientId) return;
+    setIsMealLoading(true);
+    recordMonitoringService.getMealLogs(patientId, rolePrefix, date)
+      .then(setMealLogs)
+      .finally(() => setIsMealLoading(false));
+  }, [patientId, rolePrefix]);
+
+  const handleSetActivityDate = useCallback((date: string) => {
+    setActivityDate(date);
+    if (!patientId) return;
+    setIsActivityLoading(true);
+    recordMonitoringService.getActivityLogs(patientId, rolePrefix, date)
+      .then(setActivityLogs)
+      .finally(() => setIsActivityLoading(false));
+  }, [patientId, rolePrefix]);
+
+  const handleSetMedicationDate = useCallback((date: string) => {
+    setMedicationDate(date);
+    if (!patientId) return;
+    setIsMedicationLoading(true);
+    recordMonitoringService.getMedicationLogs(patientId, rolePrefix, date)
+      .then(setMedicationLogs)
+      .finally(() => setIsMedicationLoading(false));
+  }, [patientId, rolePrefix]);
+
+  const handleSetAnalyticsDays = useCallback((days: number) => {
+    setAnalyticsDays(days);
+    if (!patientId) return;
+    setIsAnalyticsLoading(true);
+    recordMonitoringService.getActivityAnalytics(patientId, rolePrefix, days)
+      .then(setActivityAnalytics)
+      .finally(() => setIsAnalyticsLoading(false));
+  }, [patientId, rolePrefix]);
 
   return {
     patient,
@@ -76,8 +146,21 @@ export function useRecordDetail(patientId: string): UseRecordDetailReturn {
     mealLogs,
     activityLogs,
     medicationLogs,
+    activityAnalytics,
+    analyticsDays,
+    setAnalyticsDays: handleSetAnalyticsDays,
+    isAnalyticsLoading,
     isLoading,
     error,
     refetch: fetchData,
+    mealDate,
+    setMealDate: handleSetMealDate,
+    activityDate,
+    setActivityDate: handleSetActivityDate,
+    medicationDate,
+    setMedicationDate: handleSetMedicationDate,
+    isMealLoading,
+    isActivityLoading,
+    isMedicationLoading,
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { calculateDSMESCalorieTarget } from "@/lib/calorieCalculator";
 
 interface CaloriePoint {
   readonly day: string;
@@ -18,7 +19,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
   const [selectedRange, setSelectedRange] = useState<"7" | "30">("7");
   const [hoveredCalorieIndex, setHoveredCalorieIndex] = useState<number | null>(null);
 
-  const targetCalorie = patient?.dailyCalorieTarget ?? 1800;
+  const targetCalorie = calculateDSMESCalorieTarget(patient || {});
 
   // Filter logs based on the selected range
   const limitDays = parseInt(selectedRange);

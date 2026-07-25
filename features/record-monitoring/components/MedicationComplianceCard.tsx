@@ -4,9 +4,12 @@ import type { MedicationLog } from "../types/record";
 
 interface MedicationComplianceCardProps {
   readonly logs: MedicationLog[];
+  readonly selectedDate?: string;
+  readonly onDateChange?: (date: string) => void;
+  readonly isLoading?: boolean;
 }
 
-export function MedicationComplianceCard({ logs = [] }: MedicationComplianceCardProps) {
+export function MedicationComplianceCard({ logs = [], selectedDate, onDateChange, isLoading }: MedicationComplianceCardProps) {
   // Group logs by dateGroup
   const groupedLogs = logs.reduce<Record<string, MedicationLog[]>>((acc, log) => {
     if (!acc[log.dateGroup]) {
@@ -20,22 +23,36 @@ export function MedicationComplianceCard({ logs = [] }: MedicationComplianceCard
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm flex flex-col h-[520px] font-[family-name:var(--font-poppins)]">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
         <h3 className="text-base font-bold text-[#1A202C] flex items-center gap-2">
           <span className="material-symbols-outlined text-[#00695C]">medication</span>
           Kepatuhan Obat
         </h3>
-        <button className="text-[#00695C] hover:text-[#004d43] text-xs font-bold hover:underline transition-colors cursor-pointer">
-          Lihat Kalender
-        </button>
+
+        {onDateChange && (
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm text-[#718096]">calendar_today</span>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="text-xs font-medium border border-[#E2E8F0] rounded-lg px-2.5 py-1 bg-[#F8FAFC] text-[#4A5568] focus:outline-none focus:ring-1 focus:ring-[#00695C] cursor-pointer"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto pr-1">
-        {!hasData ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center text-center p-6 h-full min-h-[300px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00695C] mb-2"></div>
+            <p className="text-xs text-[#718096]">Memuat catatan obat...</p>
+          </div>
+        ) : !hasData ? (
           <div className="flex flex-col items-center justify-center text-center p-6 h-full min-h-[300px]">
             <span className="material-symbols-outlined text-[#718096] text-3xl mb-2">medication</span>
             <p className="font-semibold text-sm text-[#4A5568]">Belum Ada Catatan Obat</p>
-            <p className="text-xs text-[#718096] mt-1">Jadwal konsumsi obat harian pasien akan muncul di sini setelah dibuat.</p>
+            <p className="text-xs text-[#718096] mt-1">Jadwal konsumsi obat harian pasien pada tanggal ini akan muncul di sini.</p>
           </div>
         ) : (
           <div className="space-y-6">

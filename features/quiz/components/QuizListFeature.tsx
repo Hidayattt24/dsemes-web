@@ -21,11 +21,12 @@ export function QuizListFeature() {
     stats,
     isLoading,
     searchQuery,
+    filterType,
     filterStatus,
     sortBy,
     pagination,
-    rolePrefix,
     setSearchQuery,
+    setFilterType,
     setFilterStatus,
     setSortBy,
     setPage,
@@ -81,12 +82,12 @@ export function QuizListFeature() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight">
-            {isStaff ? "Pemantauan Kuesioner" : "Manajemen Kuesioner"}
+            {isStaff ? "Pemantauan Kuesioner" : "Manajemen Kuesioner (Pre-Test & Post-Test)"}
           </h2>
-          <p className="text-sm text-[#718096] mt-1 font-[family-name:var(--font-poppins)]">
+          <p className="text-sm text-[#718096] mt-1">
             {isStaff
-              ? "Pantau kuesioner edukasi dan progres belajar pasien"
-              : "Kelola kuesioner edukasi dan pantau progres belajar pasien"}
+              ? "Pantau kuesioner Pre-Test / Post-Test dan progres belajar pasien"
+              : "Kelola kuesioner Pre-Test & Post-Test berbasis kategori dan pantau hasil evaluasi pasien"}
           </p>
         </div>
         {!isStaff && (
@@ -106,9 +107,11 @@ export function QuizListFeature() {
       {/* Filter panel */}
       <QuizFilters
         searchQuery={searchQuery}
+        filterType={filterType}
         filterStatus={filterStatus}
         sortBy={sortBy}
         onSearchChange={setSearchQuery}
+        onTypeChange={setFilterType}
         onStatusChange={setFilterStatus}
         onSortChange={setSortBy}
       />

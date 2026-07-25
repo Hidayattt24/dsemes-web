@@ -1,34 +1,52 @@
-export interface QuizQuestion {
-  readonly id: string;
-  readonly questionText: string;
-  readonly options: {
-    readonly A: string;
-    readonly B: string;
-    readonly C: string;
-    readonly D: string;
-  };
-  readonly correctOption: "A" | "B" | "C" | "D";
-  readonly explanation?: string;
+export type QuestionnaireType = "PRE_TEST" | "POST_TEST";
+export type QuestionnaireDifficulty = "Mudah" | "Sedang" | "Sulit";
+export type QuestionnaireStatus = "Aktif" | "Draft" | "Nonaktif";
+
+export interface QuestionChoice {
+  readonly id?: string;
+  readonly optionText: string;
+  readonly isCorrect: boolean;
+  readonly displayOrder?: number;
 }
 
-export type QuizDifficulty = "Mudah" | "Sedang" | "Sulit";
-export type QuizStatus = "Terbit" | "Draft";
+export interface QuestionItem {
+  readonly id?: string;
+  readonly questionText: string;
+  readonly explanation?: string;
+  readonly displayOrder?: number;
+  readonly choices: readonly QuestionChoice[];
+}
 
-export interface Quiz {
+export interface QuestionCategoryItem {
+  readonly id?: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly displayOrder?: number;
+  readonly questions: readonly QuestionItem[];
+}
+
+export interface QuestionnaireRecord {
   readonly id: string;
   readonly title: string;
-  readonly linkedArticleId: string;
-  readonly linkedArticleTitle: string;
-  readonly difficulty: QuizDifficulty;
-  readonly passingScore: number; // e.g. 80
-  readonly status: QuizStatus;
-  readonly questions: readonly QuizQuestion[];
+  readonly type: QuestionnaireType;
+  readonly description?: string;
+  readonly educationId?: string;
+  readonly educationTitle?: string;
+  readonly passingScore?: number;
+  readonly difficulty?: QuestionnaireDifficulty;
+  readonly status: QuestionnaireStatus;
+  readonly categoryCount: number;
+  readonly questionCount: number;
   readonly participantCount: number;
-  readonly averageScore: number | null; // e.g. 78 or null if 0 participants
+  readonly averageScore: number | null;
   readonly createdBy: string;
   readonly createdAt: string;
   readonly updatedAt: string;
+  readonly categories?: readonly QuestionCategoryItem[];
 }
+
+// Backward compatibility alias
+export type Quiz = QuestionnaireRecord;
 
 export interface QuizStats {
   readonly totalQuizzes: number;
@@ -47,15 +65,15 @@ export interface QuizParticipant {
   readonly completionDate: string;
   readonly score: number;
   readonly passed: boolean;
-  readonly duration: string; // e.g., "5m 20s"
+  readonly duration: string;
 }
 
 export interface ParticipantQuestionAnalysis {
   readonly id: string;
   readonly questionNumber: number;
   readonly questionText: string;
-  readonly patientAnswer: string; // e.g., "A. Pencegahan Diabetes"
-  readonly correctAnswer: string; // e.g., "B. Gangguan metabolik kronis..."
+  readonly patientAnswer: string;
+  readonly correctAnswer: string;
   readonly isCorrect: boolean;
   readonly explanation?: string;
 }
@@ -79,6 +97,7 @@ export interface QuizListParams {
   readonly page?: number;
   readonly limit?: number;
   readonly search?: string;
+  readonly type?: string;
   readonly status?: string;
   readonly sort_by?: QuizSortBy;
   readonly sort_order?: "asc" | "desc";

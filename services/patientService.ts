@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
-import type { Patient, PatientStats } from "@/types/patient";
+import type { Patient, PatientStats, PatientMeasurement } from "@/types/patient";
 
 function mapBackendPatientToFrontend(p: any): Patient {
   // Initials
@@ -16,8 +16,8 @@ function mapBackendPatientToFrontend(p: any): Patient {
   }
 
   // Doctor/Staff and Puskesmas
-  const doctor = p.assigned_staff?.full_name ?? "Dr. Ahmad Faisal";
-  const puskesmas = p.assigned_staff?.position_title ?? "Puskesmas Kuta Alam";
+  const doctor = p.assigned_staff?.full_name ?? "-";
+  const puskesmas = p.assigned_staff?.position_title ?? "-";
 
   return {
     id: String(p.id),
@@ -60,8 +60,47 @@ function mapBackendPatientToFrontend(p: any): Patient {
     averageBloodSugar: p.average_blood_sugar,
     latestWeight: p.latest_weight,
     bmi: p.bmi,
+    waistCircumferenceCm: p.waist_circumference_cm,
+    dailyCalorieTarget: p.daily_calorie_target,
     latestActivityTime: p.latest_activity_time,
     latestActivityName: p.latest_activity_name,
+    calorieStatusInfo: p.calorie_status_info ? {
+      targetCalories: p.calorie_status_info.target_calories || 0,
+      consumedCalories: p.calorie_status_info.consumed_calories ?? 0,
+      achievementPercentage: p.calorie_status_info.achievement_percentage ?? 0,
+      calorieDifference: p.calorie_status_info.calorie_difference ?? 0,
+      calorieDifferenceStr: p.calorie_status_info.calorie_difference_str ?? "0 kcal",
+      calorieStatus: p.calorie_status_info.calorie_status ?? "Asupan Sangat Rendah",
+      calorieStatusCode: p.calorie_status_info.calorie_status_code ?? "very_low",
+      calorieDescription: p.calorie_status_info.calorie_description ?? "-",
+    } : undefined,
+    measurements: Array.isArray(p.measurements)
+      ? p.measurements.map(mapBackendMeasurementToFrontend)
+      : undefined,
+    latestMeasurement: p.latest_measurement
+      ? mapBackendMeasurementToFrontend(p.latest_measurement)
+      : undefined,
+  };
+}
+
+function mapBackendMeasurementToFrontend(m: any): PatientMeasurement {
+  return {
+    id: m.id,
+    patientId: m.patient_id,
+    weightKg: m.weight_kg,
+    heightCm: m.height_cm,
+    bmi: m.bmi,
+    bloodPressureSystolic: m.blood_pressure_systolic,
+    bloodPressureDiastolic: m.blood_pressure_diastolic,
+    bloodSugar: m.blood_sugar,
+    waistCircumferenceCm: m.waist_circumference_cm,
+    dailyCalorieTarget: m.daily_calorie_target,
+    notes: m.notes,
+    recordedById: m.recorded_by_id,
+    recordedByName: m.recorded_by_name ?? "System",
+    recordedByRole: m.recorded_by_role ?? "admin",
+    measuredAt: m.measured_at,
+    createdAt: m.created_at,
   };
 }
 
@@ -98,13 +137,33 @@ export const patientService = {
 
   /** Fetch statistics summary for the patient metrics */
   async getPatientStats(): Promise<PatientStats> {
-    const res = await axiosInstance.get("/admin/patients/stats");
-    const data = res.data?.data;
-    return {
-      totalPatients: data?.total_patients ?? 0,
-      activePatients: data?.active_patients ?? 0,
-      averageAge: data?.average_age ?? 0,
-    };
+    try {
+      const res = await axiosInstance.get("/admin/patients/stats");
+      const data = res.data?.data;
+      let youngest = data?.youngest_age ?? 0;
+      let oldest = data?.oldest_age ?? 0;
+
+      // Fallback: If stats returns 0 (e.g., pending backend restart), compute from patient list
+      if ((!youngest || !oldest) && (data?.total_patients ?? 0) > 0) {
+        const patientsRes = await patientService.getPatients({ limit: 100 });
+        const ages = patientsRes.patients
+          .map((p) => p.age)
+          .filter((a) => typeof a === "number" && a > 0);
+        if (ages.length > 0) {
+          youngest = Math.min(...ages);
+          oldest = Math.max(...ages);
+        }
+      }
+
+      return {
+        totalPatients: data?.total_patients ?? 0,
+        activePatients: data?.active_patients ?? 0,
+        youngestAge: youngest,
+        oldestAge: oldest,
+      };
+    } catch {
+      return { totalPatients: 0, activePatients: 0, youngestAge: 0, oldestAge: 0 };
+    }
   },
 
   /** Fetch patient blood sugar history */
@@ -123,5 +182,37 @@ export const patientService = {
   async getPatientActivities(id: string): Promise<any[]> {
     const res = await axiosInstance.get(`/admin/patients/${id}/activities`);
     return res.data?.data ?? [];
+  },
+
+  /** Fetch health measurements history for a patient */
+  async getPatientMeasurements(id: string, rolePrefix: 'admin' | 'staff' = 'admin'): Promise<PatientMeasurement[]> {
+    try {
+      const res = await axiosInstance.get(`/${rolePrefix}/patients/${id}/measurements`);
+      const data = res.data?.data;
+      if (Array.isArray(data)) {
+        return data.map(mapBackendMeasurementToFrontend);
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  },
+
+  /** Create a new health measurement record as Admin */
+  async createPatientMeasurement(id: string, data: any): Promise<PatientMeasurement | null> {
+    const res = await axiosInstance.post(`/admin/patients/${id}/measurements`, data);
+    if (res.data?.success && res.data?.data) {
+      return mapBackendMeasurementToFrontend(res.data.data);
+    }
+    return null;
+  },
+
+  /** Update patient personal & health info as Admin */
+  async updatePatientByAdmin(id: string, data: any): Promise<Patient | null> {
+    const res = await axiosInstance.put(`/admin/patients/${id}`, data);
+    if (res.data?.success && res.data?.data) {
+      return mapBackendPatientToFrontend(res.data.data);
+    }
+    return null;
   },
 } as const;
