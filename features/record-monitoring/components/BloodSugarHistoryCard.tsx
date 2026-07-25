@@ -43,12 +43,15 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
 
   const N = chartLogs.length;
 
-  // Dynamic Y scale
+  // Dynamic Y scale with evenly-spaced tick labels
   const values = chartLogs.map((l) => l.glucoseValue);
-  const minVal = values.length > 0 ? Math.min(...values) : 70;
-  const maxVal = values.length > 0 ? Math.max(...values) : 200;
-  const range = Math.max(maxVal - minVal, 60);
-  const padding = 20;
+  const rawMin = values.length > 0 ? Math.min(...values) : 70;
+  const rawMax = values.length > 0 ? Math.max(...values) : 200;
+  const rawRange = Math.max(rawMax - rawMin, 60);
+  const tickStep = rawRange <= 60 ? 15 : rawRange <= 100 ? 20 : rawRange <= 160 ? 30 : 50;
+  const minVal = Math.floor(rawMin / tickStep) * tickStep - tickStep;
+  const maxVal = Math.ceil(rawMax / tickStep) * tickStep + tickStep;
+  const range = maxVal - minVal;
 
   const SVG_W = 800;
   const SVG_H = 220;
@@ -63,8 +66,8 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
     N > 1 ? CHART_L + (idx / (N - 1)) * CHART_W : CHART_L + CHART_W / 2;
 
   const getY = (val: number) => {
-    const clamped = Math.max(minVal - padding, Math.min(maxVal + padding, val));
-    return CHART_B - ((clamped - (minVal - padding)) / (range + 2 * padding)) * CHART_H;
+    const clamped = Math.max(minVal, Math.min(maxVal, val));
+    return CHART_B - ((clamped - minVal) / range) * CHART_H;
   };
 
   const points = chartLogs.map((log, idx) => ({
@@ -89,8 +92,11 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
       ? `M ${points[0].x},${CHART_B} L ${points.map((p) => `${p.x},${p.y}`).join(" L ")} L ${points[points.length - 1].x},${CHART_B} Z`
       : "";
 
-  // Y-axis labels
-  const yLabels = [minVal, Math.round((minVal + maxVal) / 2), maxVal];
+  // Y-axis labels — evenly spaced ticks
+  const yLabels: number[] = [];
+  for (let v = minVal; v <= maxVal; v += tickStep) {
+    yLabels.push(v);
+  }
 
   // Status color per reading type
   const getPointColor = (type: string) => {

@@ -6,10 +6,11 @@ import { usePatientDetail } from "../hooks/usePatientDetail";
 import { PatientProfileCard } from "./PatientProfileCard";
 import { PatientPersonalInfoCard } from "./PatientPersonalInfoCard";
 import { PatientSummaryCard } from "./PatientSummaryCard";
-import { PatientBloodSugarChart } from "./PatientBloodSugarChart";
 import { PatientCalorieChart } from "./PatientCalorieChart";
 import { PatientEducationActivity } from "./PatientEducationActivity";
 import { PatientMeasurementHistoryCard } from "./PatientMeasurementHistoryCard";
+import { BloodSugarHistoryCard } from "@/features/record-monitoring/components/BloodSugarHistoryCard";
+import type { BloodSugarLog } from "@/features/record-monitoring/types/record";
 import { AddMeasurementModal } from "./AddMeasurementModal";
 import { EditPatientModal } from "./EditPatientModal";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -22,9 +23,31 @@ interface PatientDetailFeatureProps {
   readonly patientId: string;
 }
 
+function toBloodSugarLog(log: any): BloodSugarLog {
+  const d = log.measured_at ? new Date(log.measured_at) : new Date();
+  const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  const timeStr = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
+
+  let measurementTimeLabel = "Sebelum Makan";
+  if (log.measurement_time_type === "sesudah_makan") measurementTimeLabel = "Sesudah Makan";
+  else if (log.measurement_time_type === "sewaktu") measurementTimeLabel = "Sewaktu Makan";
+
+  return {
+    id: log.id,
+    date: dateStr,
+    time: timeStr,
+    glucoseValue: log.glucose_value ?? 0,
+    measurementTimeType: log.measurement_time_type || "sebelum_makan",
+    measurementTimeLabel,
+    status: log.status || "normal",
+    rawDate: d,
+  };
+}
+
 export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
   const router = useRouter();
   const { patient, bloodSugar, meals, activities, isLoading, error, refetch } = usePatientDetail(patientId);
+  const bloodSugarLogs = bloodSugar.map(toBloodSugarLog);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddMeasurementOpen, setIsAddMeasurementOpen] = useState(false);
   const { showToast } = useToast();
@@ -139,7 +162,7 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
       {/* Metrics & Analytics section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-12">
-          <PatientBloodSugarChart data={bloodSugar} bloodSugarLogs={bloodSugar} />
+          <BloodSugarHistoryCard logs={bloodSugarLogs} />
         </div>
         <div className="lg:col-span-7">
           <PatientCalorieChart data={meals} patient={patient} />
