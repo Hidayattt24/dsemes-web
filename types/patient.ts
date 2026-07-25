@@ -40,14 +40,37 @@ export interface Patient {
   readonly smokingStatus?: string;
   readonly physicalActivityLevel?: string;
 
-  // Patient Summary Stats
+  // Summary Stats & Measurements
   readonly latestBloodSugar?: number;
   readonly averageBloodSugar?: number;
   readonly latestWeight?: number;
   readonly bmi?: number;
+  readonly waistCircumferenceCm?: number;
   readonly latestActivityTime?: string;
   readonly latestActivityName?: string;
   readonly calorieStatusInfo?: CalorieStatusInfo;
+  readonly dailyCalorieTarget?: number;
+  readonly measurements?: PatientMeasurement[];
+  readonly latestMeasurement?: PatientMeasurement;
+}
+
+export interface PatientMeasurement {
+  readonly id: string;
+  readonly patientId: string;
+  readonly weightKg?: number;
+  readonly heightCm?: number;
+  readonly bmi?: number;
+  readonly bloodPressureSystolic?: number;
+  readonly bloodPressureDiastolic?: number;
+  readonly bloodSugar?: number;
+  readonly waistCircumferenceCm?: number;
+  readonly dailyCalorieTarget?: number;
+  readonly notes?: string;
+  readonly recordedById?: string;
+  readonly recordedByName: string;
+  readonly recordedByRole: "admin" | "patient" | string;
+  readonly measuredAt: string;
+  readonly createdAt: string;
 }
 
 export interface CalorieStatusInfo {

@@ -73,6 +73,18 @@ export function PatientPersonalInfoCard({ patient }: PatientPersonalInfoCardProp
           </p>
           <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)]">{patient.registeredAt}</p>
         </div>
+
+        {/* LINGKAR PINGGANG */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">straighten</span> Lingkar Pinggang
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)]">
+            {patient.waistCircumferenceCm || patient.latestMeasurement?.waistCircumferenceCm
+              ? `${patient.waistCircumferenceCm ?? patient.latestMeasurement?.waistCircumferenceCm} cm`
+              : "-"}
+          </p>
+        </div>
       </div>
     </div>
   );

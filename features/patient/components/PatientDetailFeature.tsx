@@ -9,11 +9,13 @@ import { PatientSummaryCard } from "./PatientSummaryCard";
 import { PatientBloodSugarChart } from "./PatientBloodSugarChart";
 import { PatientCalorieChart } from "./PatientCalorieChart";
 import { PatientEducationActivity } from "./PatientEducationActivity";
+import { PatientMeasurementHistoryCard } from "./PatientMeasurementHistoryCard";
+import { AddMeasurementModal } from "./AddMeasurementModal";
+import { EditPatientModal } from "./EditPatientModal";
 import { ErrorState } from "@/components/common/ErrorState";
 import Link from "next/link";
-import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useToast } from "@/components/ui/Toast";
-
+import { patientService } from "@/services/patientService";
 import { DetailPageLoader } from "@/components/ui/loading";
 
 interface PatientDetailFeatureProps {
@@ -23,22 +25,48 @@ interface PatientDetailFeatureProps {
 export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
   const router = useRouter();
   const { patient, bloodSugar, meals, activities, isLoading, error, refetch } = usePatientDetail(patientId);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAddMeasurementOpen, setIsAddMeasurementOpen] = useState(false);
   const { showToast } = useToast();
 
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    // Simulate delete API call delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsDeleting(false);
-    setIsDeleteOpen(false);
-    showToast({
-      type: "success",
-      title: "Berhasil",
-      description: "Data pasien berhasil dihapus.",
-    });
-    router.push("/admin/data-pasien");
+  const handleUpdatePatient = async (data: any) => {
+    try {
+      const res = await patientService.updatePatientByAdmin(patientId, data);
+      if (res) {
+        showToast({
+          type: "success",
+          title: "Berhasil",
+          description: "Informasi pasien berhasil diperbarui.",
+        });
+        refetch();
+      }
+    } catch {
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: "Gagal memperbarui informasi pasien.",
+      });
+    }
+  };
+
+  const handleAddMeasurement = async (data: any) => {
+    try {
+      const res = await patientService.createPatientMeasurement(patientId, data);
+      if (res) {
+        showToast({
+          type: "success",
+          title: "Berhasil",
+          description: "Pengukuran kesehatan berkala berhasil dicatat.",
+        });
+        refetch();
+      }
+    } catch {
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: "Gagal mencatat pengukuran kesehatan.",
+      });
+    }
   };
 
   if (isLoading) {
@@ -50,24 +78,42 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
   }
 
   return (
-    <section className="space-y-8 max-w-[1600px] mx-auto w-full p-1">
+    <section className="space-y-8 max-w-[1600px] mx-auto w-full p-1 font-[family-name:var(--font-poppins)]">
       {/* Back link and actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
           <Link
             href="/admin/data-pasien"
-            className="flex items-center gap-2 text-[#718096] hover:text-[#00695C] transition-colors font-medium text-sm font-[family-name:var(--font-poppins)]"
+            className="flex items-center gap-2 text-[#718096] hover:text-[#00695C] transition-colors font-medium text-sm"
           >
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             <span>Monitoring Pasien</span>
           </Link>
           <span className="text-[#718096]/40 text-sm">/</span>
-          <span className="font-semibold text-sm text-[#1A202C] font-[family-name:var(--font-poppins)]">
+          <span className="font-semibold text-sm text-[#1A202C]">
             Detail Pasien
           </span>
         </div>
 
-
+        {/* Action Buttons for Admin */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsEditOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold rounded-lg transition-colors shadow-2xs"
+          >
+            <span className="material-symbols-outlined text-[16px] text-slate-500">edit</span>
+            Edit Informasi Pasien
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsAddMeasurementOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#00695C] hover:bg-[#004D40] text-white text-xs font-bold rounded-lg transition-colors shadow-2xs"
+          >
+            <span className="material-symbols-outlined text-[16px]">add_circle</span>
+            Catat Pengukuran Baru
+          </button>
+        </div>
       </div>
 
       {/* Patient Health Summary Card Grid */}
@@ -83,10 +129,17 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
         </div>
       </div>
 
+      {/* Health Measurements Timeline Section */}
+      <PatientMeasurementHistoryCard
+        measurements={patient.measurements}
+        isAdmin={true}
+        onAddMeasurement={() => setIsAddMeasurementOpen(true)}
+      />
+
       {/* Metrics & Analytics section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-12">
-          <PatientBloodSugarChart data={bloodSugar} />
+          <PatientBloodSugarChart data={bloodSugar} bloodSugarLogs={bloodSugar} />
         </div>
         <div className="lg:col-span-7">
           <PatientCalorieChart data={meals} patient={patient} />
@@ -96,6 +149,20 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
         </div>
       </div>
 
+      {/* Modals */}
+      <EditPatientModal
+        isOpen={isEditOpen}
+        patient={patient}
+        onClose={() => setIsEditOpen(false)}
+        onSubmit={handleUpdatePatient}
+      />
+
+      <AddMeasurementModal
+        isOpen={isAddMeasurementOpen}
+        patient={patient}
+        onClose={() => setIsAddMeasurementOpen(false)}
+        onSubmit={handleAddMeasurement}
+      />
     </section>
   );
 }

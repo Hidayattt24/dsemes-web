@@ -1,6 +1,7 @@
 "use client";
 
 import type { PatientRecord } from "../types/record";
+import { calculateDSMESCalorieTarget } from "@/lib/calorieCalculator";
 
 interface RecordPatientSummaryCardProps {
   readonly patient: PatientRecord;
@@ -103,10 +104,10 @@ export function RecordPatientSummaryCard({ patient }: RecordPatientSummaryCardPr
         };
 
         const theme = getTheme(cal?.calorieStatusCode);
-        const achievement = cal?.achievementPercentage ?? 0;
+        const target = calculateDSMESCalorieTarget(patient);
         const consumed = cal?.consumedCalories ?? 0;
-        const target = cal?.targetCalories ?? (patient.dailyCalorieTarget ?? 2000);
-        const diffStr = cal?.calorieDifferenceStr ?? "0 kcal";
+        const achievement = target > 0 ? Math.round((consumed / target) * 1000) / 10 : 0;
+        const diffStr = cal?.calorieDifferenceStr ?? `${consumed - target} kcal`;
         const statusLabel = cal?.calorieStatus ?? "Asupan Sangat Rendah";
         const desc = cal?.calorieDescription ?? "Pasien mengonsumsi kalori sangat rendah dari target.";
 

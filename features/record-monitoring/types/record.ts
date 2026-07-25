@@ -1,4 +1,4 @@
-import type { CalorieStatusInfo } from "@/types/patient";
+import type { CalorieStatusInfo, PatientMeasurement } from "@/types/patient";
 
 export interface DailySummary {
   readonly bloodSugar: string;
@@ -59,6 +59,8 @@ export interface PatientRecord {
   readonly latestActivityTime?: string;
   readonly latestActivityName?: string;
   readonly calorieStatusInfo?: CalorieStatusInfo;
+  readonly measurements?: PatientMeasurement[];
+  readonly latestMeasurement?: PatientMeasurement;
 }
 
 export type { CalorieStatusInfo };

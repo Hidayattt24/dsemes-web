@@ -13,6 +13,9 @@ import { ErrorState } from "@/components/common/ErrorState";
 import { DetailPageLoader } from "@/components/ui/loading";
 import { BackButton } from "@/components/common/BackButton";
 
+import { PatientMeasurementHistoryCard } from "@/features/patient/components/PatientMeasurementHistoryCard";
+import { calculateDSMESCalorieTarget } from "@/lib/calorieCalculator";
+
 interface RecordDetailFeatureProps {
   readonly patientId: string;
 }
@@ -89,11 +92,16 @@ export function RecordDetailFeature({ patientId }: RecordDetailFeatureProps) {
 
       <RecordPatientProfileCard patient={patient} />
 
+      <PatientMeasurementHistoryCard
+        measurements={patient.measurements}
+        isAdmin={false}
+      />
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <BloodSugarHistoryCard logs={bloodSugarLogs} />
         <MealHistoryCard
           logs={mealLogs}
-          targetCalories={patient.dailyCalorieTarget}
+          targetCalories={patient.dailyCalorieTarget || calculateDSMESCalorieTarget(patient)}
           selectedDate={mealDate}
           onDateChange={setMealDate}
           isLoading={isMealLoading}
