@@ -113,7 +113,7 @@ export function QuizTable({ quizzes, pagination, onDeleteClick, onPageChange }: 
                     <span
                       className={[
                         "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border",
-                        quiz.status === "Aktif" || quiz.status === "Terbit"
+                        quiz.status === "Aktif"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : quiz.status === "Nonaktif"
                           ? "bg-rose-50 text-rose-700 border-rose-200"
