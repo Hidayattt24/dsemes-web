@@ -92,8 +92,30 @@ export const educationService = {
   /** Get all patients' progress for an education article */
   async getProgress(articleId: string): Promise<EducationProgressItem[]> {
     const res = await axiosInstance.get(`/admin/education/${articleId}/progress`);
-    return res.data?.data ?? [];
+    const raw: any[] = res.data?.data ?? [];
+    return raw.map((r) => ({
+      patient_id: r.patient_id ?? "",
+      patient_name: r.patient_name ?? "-",
+      puskesmas: r.puskesmas ?? "-",
+      article_read: r.article_read ?? false,
+      article_read_at: r.article_read_at ?? null,
+      article_started_at: r.article_started_at ?? null,
+      article_finished_at: r.article_finished_at ?? null,
+      article_reading_duration: r.article_reading_duration ?? 0,
+      article_last_scroll_position: r.article_last_scroll_position ?? 0,
+      youtube_watched: r.youtube_watched ?? false,
+      youtube_watched_at: r.youtube_watched_at ?? null,
+      video_started_at: r.video_started_at ?? null,
+      video_finished_at: r.video_finished_at ?? null,
+      video_watch_duration: r.video_watch_duration ?? 0,
+      video_last_timestamp: r.video_last_timestamp ?? 0,
+      completed: r.completed ?? false,
+      completed_at: r.completed_at ?? null,
+      completion_source: r.completion_source ?? "",
+      last_activity_at: r.last_activity_at ?? null,
+    }));
   },
+
 
   /** Get progress analytics summary for an education article */
   async getProgressAnalytics(articleId: string): Promise<EducationProgressAnalytics> {

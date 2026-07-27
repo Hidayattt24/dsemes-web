@@ -72,13 +72,21 @@ export function useEducationForm(articleId?: string) {
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof FormFields, string>> = {};
     if (!fields.title.trim()) newErrors.title = "Judul edukasi wajib diisi.";
-    if (!fields.shortDescription.trim()) newErrors.shortDescription = "Deskripsi singkat wajib diisi.";
     if (!fields.content.trim()) newErrors.content = "Konten edukasi wajib diisi.";
     if (fields.duration <= 0) newErrors.duration = "Durasi membaca harus lebih dari 0 menit.";
-    if (!fields.thumbnail.trim()) newErrors.thumbnail = "Thumbnail artikel wajib diunggah.";
+    if (!fields.thumbnail.trim()) newErrors.thumbnail = "Gambar sampul/banner wajib diunggah.";
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      showToast({
+        type: "error",
+        title: "Validasi Gagal",
+        description: firstError || "Harap lengkapi semua kolom yang wajib diisi.",
+      });
+      return false;
+    }
+    return true;
   };
 
   const save = async (forcedStatus?: "Diterbitkan" | "Draf") => {
@@ -86,9 +94,13 @@ export function useEducationForm(articleId?: string) {
 
     setIsSaving(true);
     try {
+      const autoSummary = fields.shortDescription.trim() ||
+        fields.content.replace(/<[^>]*>/g, "").slice(0, 160).trim();
+
       await educationService.saveArticle({
         id: articleId,
         ...fields,
+        shortDescription: autoSummary,
         status: forcedStatus ?? fields.status,
       });
       showToast({
@@ -98,8 +110,13 @@ export function useEducationForm(articleId?: string) {
       });
       router.push(ROUTES.MANAJEMEN_EDUKASI);
       router.refresh();
-    } catch {
-      // Error handling
+    } catch (err: any) {
+      const serverMsg = err?.response?.data?.message || err?.message || "Gagal menyimpan materi edukasi. Coba lagi.";
+      showToast({
+        type: "error",
+        title: "Gagal Menyimpan",
+        description: serverMsg,
+      });
     } finally {
       setIsSaving(false);
     }

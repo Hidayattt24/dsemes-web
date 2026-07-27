@@ -636,14 +636,28 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
         </div>
         <div className="flex w-full sm:w-auto justify-end gap-3 flex-wrap">
           <button
-            onClick={() => save("Draf")}
+            onClick={() => {
+              if (editorRef.current) {
+                const clone = editorRef.current.cloneNode(true) as HTMLElement;
+                clone.querySelectorAll('.editor-actions, .editor-only-overlay, button').forEach((el) => el.remove());
+                handleChange("content", clone.innerHTML);
+              }
+              save("Draf");
+            }}
             disabled={isSaving}
             className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full border border-[#E2E8F0] text-[#1E293B] text-sm font-semibold hover:bg-[#F1F5F9] transition-all cursor-pointer disabled:opacity-50 text-center"
           >
             Simpan Draft
           </button>
           <button
-            onClick={() => save("Diterbitkan")}
+            onClick={() => {
+              if (editorRef.current) {
+                const clone = editorRef.current.cloneNode(true) as HTMLElement;
+                clone.querySelectorAll('.editor-actions, .editor-only-overlay, button').forEach((el) => el.remove());
+                handleChange("content", clone.innerHTML);
+              }
+              save("Diterbitkan");
+            }}
             disabled={isSaving}
             className="flex-1 sm:flex-initial px-8 py-2.5 rounded-full bg-[#00695C] text-white text-sm font-semibold shadow-lg shadow-[#00695C]/20 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50 text-center"
           >
