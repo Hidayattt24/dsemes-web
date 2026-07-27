@@ -93,6 +93,7 @@ function mapBackendMeasurementToFrontend(m: any): PatientMeasurement {
     bloodPressureSystolic: m.blood_pressure_systolic,
     bloodPressureDiastolic: m.blood_pressure_diastolic,
     bloodSugar: m.blood_sugar,
+    bloodSugarTimeType: m.blood_sugar_time_type || m.measurement_time_type || "fasting",
     waistCircumferenceCm: m.waist_circumference_cm,
     dailyCalorieTarget: m.daily_calorie_target,
     notes: m.notes,

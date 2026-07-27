@@ -85,6 +85,14 @@ export interface BloodSugarLog {
   readonly measurementTimeType: string;
   readonly measurementTimeLabel: string;
   readonly status: string;
+  readonly classificationLabel?: string;
+  readonly severity?: string;
+  readonly referenceMin?: number;
+  readonly referenceMax?: number;
+  readonly referenceRangeText?: string;
+  readonly recommendation?: string;
+  readonly colorIndicator?: string;
+  readonly measuredAt?: string;
   readonly before?: number;
   readonly after?: number;
   readonly rawDate?: Date;

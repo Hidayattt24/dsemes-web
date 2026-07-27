@@ -54,7 +54,7 @@ export function AddMeasurementModal({
     weight_kg: patient.weight ? String(patient.weight) : "60",
     activity_level: patient.physicalActivityLevel || "Ringan",
     blood_sugar: "",
-    blood_sugar_time_type: "sewaktu",
+    blood_sugar_time_type: "fasting",
     waist_circumference_cm: patient.waistCircumferenceCm ? String(patient.waistCircumferenceCm) : "",
     notes: "",
   });
@@ -257,9 +257,11 @@ export function AddMeasurementModal({
                   label="Waktu Pengukuran (Konteks)"
                   value={formData.blood_sugar_time_type}
                   options={[
-                    { value: "sewaktu", label: "Sewaktu (Kapan saja)" },
-                    { value: "sebelum_makan", label: "Sebelum Makan" },
-                    { value: "sesudah_makan", label: "Sesudah Makan" },
+                    { value: "fasting", label: "Puasa" },
+                    { value: "before_meal", label: "Sebelum Makan" },
+                    { value: "after_meal", label: "2 Jam Sesudah Makan" },
+                    { value: "before_bed", label: "Sebelum Tidur" },
+                    { value: "random", label: "Sewaktu" },
                   ]}
                   onChange={(val: any) => setFormData((prev: any) => ({ ...prev, blood_sugar_time_type: String(val) }))}
                 />

@@ -156,6 +156,14 @@ export function PatientMeasurementHistoryCard({
                         {item.bloodSugar ? `${item.bloodSugar}` : "-"}
                         <span className="text-[10px] text-slate-400 font-normal ml-0.5">mg/dL</span>
                       </span>
+                      {item.bloodSugar && (
+                        <span className="text-[10px] text-[#00695C] block mt-0.5 font-semibold">
+                          {item.bloodSugarTimeType === "fasting" || item.bloodSugarTimeType === "puasa" ? "Puasa" :
+                           item.bloodSugarTimeType === "before_meal" || item.bloodSugarTimeType === "sebelum_makan" ? "Sebelum Makan" :
+                           item.bloodSugarTimeType === "after_meal" || item.bloodSugarTimeType === "sesudah_makan" ? "2 Jam Sesudah Makan" :
+                           item.bloodSugarTimeType === "before_bed" || item.bloodSugarTimeType === "sebelum_tidur" ? "Sebelum Tidur" : "Sewaktu"}
+                        </span>
+                      )}
                     </div>
 
                     {/* Waist Circumference */}

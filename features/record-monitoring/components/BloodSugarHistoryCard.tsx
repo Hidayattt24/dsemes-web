@@ -70,6 +70,47 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
     return CHART_B - ((clamped - minVal) / range) * CHART_H;
   };
 
+  const getPointColor = (type: string) => {
+    switch (type) {
+      case "fasting":
+      case "puasa":
+        return "#00695C"; // Teal
+      case "before_meal":
+      case "sebelum_makan":
+        return "#0284C7"; // Light Blue
+      case "after_meal":
+      case "sesudah_makan":
+        return "#E53E3E"; // Red
+      case "before_bed":
+      case "sebelum_tidur":
+        return "#8B5CF6"; // Purple
+      case "random":
+      case "sewaktu":
+      default:
+        return "#3182CE"; // Blue
+    }
+  };
+
+  const getGlucoseStatus = (log: any) => {
+    const status = log.status || "";
+    const label = log.classificationLabel || (
+      status === "severe_hypoglycemia" ? "Hipoglikemia Berat" :
+      status === "hypoglycemia" ? "Hipoglikemia" :
+      status === "severe_hyperglycemia" ? "Hiperglikemia Berat" :
+      status === "hyperglycemia" ? "Hiperglikemia" :
+      log.glucoseValue < 70 ? "Hipoglikemia" :
+      log.glucoseValue > 200 ? "Hiperglikemia" : "Normal"
+    );
+
+    const cls = log.colorIndicator === "#DC2626" || status === "severe_hypoglycemia" || status === "severe_hyperglycemia"
+      ? "bg-rose-50 text-rose-700 border-rose-200"
+      : log.colorIndicator === "#F97316" || log.colorIndicator === "#F59E0B" || status === "hypoglycemia" || status === "hyperglycemia"
+      ? "bg-amber-50 text-amber-700 border-amber-200"
+      : "bg-emerald-50 text-emerald-700 border-emerald-200";
+
+    return { label, cls };
+  };
+
   const points = chartLogs.map((log, idx) => ({
     x: getX(idx),
     y: getY(log.glucoseValue),
@@ -78,6 +119,8 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
     type: log.measurementTimeType,
     date: log.date,
     time: log.time,
+    classificationLabel: log.classificationLabel || getGlucoseStatus(log).label,
+    rangeText: log.referenceRangeText || "< 140 mg/dL",
   }));
 
   const linePath =
@@ -98,21 +141,6 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
     yLabels.push(v);
   }
 
-  // Status color per reading type
-  const getPointColor = (type: string) => {
-    if (type === "sesudah_makan") return "#E53E3E";
-    if (type === "sewaktu") return "#3182CE";
-    return "#00695C";
-  };
-
-  // Glucose status badge
-  const getGlucoseStatus = (val: number) => {
-    if (val < 70) return { label: "Rendah", cls: "bg-blue-50 text-blue-700 border-blue-200" };
-    if (val <= 130) return { label: "Normal", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-    if (val <= 200) return { label: "Tinggi", cls: "bg-amber-50 text-amber-700 border-amber-200" };
-    return { label: "Sangat Tinggi", cls: "bg-rose-50 text-rose-700 border-rose-200" };
-  };
-
   const avgVal = values.length > 0 ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
   const latestVal = chartLogs.length > 0 ? chartLogs[chartLogs.length - 1].glucoseValue : null;
 
@@ -125,8 +153,8 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
             <span className="material-symbols-outlined text-[#00695C] text-[20px]">water_drop</span>
           </div>
           <div>
-            <h3 className="text-base font-bold text-[#1A202C]">Riwayat Gula Darah</h3>
-            <p className="text-xs text-[#718096]">Monitoring kadar glukosa darah pasien</p>
+            <h3 className="text-base font-bold text-[#1A202C]">Riwayat Gula Darah Pasien</h3>
+            <p className="text-xs text-[#718096]">Monitoring & Klasifikasi Medis Glukosa Darah</p>
           </div>
         </div>
 
@@ -203,17 +231,17 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
                     y1={lineY}
                     x2={CHART_R}
                     y2={lineY}
-                    stroke="#E5E7EB"
-                    strokeDasharray="4,4"
+                    stroke="#E2E8F0"
+                    strokeDasharray="4 4"
                     strokeWidth="1"
                   />
                   <text
-                    x={CHART_L - 6}
-                    y={lineY}
+                    x={CHART_L - 8}
+                    y={lineY + 4}
                     textAnchor="end"
-                    dominantBaseline="middle"
                     fill="#A0AEC0"
-                    fontSize="11"
+                    fontSize="10"
+                    fontWeight="500"
                   >
                     {label}
                   </text>
@@ -221,10 +249,10 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
               );
             })}
 
-            {/* Area fill */}
+            {/* Area under line */}
             {areaPath && <path d={areaPath} fill="url(#bsAreaGradient)" />}
 
-            {/* Line */}
+            {/* Connecting line */}
             {linePath && (
               <path
                 d={linePath}
@@ -233,50 +261,44 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeDasharray={N === 1 ? "4 4" : undefined}
               />
             )}
 
-            {/* Points */}
+            {/* Data points */}
             {points.map((pt, idx) => {
               const isHovered = hoveredIdx === idx;
               const color = getPointColor(pt.type);
-              const tooltipX = Math.min(Math.max(pt.x - 55, CHART_L), CHART_R - 110);
+              const tooltipX = Math.max(CHART_L, Math.min(CHART_R - 140, pt.x - 70));
+
               return (
-                <g
-                  key={`bs-pt-${idx}`}
-                  onMouseEnter={() => setHoveredIdx(idx)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                  style={{ cursor: "pointer" }}
-                >
-                  {/* Hover vertical line */}
+                <g key={`pt-${idx}`}>
+                  {/* Outer glow ring on hover */}
                   {isHovered && (
-                    <line
-                      x1={pt.x}
-                      y1={CHART_T}
-                      x2={pt.x}
-                      y2={CHART_B}
-                      stroke={color}
-                      strokeWidth="1"
-                      strokeDasharray="3,3"
-                      strokeOpacity="0.5"
+                    <circle
+                      cx={pt.x}
+                      cy={pt.y}
+                      r={9}
+                      fill={color}
+                      fillOpacity={0.25}
                     />
                   )}
-
                   {/* Point circle */}
                   <circle
                     cx={pt.x}
                     cy={pt.y}
-                    r={isHovered ? 7 : 5}
-                    fill="#ffffff"
-                    stroke={color}
-                    strokeWidth={isHovered ? 3 : 2}
+                    r={isHovered ? 6 : 4.5}
+                    fill={color}
+                    stroke="#ffffff"
+                    strokeWidth={2}
+                    className="cursor-pointer transition-all duration-200"
+                    onMouseEnter={() => setHoveredIdx(idx)}
+                    onMouseLeave={() => setHoveredIdx(null)}
                   />
 
-                  {/* Value label above */}
+                  {/* Value label above point */}
                   <text
                     x={pt.x}
-                    y={pt.y - 13}
+                    y={pt.y - 10}
                     textAnchor="middle"
                     fill={color}
                     fontSize="11"
@@ -285,36 +307,45 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
                     {pt.val}
                   </text>
 
-                  {/* Hover tooltip */}
+                  {/* Enhanced Hover tooltip */}
                   {isHovered && (
                     <g>
                       <rect
                         x={tooltipX}
-                        y={pt.y - 52}
-                        width={110}
-                        height={38}
+                        y={pt.y - 65}
+                        width={140}
+                        height={50}
                         rx={10}
-                        fill={color}
+                        fill="#1E293B"
+                        fillOpacity={0.95}
                       />
                       <text
-                        x={tooltipX + 55}
-                        y={pt.y - 39}
+                        x={tooltipX + 70}
+                        y={pt.y - 48}
                         textAnchor="middle"
                         fill="#ffffff"
                         fontSize="11"
                         fontWeight="bold"
                       >
-                        {pt.val} mg/dL
+                        {pt.val} mg/dL ({pt.classificationLabel})
                       </text>
                       <text
-                        x={tooltipX + 55}
-                        y={pt.y - 24}
+                        x={tooltipX + 70}
+                        y={pt.y - 34}
                         textAnchor="middle"
-                        fill="#ffffff"
+                        fill="#94A3B8"
                         fontSize="9"
-                        fillOpacity="0.85"
                       >
-                        {pt.label}
+                        {pt.label} • Acuan: {pt.rangeText}
+                      </text>
+                      <text
+                        x={tooltipX + 70}
+                        y={pt.y - 20}
+                        textAnchor="middle"
+                        fill="#CBD5E1"
+                        fontSize="9"
+                      >
+                        {pt.date} • {pt.time}
                       </text>
                     </g>
                   )}
@@ -337,12 +368,14 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
         )}
       </div>
 
-      {/* Legend */}
+      {/* Legend for 5 Measurement Types */}
       {hasData && (
-        <div className="flex items-center gap-5 text-xs font-semibold mb-5">
+        <div className="flex flex-wrap items-center gap-4 text-xs font-semibold mb-5 bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0]/50">
           {[
-            { color: "#00695C", label: "Sebelum Makan" },
-            { color: "#E53E3E", label: "Sesudah Makan" },
+            { color: "#00695C", label: "Puasa" },
+            { color: "#0284C7", label: "Sebelum Makan" },
+            { color: "#E53E3E", label: "2 Jam Sesudah Makan" },
+            { color: "#8B5CF6", label: "Sebelum Tidur" },
             { color: "#3182CE", label: "Sewaktu" },
           ].map((item) => (
             <span key={item.label} className="flex items-center gap-1.5 text-[#4A5568]">
@@ -357,21 +390,22 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
       )}
 
       {/* Table */}
-      <div className="overflow-y-auto max-h-[200px] rounded-xl border border-[#E2E8F0]/50">
+      <div className="overflow-y-auto max-h-[260px] rounded-xl border border-[#E2E8F0]/50">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-[#F8FAFC] z-10">
             <tr className="text-[#718096] text-[10px] font-bold uppercase tracking-wider">
-              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Tanggal</th>
-              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Jam</th>
+              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Tanggal & Jam</th>
+              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Jenis Pengukuran</th>
               <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Nilai</th>
-              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Waktu</th>
-              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Status</th>
+              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Klasifikasi</th>
+              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Rentang Acuan</th>
+              <th className="py-2.5 px-3 border-b border-[#E2E8F0]">Rekomendasi Medis</th>
             </tr>
           </thead>
           <tbody className="text-xs font-medium divide-y divide-[#E2E8F0]/40 bg-white">
             {!hasData ? (
               <tr>
-                <td colSpan={5} className="py-6 text-center text-xs text-[#718096]">
+                <td colSpan={6} className="py-6 text-center text-xs text-[#718096]">
                   Tidak ada catatan riwayat gula darah.
                 </td>
               </tr>
@@ -379,37 +413,44 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
               [...logs]
                 .sort((a, b) => getParsedDate(b).getTime() - getParsedDate(a).getTime())
                 .map((log, idx) => {
-                  const status = getGlucoseStatus(log.glucoseValue);
+                  const status = getGlucoseStatus(log);
                   const ptColor = getPointColor(log.measurementTimeType);
                   return (
                     <tr
                       key={log.id || `bs-${idx}`}
                       className="hover:bg-[#F8FAFC] transition-colors"
                     >
-                      <td className="py-2.5 px-3 font-semibold text-[#1A202C]">{log.date}</td>
-                      <td className="py-2.5 px-3 text-[#718096]">{log.time}</td>
-                      <td className="py-2.5 px-3">
-                        <span className="font-black text-[#1A202C]">{log.glucoseValue}</span>
-                        <span className="text-[#718096] text-[10px] ml-0.5">mg/dL</span>
+                      <td className="py-2.5 px-3 font-semibold text-[#1A202C]">
+                        {log.date} <span className="text-[#718096] font-normal">({log.time})</span>
                       </td>
                       <td className="py-2.5 px-3">
                         <span
-                          className="inline-flex items-center gap-1 text-[10px] font-bold"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-bold"
                           style={{ color: ptColor }}
                         >
                           <span
-                            className="w-1.5 h-1.5 rounded-full inline-block"
+                            className="w-2 h-2 rounded-full inline-block"
                             style={{ backgroundColor: ptColor }}
                           />
                           {log.measurementTimeLabel}
                         </span>
                       </td>
                       <td className="py-2.5 px-3">
+                        <span className="font-black text-[#1A202C]">{log.glucoseValue}</span>
+                        <span className="text-[#718096] text-[10px] ml-0.5">mg/dL</span>
+                      </td>
+                      <td className="py-2.5 px-3">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${status.cls}`}
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${status.cls}`}
                         >
                           {status.label}
                         </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-[#4A5568] text-[11px]">
+                        {log.referenceRangeText || "< 140 mg/dL"}
+                      </td>
+                      <td className="py-2.5 px-3 text-[#4A5568] text-[11px] max-w-[280px]">
+                        {log.recommendation || "-"}
                       </td>
                     </tr>
                   );

@@ -244,11 +244,14 @@ export const recordMonitoringService = {
       const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
       const timeStr = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
 
-      let measurementTimeLabel = "Sebelum Makan";
-      if (log.measurement_time_type === "sesudah_makan") {
-        measurementTimeLabel = "Sesudah Makan";
-      } else if (log.measurement_time_type === "sewaktu") {
-        measurementTimeLabel = "Sewaktu Makan";
+      const mType = log.measurement_time_type || "random";
+      let measurementTimeLabel = log.measurement_time_label;
+      if (!measurementTimeLabel || measurementTimeLabel.includes("(")) {
+        if (mType === "fasting" || mType === "puasa") measurementTimeLabel = "Puasa";
+        else if (mType === "before_meal" || mType === "sebelum_makan") measurementTimeLabel = "Sebelum Makan";
+        else if (mType === "after_meal" || mType === "sesudah_makan") measurementTimeLabel = "2 Jam Sesudah Makan";
+        else if (mType === "before_bed" || mType === "sebelum_tidur") measurementTimeLabel = "Sebelum Tidur";
+        else measurementTimeLabel = "Sewaktu";
       }
 
       return {
@@ -256,12 +259,20 @@ export const recordMonitoringService = {
         date: dateStr,
         time: timeStr,
         glucoseValue: log.glucose_value ?? 0,
-        measurementTimeType: log.measurement_time_type || "sebelum_makan",
+        measurementTimeType: mType,
         measurementTimeLabel,
         status: log.status || "normal",
+        classificationLabel: log.classification_label || (log.status === "normal" ? "Normal" : log.status),
+        severity: log.severity || "normal",
+        referenceMin: log.reference_min,
+        referenceMax: log.reference_max,
+        referenceRangeText: log.reference_range_text,
+        recommendation: log.recommendation,
+        colorIndicator: log.color_indicator,
+        measuredAt: log.measured_at,
         rawDate: d,
-        before: log.measurement_time_type === "sebelum_makan" ? log.glucose_value : 0,
-        after: log.measurement_time_type === "sesudah_makan" ? log.glucose_value : 0,
+        before: (mType === "before_meal" || mType === "sebelum_makan") ? log.glucose_value : 0,
+        after: (mType === "after_meal" || mType === "sesudah_makan") ? log.glucose_value : 0,
       };
     }).sort((a: any, b: any) => (b.rawDate?.getTime() ?? 0) - (a.rawDate?.getTime() ?? 0));
   },
