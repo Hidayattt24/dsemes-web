@@ -48,6 +48,38 @@ export interface QuestionnaireRecord {
 // Backward compatibility alias
 export type Quiz = QuestionnaireRecord;
 
+export interface FormChoice {
+  id?: string;
+  optionText: string;
+  isCorrect: boolean;
+}
+
+export interface FormQuestion {
+  id?: string;
+  questionText: string;
+  explanation: string;
+  choices: FormChoice[];
+}
+
+export interface FormCategory {
+  id?: string;
+  title: string;
+  description: string;
+  questions: FormQuestion[];
+}
+
+export interface QuestionnaireFormFields {
+  title: string;
+  type: QuestionnaireType;
+  description: string;
+  educationId: string;
+  difficulty: QuestionnaireDifficulty;
+  passingScore: number;
+  status: QuestionnaireStatus;
+  categories: FormCategory[];
+}
+
+
 export interface QuizStats {
   readonly totalQuizzes: number;
   readonly publishedQuizzes: number;

@@ -9,6 +9,7 @@ import type {
   QuestionCategoryItem,
   QuestionItem,
   QuestionChoice,
+  QuestionnaireFormFields,
 } from "../types/quiz";
 import { axiosInstance } from "@/lib/axios";
 
@@ -189,6 +190,36 @@ function mapQuestionAnalysisFromApi(
   };
 }
 
+function formatQuestionnairePayload(fields: QuestionnaireFormFields) {
+  return {
+    title: fields.title.trim(),
+    type: fields.type,
+    description: fields.description ? fields.description.trim() : "",
+    education_id: fields.type === "POST_TEST" && fields.educationId ? fields.educationId : null,
+    passing_score: fields.type === "POST_TEST" && fields.passingScore ? Number(fields.passingScore) : null,
+    difficulty: fields.type === "POST_TEST" && fields.difficulty ? fields.difficulty : null,
+    status: fields.status ? fields.status.toLowerCase() : "aktif",
+    categories: fields.categories.map((cat, catIdx) => ({
+      ...(cat.id ? { id: cat.id } : {}),
+      title: cat.title.trim(),
+      description: cat.description ? cat.description.trim() : "",
+      display_order: catIdx + 1,
+      questions: cat.questions.map((q, qIdx) => ({
+        ...(q.id ? { id: q.id } : {}),
+        question_text: q.questionText.trim(),
+        explanation: q.explanation ? q.explanation.trim() : "",
+        display_order: qIdx + 1,
+        choices: q.choices.map((c, cIdx) => ({
+          ...(c.id ? { id: c.id } : {}),
+          option_text: c.optionText.trim(),
+          is_correct: c.isCorrect,
+          display_order: cIdx + 1,
+        })),
+      })),
+    })),
+  };
+}
+
 export const quizService = {
   /** Get paginated questionnaires */
   async getQuizzes(
@@ -225,42 +256,30 @@ export const quizService = {
     }
   },
 
-  /** Save (Create or Update) questionnaire */
-  async saveQuestionnaire(
-    payload: {
-      id?: string;
-      title: string;
-      type: "PRE_TEST" | "POST_TEST";
-      description?: string;
-      education_id?: string | null;
-      passing_score?: number | null;
-      difficulty?: string | null;
-      status: string;
-      categories: {
-        title: string;
-        description?: string;
-        display_order: number;
-        questions: {
-          question_text: string;
-          explanation?: string;
-          display_order: number;
-          choices: {
-            option_text: string;
-            is_correct: boolean;
-            display_order: number;
-          }[];
-        }[];
-      }[];
-    }
-  ): Promise<QuestionnaireRecord> {
-    let res;
-    if (payload.id) {
-      res = await axiosInstance.put(`/admin/quiz/${payload.id}`, payload);
-    } else {
-      res = await axiosInstance.post("/admin/quiz", payload);
-    }
+  /** Create new questionnaire */
+  async createQuiz(payload: QuestionnaireFormFields): Promise<QuestionnaireRecord> {
+    const formatted = formatQuestionnairePayload(payload);
+    const res = await axiosInstance.post("/admin/quiz", formatted);
     const data: ApiQuestionnaireDetailResponse = res.data.data;
     return mapQuestionnaireFromApi(data);
+  },
+
+  /** Update existing questionnaire */
+  async updateQuiz(id: string, payload: QuestionnaireFormFields): Promise<QuestionnaireRecord> {
+    const formatted = formatQuestionnairePayload(payload);
+    const res = await axiosInstance.put(`/admin/quiz/${id}`, formatted);
+    const data: ApiQuestionnaireDetailResponse = res.data.data;
+    return mapQuestionnaireFromApi(data);
+  },
+
+  /** Save (Create or Update) questionnaire */
+  async saveQuestionnaire(
+    payload: QuestionnaireFormFields & { id?: string }
+  ): Promise<QuestionnaireRecord> {
+    if (payload.id) {
+      return this.updateQuiz(payload.id, payload);
+    }
+    return this.createQuiz(payload);
   },
 
   /** Delete questionnaire */
