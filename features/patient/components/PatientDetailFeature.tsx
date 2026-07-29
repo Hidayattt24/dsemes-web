@@ -61,7 +61,7 @@ function toBloodSugarLog(log: any): BloodSugarLog {
 
 export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
   const router = useRouter();
-  const { patient, bloodSugar, meals, activities, isLoading, error, refetch } = usePatientDetail(patientId);
+  const { patient, bloodSugar, meals, activities, educationActivities, isLoading, error, refetch } = usePatientDetail(patientId);
   const bloodSugarLogs = bloodSugar.map(toBloodSugarLog);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddMeasurementOpen, setIsAddMeasurementOpen] = useState(false);
@@ -183,7 +183,7 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
           <PatientCalorieChart data={meals} patient={patient} />
         </div>
         <div className="lg:col-span-5">
-          <PatientEducationActivity data={activities} />
+          <PatientEducationActivity data={educationActivities} />
         </div>
       </div>
 

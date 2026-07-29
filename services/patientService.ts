@@ -185,6 +185,16 @@ export const patientService = {
     return res.data?.data ?? [];
   },
 
+  /** Fetch patient education activities */
+  async getPatientEducationActivities(id: string): Promise<any> {
+    try {
+      const res = await axiosInstance.get(`/admin/patients/${id}/activities/education`);
+      return res.data?.data ?? null;
+    } catch {
+      return null;
+    }
+  },
+
   /** Fetch health measurements history for a patient */
   async getPatientMeasurements(id: string, rolePrefix: 'admin' | 'staff' = 'admin'): Promise<PatientMeasurement[]> {
     try {
