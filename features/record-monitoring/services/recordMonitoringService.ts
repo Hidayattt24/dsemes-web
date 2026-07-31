@@ -61,17 +61,17 @@ const mapPatientRecord = (data: any): PatientRecord => {
     }
   }
 
-  // Show meal type even when calories = 0 (food may not be linked to a food item)
+  // Show meal type and food name
   const mealTypeLabel = data.latest_meal_type
     ? (data.latest_meal_type === "sarapan" ? "Sarapan" :
       data.latest_meal_type === "makan_siang" ? "Makan Siang" :
       data.latest_meal_type === "makan_malam" ? "Makan Malam" : "Cemilan")
     : null;
 
-  const meal = data.latest_meal_type
-    ? (data.latest_meal_calories > 0 ? `${Math.round(data.latest_meal_calories)} kcal` : mealTypeLabel ?? "-")
-    : "-";
-  const mealType = mealTypeLabel ?? "-";
+  const meal = data.latest_meal_name || (data.latest_meal_type ? (data.latest_meal_calories > 0 ? `${Math.round(data.latest_meal_calories)} kcal` : mealTypeLabel ?? "-") : "-");
+  const mealType = data.latest_meal_name
+    ? (mealTypeLabel ? `${mealTypeLabel}${data.latest_meal_calories > 0 ? ` • ${Math.round(data.latest_meal_calories)} kcal` : ''}` : "-")
+    : (mealTypeLabel ?? "-");
 
   // Activity: show activity name + relative time
   let activity = "-";
@@ -304,7 +304,7 @@ export const recordMonitoringService = {
     const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/activities`, { params: { limit: 100, date: date || undefined } });
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
-      const loggedDate = new Date(log.logged_at);
+      const loggedDate = log.logged_at ? new Date(log.logged_at) : new Date();
       const dateStr = loggedDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
       const timeStr = loggedDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
 
@@ -314,11 +314,12 @@ export const recordMonitoringService = {
 
       return {
         id: log.id,
-        name: log.activity_name,
+        name: log.activity_name || log.descriptive_name || "Aktivitas Fisik",
         time: `${dateStr}, ${timeStr}`,
         intensity,
-        duration: log.duration_minutes,
-        caloriesBurned: Math.round(log.calories_burned),
+        duration: log.duration_minutes || 30,
+        caloriesBurned: Math.round(log.calories_burned ?? 0),
+        rawDate: loggedDate,
       };
     });
   },
@@ -328,17 +329,22 @@ export const recordMonitoringService = {
     const list = res.data?.data ?? [];
     return list.map((log: any) => {
       let status: "Diminum" | "Terlewat" | "Mendatang" = "Mendatang";
-      if (log.status === "completed") status = "Diminum";
-      else if (log.status === "skipped") status = "Terlewat";
+      if (log.status === "selesai") status = "Diminum";
+      else if (log.status === "terlewat") status = "Terlewat";
 
       const logDate = log.logged_date ? new Date(log.logged_date) : new Date();
       const dateGroup = logDate.toLocaleDateString("id-ID", { day: "numeric", month: "short", weekday: "short" });
 
+      let sched = log.scheduled_time || "08:00";
+      if (sched.length >= 5) {
+        sched = sched.substring(0, 5) + " WIB";
+      }
+
       return {
         id: log.id || log.reminder_id,
-        name: log.activity_name,
-        dosage: "Sesuai Petunjuk",
-        time: `Jadwal: ${log.scheduled_time || "08:00"}`,
+        name: log.activity_name || "Catatan Minum Obat",
+        dosage: log.notes || log.dosage || "Sesuai Petunjuk",
+        time: `Jadwal: ${sched}`,
         status,
         dateGroup,
       };

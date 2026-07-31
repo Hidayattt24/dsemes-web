@@ -10,8 +10,11 @@ interface MedicationComplianceCardProps {
 }
 
 export function MedicationComplianceCard({ logs = [], selectedDate, onDateChange, isLoading }: MedicationComplianceCardProps) {
+  // Filter out 'Mendatang' items — ONLY display actual logs inputted by user
+  const actualLogs = logs.filter((log) => log.status !== "Mendatang");
+
   // Group logs by dateGroup
-  const groupedLogs = logs.reduce<Record<string, MedicationLog[]>>((acc, log) => {
+  const groupedLogs = actualLogs.reduce<Record<string, MedicationLog[]>>((acc, log) => {
     if (!acc[log.dateGroup]) {
       acc[log.dateGroup] = [];
     }
@@ -19,7 +22,7 @@ export function MedicationComplianceCard({ logs = [], selectedDate, onDateChange
     return acc;
   }, {});
 
-  const hasData = logs.length > 0;
+  const hasData = actualLogs.length > 0;
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm flex flex-col h-[520px] font-[family-name:var(--font-poppins)]">

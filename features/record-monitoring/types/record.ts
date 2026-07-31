@@ -113,6 +113,7 @@ export interface ActivityLog {
   readonly intensity: "Ringan" | "Sedang" | "Berat";
   readonly duration: number;
   readonly caloriesBurned: number;
+  readonly rawDate?: Date;
 }
 
 export interface MedicationLog {
