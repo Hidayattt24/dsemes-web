@@ -69,12 +69,12 @@ export function useEducationForm(articleId?: string) {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  const validate = (): boolean => {
+  const validate = (targetFields: FormFields): boolean => {
     const newErrors: Partial<Record<keyof FormFields, string>> = {};
-    if (!fields.title.trim()) newErrors.title = "Judul edukasi wajib diisi.";
-    if (!fields.content.trim()) newErrors.content = "Konten edukasi wajib diisi.";
-    if (fields.duration <= 0) newErrors.duration = "Durasi membaca harus lebih dari 0 menit.";
-    if (!fields.thumbnail.trim()) newErrors.thumbnail = "Gambar sampul/banner wajib diunggah.";
+    if (!targetFields.title.trim()) newErrors.title = "Judul edukasi wajib diisi.";
+    if (!targetFields.content.trim()) newErrors.content = "Konten edukasi wajib diisi.";
+    if (targetFields.duration <= 0) newErrors.duration = "Durasi membaca harus lebih dari 0 menit.";
+    if (!targetFields.thumbnail.trim()) newErrors.thumbnail = "Gambar sampul/banner wajib diunggah.";
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -89,19 +89,24 @@ export function useEducationForm(articleId?: string) {
     return true;
   };
 
-  const save = async (forcedStatus?: "Diterbitkan" | "Draf") => {
-    if (!validate()) return;
+  const save = async (forcedStatus?: "Diterbitkan" | "Draf", overrideFields?: Partial<FormFields>) => {
+    const currentFields: FormFields = {
+      ...fields,
+      ...overrideFields,
+      ...(forcedStatus ? { status: forcedStatus } : {}),
+    };
+
+    if (!validate(currentFields)) return;
 
     setIsSaving(true);
     try {
-      const autoSummary = fields.shortDescription.trim() ||
-        fields.content.replace(/<[^>]*>/g, "").slice(0, 160).trim();
+      const autoSummary = currentFields.shortDescription.trim() ||
+        currentFields.content.replace(/<[^>]*>/g, "").slice(0, 160).trim();
 
       await educationService.saveArticle({
         id: articleId,
-        ...fields,
+        ...currentFields,
         shortDescription: autoSummary,
-        status: forcedStatus ?? fields.status,
       });
       showToast({
         type: "success",

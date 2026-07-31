@@ -65,6 +65,29 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
   const [newCategoryInput, setNewCategoryInput] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sync category from loaded article into list
+  useEffect(() => {
+    if (fields.category && !categoriesList.includes(fields.category)) {
+      setCategoriesList((prev) => [...prev, fields.category]);
+    }
+  }, [fields.category, categoriesList]);
+
+  // Fetch backend categories on mount
+  useEffect(() => {
+    const fetchServerCategories = async () => {
+      try {
+        const { educationService } = await import("../services/educationService");
+        const serverCats = await educationService.getCategories();
+        if (serverCats.length > 0) {
+          setCategoriesList((prev) => Array.from(new Set([...prev, ...serverCats])));
+        }
+      } catch {
+        // Handle error silently
+      }
+    };
+    fetchServerCategories();
+  }, []);
+
   // YouTube modal states
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
   const [youtubeUrlInput, setYoutubeUrlInput] = useState("");
@@ -498,16 +521,45 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
   };
 
   // Add custom new category dynamically in combobox
-  const handleAddNewCategory = () => {
-    if (newCategoryInput.trim() && !categoriesList.includes(newCategoryInput.trim())) {
-      const added = newCategoryInput.trim();
-      setCategoriesList((prev) => [...prev, added]);
+  const handleAddNewCategory = (): string => {
+    const added = newCategoryInput.trim();
+    if (added) {
+      if (!categoriesList.includes(added)) {
+        setCategoriesList((prev) => [...prev, added]);
+      }
       handleChange("category", added);
       setNewCategoryInput("");
       setIsAddingNewCategory(false);
       setIsCategoryDropdownOpen(false);
       setCategorySearchQuery("");
+      return added;
     }
+    return fields.category;
+  };
+
+  // Centralized save handler that guarantees the latest DOM content and category are submitted
+  const handleSave = (forcedStatus?: "Diterbitkan" | "Draf") => {
+    let latestContent = fields.content;
+    if (editorRef.current) {
+      const clone = editorRef.current.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('.editor-actions, .editor-only-overlay, button').forEach((el) => el.remove());
+      latestContent = clone.innerHTML;
+    }
+
+    let latestCategory = fields.category;
+    if (isAddingNewCategory && newCategoryInput.trim()) {
+      latestCategory = handleAddNewCategory();
+    }
+
+    const override = {
+      content: latestContent,
+      category: latestCategory,
+    };
+
+    handleChange("content", latestContent);
+    handleChange("category", latestCategory);
+
+    save(forcedStatus, override);
   };
 
   const filteredCategories = categoriesList.filter((c) =>
@@ -636,28 +688,14 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
         </div>
         <div className="flex w-full sm:w-auto justify-end gap-3 flex-wrap">
           <button
-            onClick={() => {
-              if (editorRef.current) {
-                const clone = editorRef.current.cloneNode(true) as HTMLElement;
-                clone.querySelectorAll('.editor-actions, .editor-only-overlay, button').forEach((el) => el.remove());
-                handleChange("content", clone.innerHTML);
-              }
-              save("Draf");
-            }}
+            onClick={() => handleSave("Draf")}
             disabled={isSaving}
             className="flex-1 sm:flex-initial px-6 py-2.5 rounded-full border border-[#E2E8F0] text-[#1E293B] text-sm font-semibold hover:bg-[#F1F5F9] transition-all cursor-pointer disabled:opacity-50 text-center"
           >
             Simpan Draft
           </button>
           <button
-            onClick={() => {
-              if (editorRef.current) {
-                const clone = editorRef.current.cloneNode(true) as HTMLElement;
-                clone.querySelectorAll('.editor-actions, .editor-only-overlay, button').forEach((el) => el.remove());
-                handleChange("content", clone.innerHTML);
-              }
-              save("Diterbitkan");
-            }}
+            onClick={() => handleSave("Diterbitkan")}
             disabled={isSaving}
             className="flex-1 sm:flex-initial px-8 py-2.5 rounded-full bg-[#00695C] text-white text-sm font-semibold shadow-lg shadow-[#00695C]/20 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50 text-center"
           >
@@ -1082,7 +1120,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
             Batal
           </button>
           <button
-            onClick={() => save()}
+            onClick={() => handleSave()}
             disabled={isSaving}
             className="w-full sm:w-auto px-10 py-3 rounded-xl bg-[#00695C] text-white text-sm font-bold shadow-xl shadow-[#00695C]/25 hover:opacity-90 transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 text-center"
           >

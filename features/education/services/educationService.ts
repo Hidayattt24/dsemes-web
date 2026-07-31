@@ -20,6 +20,17 @@ const mapArticleFromBackend = (data: any): EducationArticle => {
 };
 
 export const educationService = {
+  /** Get all categories */
+  async getCategories(): Promise<string[]> {
+    try {
+      const res = await axiosInstance.get("/education/categories");
+      const list = res.data?.data ?? [];
+      return list.map((c: any) => c.name || c.category_name || c).filter(Boolean);
+    } catch {
+      return [];
+    }
+  },
+
   /** Get all articles */
   async getArticles(): Promise<EducationArticle[]> {
     const res = await axiosInstance.get("/admin/education/articles", { params: { limit: 100 } });
