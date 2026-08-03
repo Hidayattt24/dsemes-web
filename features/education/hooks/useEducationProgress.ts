@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { educationService } from "../services/educationService";
-import type { EducationProgressItem, EducationProgressAnalytics } from "../types/education";
+import type { EducationProgressItem, EducationProgressAnalytics, AdminArticleReviewsData } from "../types/education";
 
 interface UseEducationProgressReturn {
   readonly progress: readonly EducationProgressItem[];
   readonly analytics: EducationProgressAnalytics | null;
+  readonly reviewsData: AdminArticleReviewsData | null;
   readonly isLoading: boolean;
   readonly error: string | null;
   readonly refetch: () => void;
@@ -15,6 +16,7 @@ interface UseEducationProgressReturn {
 export function useEducationProgress(articleId: string): UseEducationProgressReturn {
   const [progress, setProgress] = useState<readonly EducationProgressItem[]>([]);
   const [analytics, setAnalytics] = useState<EducationProgressAnalytics | null>(null);
+  const [reviewsData, setReviewsData] = useState<AdminArticleReviewsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,12 +25,14 @@ export function useEducationProgress(articleId: string): UseEducationProgressRet
     setIsLoading(true);
     setError(null);
     try {
-      const [prog, an] = await Promise.all([
+      const [prog, an, rev] = await Promise.all([
         educationService.getProgress(articleId),
         educationService.getProgressAnalytics(articleId),
+        educationService.getArticleReviews(articleId),
       ]);
       setProgress(prog);
       setAnalytics(an);
+      setReviewsData(rev);
     } catch {
       setError("Gagal memuat data progress edukasi.");
     } finally {
@@ -43,6 +47,7 @@ export function useEducationProgress(articleId: string): UseEducationProgressRet
   return {
     progress,
     analytics,
+    reviewsData,
     isLoading,
     error,
     refetch: fetchData,

@@ -1,4 +1,4 @@
-import type { EducationArticle, EducationStats, EducationProgressItem, EducationProgressAnalytics } from "../types/education";
+import type { EducationArticle, EducationStats, EducationProgressItem, EducationProgressAnalytics, AdminArticleReviewsData } from "../types/education";
 import { axiosInstance } from "@/lib/axios";
 
 const mapArticleFromBackend = (data: any): EducationArticle => {
@@ -127,7 +127,6 @@ export const educationService = {
     }));
   },
 
-
   /** Get progress analytics summary for an education article */
   async getProgressAnalytics(articleId: string): Promise<EducationProgressAnalytics> {
     const res = await axiosInstance.get(`/admin/education/${articleId}/progress/analytics`);
@@ -140,5 +139,42 @@ export const educationService = {
       read_and_video_count: data.read_and_video_count || 0,
       not_started_count: data.not_started_count || 0,
     };
+  },
+
+  /** Get article review summary, rating distribution, and reviews list */
+  async getArticleReviews(articleId: string): Promise<AdminArticleReviewsData> {
+    try {
+      const res = await axiosInstance.get(`/admin/education/${articleId}/reviews`);
+      const data = res.data?.data ?? {};
+      return {
+        average_rating: data.average_rating || 0,
+        total_reviews: data.total_reviews || 0,
+        rating_distribution: {
+          star_1: data.rating_distribution?.star_1 || 0,
+          star_2: data.rating_distribution?.star_2 || 0,
+          star_3: data.rating_distribution?.star_3 || 0,
+          star_4: data.rating_distribution?.star_4 || 0,
+          star_5: data.rating_distribution?.star_5 || 0,
+        },
+        reviews: (data.reviews || []).map((r: any) => ({
+          id: r.id,
+          education_id: r.education_id,
+          patient_id: r.patient_id,
+          patient_name: r.patient_name || "Pasien",
+          rating: r.rating || 0,
+          note: r.note || "",
+          completion_date: r.completion_date || null,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+        })),
+      };
+    } catch {
+      return {
+        average_rating: 0,
+        total_reviews: 0,
+        rating_distribution: { star_1: 0, star_2: 0, star_3: 0, star_4: 0, star_5: 0 },
+        reviews: [],
+      };
+    }
   },
 };

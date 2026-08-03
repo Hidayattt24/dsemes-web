@@ -55,3 +55,31 @@ export interface EducationProgressAnalytics {
   readonly read_and_video_count: number;
   readonly not_started_count: number;
 }
+
+export interface RatingDistribution {
+  readonly star_1: number;
+  readonly star_2: number;
+  readonly star_3: number;
+  readonly star_4: number;
+  readonly star_5: number;
+}
+
+export interface EducationUserReview {
+  readonly id: string;
+  readonly education_id: string;
+  readonly patient_id: string;
+  readonly patient_name: string;
+  readonly rating: number;
+  readonly note: string;
+  readonly completion_date: string | null;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface AdminArticleReviewsData {
+  readonly average_rating: number;
+  readonly total_reviews: number;
+  readonly rating_distribution: RatingDistribution;
+  readonly reviews: readonly EducationUserReview[];
+}
+
