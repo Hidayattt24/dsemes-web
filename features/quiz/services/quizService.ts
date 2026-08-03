@@ -23,6 +23,7 @@ interface ApiChoiceResponse {
 interface ApiQuestionResponse {
   readonly id: string;
   readonly question_text: string;
+  readonly question_image_url?: string;
   readonly explanation?: string;
   readonly display_order: number;
   readonly choices: readonly ApiChoiceResponse[];
@@ -102,6 +103,7 @@ function mapQuestionnaireFromApi(api: ApiQuestionnaireDetailResponse): Questionn
     questions: (cat.questions ?? []).map((q): QuestionItem => ({
       id: q.id,
       questionText: q.question_text,
+      questionImageUrl: q.question_image_url,
       explanation: q.explanation,
       displayOrder: q.display_order,
       choices: (q.choices ?? []).map((c): QuestionChoice => ({
@@ -207,6 +209,7 @@ function formatQuestionnairePayload(fields: QuestionnaireFormFields) {
       questions: cat.questions.map((q, qIdx) => ({
         ...(q.id ? { id: q.id } : {}),
         question_text: q.questionText.trim(),
+        question_image_url: q.questionImageUrl ? q.questionImageUrl.trim() : "",
         explanation: q.explanation ? q.explanation.trim() : "",
         display_order: qIdx + 1,
         choices: q.choices.map((c, cIdx) => ({

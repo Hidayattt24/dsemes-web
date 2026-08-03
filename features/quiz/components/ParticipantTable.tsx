@@ -13,6 +13,7 @@ interface ParticipantTableProps {
   readonly participants: readonly QuizParticipant[];
   readonly searchQuery: string;
   readonly onSearchChange: (q: string) => void;
+  readonly isPreTest?: boolean;
 }
 
 interface GroupedParticipant {
@@ -27,11 +28,19 @@ interface GroupedParticipant {
   readonly attempts: readonly QuizParticipant[];
 }
 
+function getDmsesCategory(score: number): string {
+  if (score <= 40) return "Low Self-Efficacy";
+  if (score <= 60) return "Moderate Self-Efficacy";
+  if (score <= 80) return "Good Self-Efficacy";
+  return "Very High Self-Efficacy";
+}
+
 export function ParticipantTable({
   quizId,
   participants,
   searchQuery,
   onSearchChange,
+  isPreTest = false,
 }: ParticipantTableProps) {
   const pathname = usePathname();
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,9 +150,9 @@ export function ParticipantTable({
             <tr>
               <th className="py-3.5 px-6">Pasien</th>
               <th className="py-3.5 px-4">Percobaan</th>
-              <th className="py-3.5 px-4 text-center">Skor Terakhir</th>
-              <th className="py-3.5 px-4 text-center">Skor Tertinggi</th>
-              <th className="py-3.5 px-4">Status Terakhir</th>
+              <th className="py-3.5 px-4 text-center">{isPreTest ? "Skor DMSES" : "Skor Terakhir"}</th>
+              <th className="py-3.5 px-4 text-center">{isPreTest ? "Kategori Efikasi Diri" : "Skor Tertinggi"}</th>
+              <th className="py-3.5 px-4">{isPreTest ? "Status" : "Status Terakhir"}</th>
               <th className="py-3.5 px-4">Tanggal Selesai</th>
               <th className="py-3.5 px-6 text-right">Aksi</th>
             </tr>
@@ -159,6 +168,7 @@ export function ParticipantTable({
               paginatedGroups.map((group) => {
                 const isExpanded = expandedUserIds.has(group.patientId);
                 const hasMultiple = group.totalAttempts > 1;
+                const dmsesCategory = group.attempts[0]?.selfEfficacyCategory || getDmsesCategory(group.latestScore);
 
                 return (
                   <Fragment key={group.patientId}>
@@ -184,25 +194,35 @@ export function ParticipantTable({
                         </span>
                       </td>
 
-                      {/* Skor Terakhir Column */}
+                      {/* Skor Terakhir / DMSES Column */}
                       <td className="py-3.5 px-4 text-center">
                         <span className="font-bold text-sm text-[#00695C]">
-                          {group.latestScore}%
+                          {isPreTest ? `${group.latestScore} / 100` : `${group.latestScore}%`}
                         </span>
                       </td>
 
-                      {/* Skor Tertinggi Column */}
+                      {/* Skor Tertinggi / Kategori Column */}
                       <td className="py-3.5 px-4 text-center">
-                        <span className="font-bold text-sm text-slate-700">
-                          {group.highestScore}%
-                        </span>
+                        {isPreTest ? (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
+                            {dmsesCategory}
+                          </span>
+                        ) : (
+                          <span className="font-bold text-sm text-slate-700">
+                            {group.highestScore}%
+                          </span>
+                        )}
                       </td>
 
-                      {/* Status Terakhir Column */}
+                      {/* Status Column */}
                       <td className="py-3.5 px-4">
-                        <Badge variant={group.latestPassed ? "primary" : "error"}>
-                          {group.latestPassed ? "Lulus" : "Gagal"}
-                        </Badge>
+                        {isPreTest ? (
+                          <Badge variant="primary">Selesai</Badge>
+                        ) : (
+                          <Badge variant={group.latestPassed ? "primary" : "error"}>
+                            {group.latestPassed ? "Lulus" : "Gagal"}
+                          </Badge>
+                        )}
                       </td>
 
                       {/* Tanggal Selesai Column */}

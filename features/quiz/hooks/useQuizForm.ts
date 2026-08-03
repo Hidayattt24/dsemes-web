@@ -21,6 +21,7 @@ export interface FormChoice {
 export interface FormQuestion {
   id?: string;
   questionText: string;
+  questionImageUrl?: string;
   explanation: string;
   choices: FormChoice[];
 }
@@ -55,6 +56,7 @@ const createEmptyChoice = (label = "", isCorrect = false): FormChoice => ({
 
 const createEmptyQuestion = (): FormQuestion => ({
   questionText: "",
+  questionImageUrl: "",
   explanation: "",
   choices: [
     createEmptyChoice("", true),
@@ -122,6 +124,7 @@ export function useQuizForm(quizId?: string) {
             questions: (cat.questions ?? []).map((q) => ({
               id: q.id,
               questionText: q.questionText,
+              questionImageUrl: q.questionImageUrl ?? "",
               explanation: q.explanation ?? "",
               choices: (q.choices ?? []).map((c) => ({
                 id: c.id,
@@ -377,20 +380,20 @@ export function useQuizForm(quizId?: string) {
         };
       });
 
-      // Validate questions inside categories
-      for (let cIdx = 0; cIdx < formattedCategories.length; cIdx++) {
-        const cat = formattedCategories[cIdx];
-        if (cat.questions.length === 0) {
+      // Validate questions inside categories or PRE_TEST questions
+      if (fields.type === "PRE_TEST") {
+        const questionsList = formattedCategories[0]?.questions || [];
+        if (questionsList.length === 0) {
           showToast({
             type: "error",
             title: "Validasi Gagal",
-            description: `Kategori "${cat.title}" belum memiliki soal.`,
+            description: "Pre-Test wajib memiliki minimal 1 pertanyaan.",
           });
           return;
         }
 
-        for (let qIdx = 0; qIdx < cat.questions.length; qIdx++) {
-          const q = cat.questions[qIdx];
+        for (let qIdx = 0; qIdx < questionsList.length; qIdx++) {
+          const q = questionsList[qIdx];
           if (!q.questionText.trim()) {
             showToast({
               type: "error",
@@ -399,25 +402,50 @@ export function useQuizForm(quizId?: string) {
             });
             return;
           }
-
-          const hasValidChoice = q.choices.some((c) => c.optionText.trim().length > 0);
-          if (!hasValidChoice) {
+        }
+      } else {
+        // Validate POST_TEST questions and choices
+        for (let cIdx = 0; cIdx < formattedCategories.length; cIdx++) {
+          const cat = formattedCategories[cIdx];
+          if (cat.questions.length === 0) {
             showToast({
               type: "error",
               title: "Validasi Gagal",
-              description: `Soal #${qIdx + 1} harus memiliki minimal 1 pilihan jawaban bertuliskan teks.`,
+              description: `Kategori "${cat.title}" belum memiliki soal.`,
             });
             return;
           }
 
-          const hasCorrectChoice = q.choices.some((c) => c.isCorrect && c.optionText.trim().length > 0);
-          if (!hasCorrectChoice) {
-            showToast({
-              type: "error",
-              title: "Validasi Gagal",
-              description: `Soal #${qIdx + 1} belum memiliki jawaban benar yang valid.`,
-            });
-            return;
+          for (let qIdx = 0; qIdx < cat.questions.length; qIdx++) {
+            const q = cat.questions[qIdx];
+            if (!q.questionText.trim()) {
+              showToast({
+                type: "error",
+                title: "Validasi Gagal",
+                description: `Soal #${qIdx + 1} belum memiliki teks pertanyaan.`,
+              });
+              return;
+            }
+
+            const hasValidChoice = q.choices.some((c) => c.optionText.trim().length > 0);
+            if (!hasValidChoice) {
+              showToast({
+                type: "error",
+                title: "Validasi Gagal",
+                description: `Soal #${qIdx + 1} harus memiliki minimal 1 pilihan jawaban bertuliskan teks.`,
+              });
+              return;
+            }
+
+            const hasCorrectChoice = q.choices.some((c) => c.isCorrect && c.optionText.trim().length > 0);
+            if (!hasCorrectChoice) {
+              showToast({
+                type: "error",
+                title: "Validasi Gagal",
+                description: `Soal #${qIdx + 1} belum memiliki jawaban benar yang valid.`,
+              });
+              return;
+            }
           }
         }
       }

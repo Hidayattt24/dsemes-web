@@ -12,6 +12,7 @@ export interface QuestionChoice {
 export interface QuestionItem {
   readonly id?: string;
   readonly questionText: string;
+  readonly questionImageUrl?: string;
   readonly explanation?: string;
   readonly displayOrder?: number;
   readonly choices: readonly QuestionChoice[];
@@ -57,6 +58,7 @@ export interface FormChoice {
 export interface FormQuestion {
   id?: string;
   questionText: string;
+  questionImageUrl?: string;
   explanation: string;
   choices: FormChoice[];
 }
@@ -77,6 +79,7 @@ export interface QuestionnaireFormFields {
   passingScore: number;
   status: QuestionnaireStatus;
   categories: FormCategory[];
+  questions?: FormQuestion[];
 }
 
 
@@ -98,6 +101,7 @@ export interface QuizParticipant {
   readonly score: number;
   readonly passed: boolean;
   readonly duration: string;
+  readonly selfEfficacyCategory?: string;
 }
 
 export interface ParticipantQuestionAnalysis {

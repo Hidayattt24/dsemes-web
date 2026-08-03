@@ -115,6 +115,42 @@ export function QuizDetailFeature({ quizId }: QuizDetailFeatureProps) {
         )}
       </div>
 
+      {/* DMSES Interpretation Information Banner (Pre-Test Only) */}
+      {quiz.type === "PRE_TEST" && (
+        <div className="bg-gradient-to-br from-[#F0F9F8] via-white to-[#E6F2F1]/50 p-6 rounded-2xl border border-[#00695C]/20 shadow-sm space-y-3">
+          <div className="flex items-center gap-2.5 text-[#00695C]">
+            <span className="material-symbols-outlined text-xl select-none">psychology</span>
+            <h3 className="text-sm font-bold uppercase tracking-wider">
+              Interpretasi Skor Efikasi Diri (DMSES)
+            </h3>
+          </div>
+          <p className="text-xs text-[#4A5568] leading-relaxed">
+            <strong>Skor Total DMSES</strong> = Penjumlahan seluruh item pertanyaan (Skor Minimal = 20, Skor Maksimal = 100).
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+            <div className="bg-white p-3 rounded-xl border border-teal-100 text-center shadow-2xs">
+              <span className="block text-xs font-bold text-slate-700">20 – 40</span>
+              <span className="text-[11px] font-semibold text-amber-700">Low Self-Efficacy</span>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-teal-100 text-center shadow-2xs">
+              <span className="block text-xs font-bold text-slate-700">41 – 60</span>
+              <span className="text-[11px] font-semibold text-blue-700">Moderate Self-Efficacy</span>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-teal-100 text-center shadow-2xs">
+              <span className="block text-xs font-bold text-slate-700">61 – 80</span>
+              <span className="text-[11px] font-semibold text-teal-700">Good Self-Efficacy</span>
+            </div>
+            <div className="bg-white p-3 rounded-xl border border-teal-100 text-center shadow-2xs">
+              <span className="block text-xs font-bold text-slate-700">81 – 100</span>
+              <span className="text-[11px] font-semibold text-emerald-700">Very High Self-Efficacy</span>
+            </div>
+          </div>
+          <p className="text-[11px] italic text-[#718096] pt-1">
+            *Skor yang lebih tinggi menunjukkan keyakinan diri yang lebih besar dalam pengelolaan mandiri diabetes.
+          </p>
+        </div>
+      )}
+
       {/* Summary Stat Cards */}
       <QuizSummaryStats quiz={quiz} />
 
@@ -124,6 +160,7 @@ export function QuizDetailFeature({ quizId }: QuizDetailFeatureProps) {
         participants={participants}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        isPreTest={quiz.type === "PRE_TEST"}
       />
 
       {/* Delete Confirmation Modal */}
