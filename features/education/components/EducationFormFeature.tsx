@@ -732,8 +732,8 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
             )}
           </div>
 
-          {/* Category & Read time input row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Category, Author & Read time input row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Searchable Combobox Category */}
             <div className="space-y-2 relative" ref={dropdownRef}>
@@ -835,6 +835,25 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Author / Penulis Input */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider font-[family-name:var(--font-poppins)]">
+                Penulis / Author
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={fields.createdBy}
+                  onChange={(e) => handleChange("createdBy", e.target.value)}
+                  className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none text-sm font-semibold font-[family-name:var(--font-poppins)] text-[#1E293B] placeholder:text-[#64748B]/50"
+                  placeholder="Contoh: dr. Sarah, Sp.PD"
+                />
+                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#64748B] opacity-40 select-none">
+                  person
+                </span>
+              </div>
             </div>
 
             {/* Read time duration */}
