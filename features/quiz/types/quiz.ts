@@ -46,8 +46,11 @@ export interface QuestionnaireRecord {
   readonly categories?: readonly QuestionCategoryItem[];
 }
 
-// Backward compatibility alias
+// Backward compatibility aliases
 export type Quiz = QuestionnaireRecord;
+export type QuizQuestion = FormQuestion;
+export type QuizChoice = FormChoice;
+export type QuizCategory = FormCategory;
 
 export interface FormChoice {
   id?: string;

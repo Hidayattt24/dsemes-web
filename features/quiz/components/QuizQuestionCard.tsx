@@ -1,22 +1,35 @@
-import type { QuizQuestion } from "../types/quiz";
+"use client";
+
+import type { FormQuestion, FormChoice } from "../types/quiz";
 
 interface QuizQuestionCardProps {
-  readonly question: QuizQuestion;
+  readonly question: FormQuestion;
   readonly index: number;
-  readonly onQuestionChange: (index: number, qFields: Partial<QuizQuestion>) => void;
-  readonly onOptionChange: (qIndex: number, optionKey: "A" | "B" | "C" | "D", value: string) => void;
+  readonly onQuestionChange: (index: number, qFields: Partial<FormQuestion>) => void;
+  readonly onOptionChange: (qIndex: number, choiceIndex: number, value: string) => void;
+  readonly onCorrectChange: (qIndex: number, choiceIndex: number) => void;
   readonly onDuplicate: (index: number) => void;
   readonly onDelete: (index: number) => void;
 }
+
+const OPTION_LABELS = ["A", "B", "C", "D"] as const;
 
 export function QuizQuestionCard({
   question,
   index,
   onQuestionChange,
   onOptionChange,
+  onCorrectChange,
   onDuplicate,
   onDelete,
 }: QuizQuestionCardProps) {
+  // Ensure we always have exactly 4 choices
+  const choices: FormChoice[] = OPTION_LABELS.map((_, i) => ({
+    optionText: question.choices[i]?.optionText ?? "",
+    isCorrect: question.choices[i]?.isCorrect ?? false,
+    id: question.choices[i]?.id,
+  }));
+
   return (
     <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm relative group hover:shadow-md transition-all space-y-6">
       {/* Card Actions (Duplicate & Delete) */}
@@ -71,30 +84,30 @@ export function QuizQuestionCard({
           </span>
         </label>
         <div className="space-y-3">
-          {(["A", "B", "C", "D"] as const).map((opt) => (
+          {choices.map((choice, choiceIndex) => (
             <div
-              key={opt}
+              key={OPTION_LABELS[choiceIndex]}
               className={[
                 "flex items-center gap-3 p-3 rounded-xl border bg-white transition-all focus-within:border-[#00695C] focus-within:ring-1 focus-within:ring-[#00695C]",
-                question.correctOption === opt ? "border-[#00695C] ring-1 ring-[#00695C]" : "border-[#E2E8F0]",
+                choice.isCorrect ? "border-[#00695C] ring-1 ring-[#00695C]" : "border-[#E2E8F0]",
               ].join(" ")}
             >
               <input
                 type="radio"
                 name={`correct_q_${index}`}
-                checked={question.correctOption === opt}
-                onChange={() => onQuestionChange(index, { correctOption: opt })}
+                checked={choice.isCorrect}
+                onChange={() => onCorrectChange(index, choiceIndex)}
                 className="w-5 h-5 text-[#00695C] border-[#E2E8F0] focus:ring-[#00695C] cursor-pointer"
                 required
               />
               <div className="flex-1 flex items-center gap-3">
-                <span className="text-xs font-bold text-[#718096] w-6 text-center">{opt}</span>
+                <span className="text-xs font-bold text-[#718096] w-6 text-center">{OPTION_LABELS[choiceIndex]}</span>
                 <input
                   type="text"
-                  value={question.options[opt]}
-                  onChange={(e) => onOptionChange(index, opt, e.target.value)}
+                  value={choice.optionText}
+                  onChange={(e) => onOptionChange(index, choiceIndex, e.target.value)}
                   className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-[#1A202C] placeholder:text-[#BEC9C5] outline-none"
-                  placeholder={`Pilihan ${opt}`}
+                  placeholder={`Pilihan ${OPTION_LABELS[choiceIndex]}`}
                   required
                 />
               </div>

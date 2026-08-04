@@ -167,7 +167,7 @@ export function QuizListFeature() {
               ? `Apakah Anda yakin ingin mengubah status kuesioner "${toggleTarget?.title}" menjadi Draft? Kuesioner tidak akan dapat diakses oleh pasien.`
               : `Apakah Anda yakin ingin mengaktifkan kuesioner "${toggleTarget?.title}"? Kuesioner ini akan langsung dapat diisi oleh pasien.`
           }
-          variant={toggleTarget?.status === "Aktif" ? "warning" : "primary"}
+          variant={toggleTarget?.status === "Aktif" ? "warning" : "success"}
           confirmText={toggleTarget?.status === "Aktif" ? "Ya, Jadikan Draft" : "Ya, Aktifkan"}
           cancelText="Batal"
           loading={isTogglingStatus}

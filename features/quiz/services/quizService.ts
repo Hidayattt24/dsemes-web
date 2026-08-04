@@ -311,7 +311,7 @@ export const quizService = {
         passingScore: detail.passingScore ?? 75,
         difficulty: detail.difficulty ?? "Sedang",
         status: newStatus,
-        categories: detail.categories.map((c) => ({
+        categories: (detail.categories ?? []).map((c) => ({
           id: c.id,
           title: c.title,
           description: c.description ?? "",
@@ -320,7 +320,7 @@ export const quizService = {
             id: q.id,
             questionText: q.questionText,
             questionImageUrl: q.questionImageUrl,
-            explanation: q.explanation,
+            explanation: q.explanation ?? "",
             displayOrder: q.displayOrder,
             choices: q.choices.map((ch) => ({
               id: ch.id,
