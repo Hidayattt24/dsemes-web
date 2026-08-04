@@ -16,12 +16,14 @@ export const ROUTES = {
   PEMANTAUAN_CATATAN_PASIEN: "/admin/pemantauan-catatan-pasien",
   MANAJEMEN_EDUKASI: "/admin/manajemen-edukasi",
   MANAJEMEN_KUISIONER: "/admin/manajemen-kuisioner",
+  SURVEY: "/admin/survey",
   ADMINISTRATOR: "/admin/administrator",
   PENGATURAN: "/admin/pengaturan",
   // Staff pages
   STAFF_DASHBOARD: "/staff/dashboard",
   STAFF_PEMANTAUAN_CATATAN_PASIEN: "/staff/pemantauan-catatan-pasien",
   STAFF_MANAJEMEN_KUISIONER: "/staff/manajemen-kuisioner",
+  STAFF_SURVEY: "/staff/survey",
   STAFF_PENGATURAN: "/staff/pengaturan",
 } as const;
 

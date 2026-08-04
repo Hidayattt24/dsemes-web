@@ -295,6 +295,50 @@ export const quizService = {
     }
   },
 
+  /** Toggle quiz status between Aktif and Draft */
+  async toggleQuizStatus(quizId: string, currentStatus: string): Promise<boolean> {
+    try {
+      const detail = await this.getQuizById(quizId, "admin");
+      if (!detail) return false;
+
+      const newStatus = currentStatus === "Aktif" ? "Draft" : "Aktif";
+
+      const payload: QuestionnaireFormFields = {
+        title: detail.title,
+        type: detail.type,
+        description: detail.description ?? "",
+        educationId: detail.educationId ?? "",
+        passingScore: detail.passingScore ?? 75,
+        difficulty: detail.difficulty ?? "Sedang",
+        status: newStatus,
+        categories: detail.categories.map((c) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description ?? "",
+          displayOrder: c.displayOrder,
+          questions: c.questions.map((q) => ({
+            id: q.id,
+            questionText: q.questionText,
+            questionImageUrl: q.questionImageUrl,
+            explanation: q.explanation,
+            displayOrder: q.displayOrder,
+            choices: q.choices.map((ch) => ({
+              id: ch.id,
+              optionText: ch.optionText,
+              isCorrect: ch.isCorrect,
+              displayOrder: ch.displayOrder,
+            })),
+          })),
+        })),
+      };
+
+      await this.updateQuiz(quizId, payload);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   /** Get statistics summary */
   async getStats(rolePrefix: "admin" | "staff" = "staff"): Promise<QuizStats> {
     const res = await axiosInstance.get(`/${rolePrefix}/quiz/stats`);
