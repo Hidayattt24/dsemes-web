@@ -9,6 +9,7 @@ interface UsePatientDetailReturn {
   readonly bloodSugar: any[];
   readonly meals: any[];
   readonly activities: any[];
+  readonly educationActivities: any;
   readonly isLoading: boolean;
   readonly error: string | null;
   readonly refetch: () => void;
@@ -19,6 +20,7 @@ export function usePatientDetail(id: string): UsePatientDetailReturn {
   const [bloodSugar, setBloodSugar] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+  const [educationActivities, setEducationActivities] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,17 +28,19 @@ export function usePatientDetail(id: string): UsePatientDetailReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const [patientData, bsData, mealsData, actData] = await Promise.all([
+      const [patientData, bsData, mealsData, actData, eduActData] = await Promise.all([
         patientService.getPatientById(id),
         patientService.getPatientBloodSugar(id),
         patientService.getPatientMeals(id),
         patientService.getPatientActivities(id),
+        patientService.getPatientEducationActivities(id),
       ]);
       if (patientData) {
         setPatient(patientData);
         setBloodSugar(bsData);
         setMeals(mealsData);
         setActivities(actData);
+        setEducationActivities(eduActData);
       } else {
         setError("Pasien tidak ditemukan.");
       }
@@ -58,6 +62,7 @@ export function usePatientDetail(id: string): UsePatientDetailReturn {
     bloodSugar,
     meals,
     activities,
+    educationActivities,
     isLoading,
     error,
     refetch: fetchPatient,

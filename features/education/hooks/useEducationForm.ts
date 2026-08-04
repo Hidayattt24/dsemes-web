@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 interface FormFields {
   readonly title: string;
   readonly category: string;
+  readonly createdBy: string;
   readonly shortDescription: string;
   readonly content: string;
   readonly youtubeLink: string;
@@ -23,6 +24,7 @@ export function useEducationForm(articleId?: string) {
   const [fields, setFields] = useState<FormFields>({
     title: "",
     category: "Nutrisi & Makanan",
+    createdBy: "Tim Medis DSMES",
     shortDescription: "",
     content: "",
     youtubeLink: "",
@@ -46,6 +48,7 @@ export function useEducationForm(articleId?: string) {
           setFields({
             title: art.title,
             category: art.category,
+            createdBy: art.createdBy || "Tim Medis DSMES",
             shortDescription: art.shortDescription,
             content: art.content,
             youtubeLink: art.youtubeLink ?? "",
@@ -69,27 +72,44 @@ export function useEducationForm(articleId?: string) {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  const validate = (): boolean => {
+  const validate = (targetFields: FormFields): boolean => {
     const newErrors: Partial<Record<keyof FormFields, string>> = {};
-    if (!fields.title.trim()) newErrors.title = "Judul edukasi wajib diisi.";
-    if (!fields.shortDescription.trim()) newErrors.shortDescription = "Deskripsi singkat wajib diisi.";
-    if (!fields.content.trim()) newErrors.content = "Konten edukasi wajib diisi.";
-    if (fields.duration <= 0) newErrors.duration = "Durasi membaca harus lebih dari 0 menit.";
-    if (!fields.thumbnail.trim()) newErrors.thumbnail = "Thumbnail artikel wajib diunggah.";
+    if (!targetFields.title.trim()) newErrors.title = "Judul edukasi wajib diisi.";
+    if (!targetFields.content.trim()) newErrors.content = "Konten edukasi wajib diisi.";
+    if (targetFields.duration <= 0) newErrors.duration = "Durasi membaca harus lebih dari 0 menit.";
+    if (!targetFields.thumbnail.trim()) newErrors.thumbnail = "Gambar sampul/banner wajib diunggah.";
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      showToast({
+        type: "error",
+        title: "Validasi Gagal",
+        description: firstError || "Harap lengkapi semua kolom yang wajib diisi.",
+      });
+      return false;
+    }
+    return true;
   };
 
-  const save = async (forcedStatus?: "Diterbitkan" | "Draf") => {
-    if (!validate()) return;
+  const save = async (forcedStatus?: "Diterbitkan" | "Draf", overrideFields?: Partial<FormFields>) => {
+    const currentFields: FormFields = {
+      ...fields,
+      ...overrideFields,
+      ...(forcedStatus ? { status: forcedStatus } : {}),
+    };
+
+    if (!validate(currentFields)) return;
 
     setIsSaving(true);
     try {
+      const autoSummary = currentFields.shortDescription.trim() ||
+        currentFields.content.replace(/<[^>]*>/g, "").slice(0, 160).trim();
+
       await educationService.saveArticle({
         id: articleId,
-        ...fields,
-        status: forcedStatus ?? fields.status,
+        ...currentFields,
+        shortDescription: autoSummary,
       });
       showToast({
         type: "success",
@@ -98,8 +118,13 @@ export function useEducationForm(articleId?: string) {
       });
       router.push(ROUTES.MANAJEMEN_EDUKASI);
       router.refresh();
-    } catch {
-      // Error handling
+    } catch (err: any) {
+      const serverMsg = err?.response?.data?.message || err?.message || "Gagal menyimpan materi edukasi. Coba lagi.";
+      showToast({
+        type: "error",
+        title: "Gagal Menyimpan",
+        description: serverMsg,
+      });
     } finally {
       setIsSaving(false);
     }

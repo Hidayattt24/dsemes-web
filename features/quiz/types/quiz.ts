@@ -12,6 +12,7 @@ export interface QuestionChoice {
 export interface QuestionItem {
   readonly id?: string;
   readonly questionText: string;
+  readonly questionImageUrl?: string;
   readonly explanation?: string;
   readonly displayOrder?: number;
   readonly choices: readonly QuestionChoice[];
@@ -45,8 +46,45 @@ export interface QuestionnaireRecord {
   readonly categories?: readonly QuestionCategoryItem[];
 }
 
-// Backward compatibility alias
+// Backward compatibility aliases
 export type Quiz = QuestionnaireRecord;
+export type QuizQuestion = FormQuestion;
+export type QuizChoice = FormChoice;
+export type QuizCategory = FormCategory;
+
+export interface FormChoice {
+  id?: string;
+  optionText: string;
+  isCorrect: boolean;
+}
+
+export interface FormQuestion {
+  id?: string;
+  questionText: string;
+  questionImageUrl?: string;
+  explanation: string;
+  choices: FormChoice[];
+}
+
+export interface FormCategory {
+  id?: string;
+  title: string;
+  description: string;
+  questions: FormQuestion[];
+}
+
+export interface QuestionnaireFormFields {
+  title: string;
+  type: QuestionnaireType;
+  description: string;
+  educationId: string;
+  difficulty: QuestionnaireDifficulty;
+  passingScore: number;
+  status: QuestionnaireStatus;
+  categories: FormCategory[];
+  questions?: FormQuestion[];
+}
+
 
 export interface QuizStats {
   readonly totalQuizzes: number;
@@ -66,6 +104,7 @@ export interface QuizParticipant {
   readonly score: number;
   readonly passed: boolean;
   readonly duration: string;
+  readonly selfEfficacyCategory?: string;
 }
 
 export interface ParticipantQuestionAnalysis {

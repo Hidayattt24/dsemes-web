@@ -13,7 +13,7 @@ export interface MetricCard {
   readonly label: string;
   readonly value: string | number;
   readonly icon: string;
-  readonly badgeLabel: string;
+  readonly badgeLabel?: string;
   readonly badgeVariant: "primary" | "muted" | "warning" | "error";
   readonly progressBar?: number;
 }

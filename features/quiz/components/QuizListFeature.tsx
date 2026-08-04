@@ -6,12 +6,12 @@ import { QuizStatsCards } from "./QuizStatsCards";
 import { QuizFilters } from "./QuizFilters";
 import { QuizTable } from "./QuizTable";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { TableLoader } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/Toast";
 import { quizService } from "../services/quizService";
 import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 import { usePathname } from "next/navigation";
+import type { QuestionnaireRecord } from "../types/quiz";
 
 export function QuizListFeature() {
   const pathname = usePathname();
@@ -36,6 +36,8 @@ export function QuizListFeature() {
   const { showToast } = useToast();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [toggleTarget, setToggleTarget] = useState<QuestionnaireRecord | null>(null);
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteId) return;
@@ -62,41 +64,71 @@ export function QuizListFeature() {
     }
   }, [deleteId, showToast, refetch]);
 
+  const handleConfirmToggleStatus = useCallback(async () => {
+    if (!toggleTarget) return;
+    setIsTogglingStatus(true);
+    try {
+      const isCurrentlyActive = toggleTarget.status === "Aktif";
+      const success = await quizService.toggleQuizStatus(toggleTarget.id, toggleTarget.status);
+      if (success) {
+        showToast({
+          type: isCurrentlyActive ? "info" : "success",
+          title: isCurrentlyActive ? "Kuesioner Dijadikan Draft" : "Kuesioner Diaktifkan",
+          description: isCurrentlyActive
+            ? `Kuesioner "${toggleTarget.title}" telah diubah statusnya menjadi Draft.`
+            : `Kuesioner "${toggleTarget.title}" berhasil diaktifkan.`,
+        });
+        refetch();
+      } else {
+        showToast({
+          type: "error",
+          title: "Gagal",
+          description: "Gagal mengubah status kuesioner.",
+        });
+      }
+    } catch {
+      showToast({
+        type: "error",
+        title: "Gagal",
+        description: "Terjadi kesalahan saat mengubah status kuesioner.",
+      });
+    } finally {
+      setIsTogglingStatus(false);
+      setToggleTarget(null);
+    }
+  }, [toggleTarget, showToast, refetch]);
+
   if (isLoading) {
     return (
-      <div className="space-y-8 max-w-[1600px] mx-auto w-full">
+      <div className="space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="h-8 w-64 bg-slate-200 rounded-lg animate-pulse" />
-            <div className="h-4 w-80 bg-slate-100 rounded mt-2 animate-pulse" />
+            <div className="h-4 w-96 bg-slate-100 rounded-lg animate-pulse mt-2" />
           </div>
         </div>
-        <TableLoader />
+        <div className="h-96 w-full bg-slate-100 rounded-2xl animate-pulse" />
       </div>
     );
   }
 
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)]">
-      {/* Page Header & Action */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight">
-            {isStaff ? "Pemantauan Kuesioner" : "Manajemen Kuesioner (Pre-Test & Post-Test)"}
-          </h2>
-          <p className="text-sm text-[#718096] mt-1">
-            {isStaff
-              ? "Pantau kuesioner Pre-Test / Post-Test dan progres belajar pasien"
-              : "Kelola kuesioner Pre-Test & Post-Test berbasis kategori dan pantau hasil evaluasi pasien"}
+          <h2 className="text-2xl font-bold text-[#1A202C]">Manajemen Kuesioner</h2>
+          <p className="text-xs font-medium text-[#718096] mt-1">
+            Kelola instrumen evaluasi Pre-Test (DMSES) dan Post-Test materi edukasi pasien
           </p>
         </div>
         {!isStaff && (
           <Link
-            href={`${ROUTES.MANAJEMEN_KUISIONER}/tambah`}
-            className="bg-[#00695C] text-white text-sm font-bold h-12 px-6 rounded-xl flex items-center gap-2 hover:bg-[#004d43] transition-colors shadow-md shadow-[#00695C]/10 cursor-pointer active:scale-95 duration-200"
+            href={`${ROUTES.MANAJEMEN_KUISIONER}/create`}
+            className="h-12 px-6 rounded-xl bg-[#00695C] text-white text-sm font-bold hover:bg-[#004D40] transition-all flex items-center gap-2 cursor-pointer shadow-sm shadow-[#00695C]/20 shrink-0"
           >
-            <span className="material-symbols-outlined text-lg select-none">add</span>
-            <span>Tambah Kuesioner Baru</span>
+            <span className="material-symbols-outlined text-xl select-none">add</span>
+            <span>Buat Kuesioner Baru</span>
           </Link>
         )}
       </div>
@@ -122,7 +154,27 @@ export function QuizListFeature() {
         pagination={pagination}
         onDeleteClick={setDeleteId}
         onPageChange={setPage}
+        onToggleStatusClick={(quiz) => setToggleTarget(quiz)}
       />
+
+      {/* Toggle Status Confirmation Modal */}
+      {!isStaff && (
+        <ConfirmationModal
+          open={!!toggleTarget}
+          title={toggleTarget?.status === "Aktif" ? "Jadikan Draft Kuesioner?" : "Aktifkan Kuesioner?"}
+          description={
+            toggleTarget?.status === "Aktif"
+              ? `Apakah Anda yakin ingin mengubah status kuesioner "${toggleTarget?.title}" menjadi Draft? Kuesioner tidak akan dapat diakses oleh pasien.`
+              : `Apakah Anda yakin ingin mengaktifkan kuesioner "${toggleTarget?.title}"? Kuesioner ini akan langsung dapat diisi oleh pasien.`
+          }
+          variant={toggleTarget?.status === "Aktif" ? "warning" : "success"}
+          confirmText={toggleTarget?.status === "Aktif" ? "Ya, Jadikan Draft" : "Ya, Aktifkan"}
+          cancelText="Batal"
+          loading={isTogglingStatus}
+          onConfirm={handleConfirmToggleStatus}
+          onCancel={() => setToggleTarget(null)}
+        />
+      )}
 
       {/* Delete Confirmation Modal — admin only */}
       {!isStaff && (

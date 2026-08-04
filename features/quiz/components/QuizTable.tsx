@@ -8,9 +8,16 @@ interface QuizTableProps {
   readonly pagination: PaginationMeta;
   readonly onDeleteClick: (id: string) => void;
   readonly onPageChange: (page: number) => void;
+  readonly onToggleStatusClick?: (quiz: QuestionnaireRecord) => void;
 }
 
-export function QuizTable({ quizzes, pagination, onDeleteClick, onPageChange }: QuizTableProps) {
+export function QuizTable({
+  quizzes,
+  pagination,
+  onDeleteClick,
+  onPageChange,
+  onToggleStatusClick,
+}: QuizTableProps) {
   const pathname = usePathname();
   const isStaff = pathname.startsWith("/staff");
 
@@ -126,27 +133,58 @@ export function QuizTable({ quizzes, pagination, onDeleteClick, onPageChange }: 
 
                   {/* Aksi */}
                   <td className="py-4 px-6 text-right">
-                    <div className="flex justify-end gap-2 text-[#718096]">
+                    <div className="flex justify-end items-center gap-1.5 text-[#718096]">
+                      {/* Lihat Detail */}
                       <Link
                         href={isStaff ? `/staff/manajemen-kuisioner/${quiz.id}` : `${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}`}
                         className="p-2 hover:text-[#00695C] hover:bg-[#00695C]/10 rounded-lg transition-colors flex items-center"
-                        title="Lihat Detail"
+                        title="Lihat Detail & Soal"
                       >
                         <span className="material-symbols-outlined text-[20px] select-none">visibility</span>
                       </Link>
+
+                      {/* Hasil Pasien & Analitik */}
+                      <Link
+                        href={isStaff ? `/staff/manajemen-kuisioner/${quiz.id}` : `${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}`}
+                        className="p-2 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center"
+                        title="Hasil Pasien & Analitik"
+                      >
+                        <span className="material-symbols-outlined text-[20px] select-none">analytics</span>
+                      </Link>
+
                       {!isStaff && (
                         <>
+                          {/* Status Toggle */}
+                          <button
+                            type="button"
+                            onClick={() => onToggleStatusClick?.(quiz)}
+                            className={`p-2 rounded-lg transition-colors flex items-center cursor-pointer ${
+                              quiz.status === "Aktif"
+                                ? "text-emerald-600 hover:bg-emerald-50"
+                                : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            }`}
+                            title={quiz.status === "Aktif" ? "Nonaktifkan Kuesioner" : "Aktifkan Kuesioner"}
+                          >
+                            <span className="material-symbols-outlined text-[20px] select-none">
+                              {quiz.status === "Aktif" ? "toggle_on" : "toggle_off"}
+                            </span>
+                          </button>
+
+                          {/* Edit */}
                           <Link
                             href={`${ROUTES.MANAJEMEN_KUISIONER}/${quiz.id}/edit`}
                             className="p-2 hover:text-[#B45309] hover:bg-[#B45309]/10 rounded-lg transition-colors flex items-center"
-                            title="Edit"
+                            title="Edit Kuesioner"
                           >
                             <span className="material-symbols-outlined text-[20px] select-none">edit</span>
                           </Link>
+
+                          {/* Hapus */}
                           <button
+                            type="button"
                             onClick={() => onDeleteClick(quiz.id)}
                             className="p-2 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center cursor-pointer"
-                            title="Hapus"
+                            title="Hapus Kuesioner"
                           >
                             <span className="material-symbols-outlined text-[20px] select-none">delete</span>
                           </button>

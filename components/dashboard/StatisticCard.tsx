@@ -24,7 +24,9 @@ export function StatisticCard({ card }: StatisticCardProps) {
             {card.icon}
           </span>
         </span>
-        <Badge variant={card.badgeVariant}>{card.badgeLabel}</Badge>
+        {card.badgeLabel && (
+          <Badge variant={card.badgeVariant}>{card.badgeLabel}</Badge>
+        )}
       </div>
 
       {/* Label */}

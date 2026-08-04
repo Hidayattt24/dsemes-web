@@ -63,6 +63,7 @@ export interface PatientMeasurement {
   readonly bloodPressureSystolic?: number;
   readonly bloodPressureDiastolic?: number;
   readonly bloodSugar?: number;
+  readonly bloodSugarTimeType?: string;
   readonly waistCircumferenceCm?: number;
   readonly dailyCalorieTarget?: number;
   readonly notes?: string;

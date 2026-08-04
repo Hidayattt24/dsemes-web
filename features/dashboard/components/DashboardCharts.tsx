@@ -10,12 +10,6 @@ export function DashboardCharts() {
   const totalValue = activityData.reduce((sum, item) => sum + item.value, 0);
   const totalLabel = totalValue >= 1000 ? `${(totalValue / 1000).toFixed(1)}k` : totalValue.toString();
 
-  // Compare second half of the week vs first half to calculate the trend
-  const firstHalf = activityData.slice(0, 3).reduce((sum, item) => sum + item.value, 0);
-  const secondHalf = activityData.slice(4, 7).reduce((sum, item) => sum + item.value, 0);
-  const trendPercent = firstHalf > 0 ? ((secondHalf - firstHalf) / firstHalf) * 100 : 0;
-  const trendLabel = `${trendPercent >= 0 ? "+" : ""}${trendPercent.toFixed(1)}%`;
-
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-12">
@@ -25,7 +19,6 @@ export function DashboardCharts() {
           <ActivityBarChart
             data={activityData}
             totalLabel={totalLabel}
-            trendLabel={trendLabel}
           />
         )}
       </div>

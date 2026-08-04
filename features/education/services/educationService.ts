@@ -1,4 +1,4 @@
-import type { EducationArticle, EducationStats, EducationProgressItem, EducationProgressAnalytics } from "../types/education";
+import type { EducationArticle, EducationStats, EducationProgressItem, EducationProgressAnalytics, AdminArticleReviewsData } from "../types/education";
 import { axiosInstance } from "@/lib/axios";
 
 const mapArticleFromBackend = (data: any): EducationArticle => {
@@ -20,6 +20,17 @@ const mapArticleFromBackend = (data: any): EducationArticle => {
 };
 
 export const educationService = {
+  /** Get all categories */
+  async getCategories(): Promise<string[]> {
+    try {
+      const res = await axiosInstance.get("/education/categories");
+      const list = res.data?.data ?? [];
+      return list.map((c: any) => c.name || c.category_name || c).filter(Boolean);
+    } catch {
+      return [];
+    }
+  },
+
   /** Get all articles */
   async getArticles(): Promise<EducationArticle[]> {
     const res = await axiosInstance.get("/admin/education/articles", { params: { limit: 100 } });
@@ -92,7 +103,28 @@ export const educationService = {
   /** Get all patients' progress for an education article */
   async getProgress(articleId: string): Promise<EducationProgressItem[]> {
     const res = await axiosInstance.get(`/admin/education/${articleId}/progress`);
-    return res.data?.data ?? [];
+    const raw: any[] = res.data?.data ?? [];
+    return raw.map((r) => ({
+      patient_id: r.patient_id ?? "",
+      patient_name: r.patient_name ?? "-",
+      puskesmas: r.puskesmas ?? "-",
+      article_read: r.article_read ?? false,
+      article_read_at: r.article_read_at ?? null,
+      article_started_at: r.article_started_at ?? null,
+      article_finished_at: r.article_finished_at ?? null,
+      article_reading_duration: r.article_reading_duration ?? 0,
+      article_last_scroll_position: r.article_last_scroll_position ?? 0,
+      youtube_watched: r.youtube_watched ?? false,
+      youtube_watched_at: r.youtube_watched_at ?? null,
+      video_started_at: r.video_started_at ?? null,
+      video_finished_at: r.video_finished_at ?? null,
+      video_watch_duration: r.video_watch_duration ?? 0,
+      video_last_timestamp: r.video_last_timestamp ?? 0,
+      completed: r.completed ?? false,
+      completed_at: r.completed_at ?? null,
+      completion_source: r.completion_source ?? "",
+      last_activity_at: r.last_activity_at ?? null,
+    }));
   },
 
   /** Get progress analytics summary for an education article */
@@ -107,5 +139,42 @@ export const educationService = {
       read_and_video_count: data.read_and_video_count || 0,
       not_started_count: data.not_started_count || 0,
     };
+  },
+
+  /** Get article review summary, rating distribution, and reviews list */
+  async getArticleReviews(articleId: string): Promise<AdminArticleReviewsData> {
+    try {
+      const res = await axiosInstance.get(`/admin/education/${articleId}/reviews`);
+      const data = res.data?.data ?? {};
+      return {
+        average_rating: data.average_rating || 0,
+        total_reviews: data.total_reviews || 0,
+        rating_distribution: {
+          star_1: data.rating_distribution?.star_1 || 0,
+          star_2: data.rating_distribution?.star_2 || 0,
+          star_3: data.rating_distribution?.star_3 || 0,
+          star_4: data.rating_distribution?.star_4 || 0,
+          star_5: data.rating_distribution?.star_5 || 0,
+        },
+        reviews: (data.reviews || []).map((r: any) => ({
+          id: r.id,
+          education_id: r.education_id,
+          patient_id: r.patient_id,
+          patient_name: r.patient_name || "Pasien",
+          rating: r.rating || 0,
+          note: r.note || "",
+          completion_date: r.completion_date || null,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+        })),
+      };
+    } catch {
+      return {
+        average_rating: 0,
+        total_reviews: 0,
+        rating_distribution: { star_1: 0, star_2: 0, star_3: 0, star_4: 0, star_5: 0 },
+        reviews: [],
+      };
+    }
   },
 };

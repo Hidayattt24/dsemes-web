@@ -21,6 +21,7 @@ export interface FormChoice {
 export interface FormQuestion {
   id?: string;
   questionText: string;
+  questionImageUrl?: string;
   explanation: string;
   choices: FormChoice[];
 }
@@ -55,6 +56,7 @@ const createEmptyChoice = (label = "", isCorrect = false): FormChoice => ({
 
 const createEmptyQuestion = (): FormQuestion => ({
   questionText: "",
+  questionImageUrl: "",
   explanation: "",
   choices: [
     createEmptyChoice("", true),
@@ -82,7 +84,7 @@ export function useQuizForm(quizId?: string) {
     difficulty: "Sedang",
     passingScore: 80,
     status: "Draft",
-    categories: [createEmptyCategory("")],
+    categories: [createEmptyCategory("Soal Post-Test")],
   });
 
   const [articleOptions, setArticleOptions] = useState<readonly ArticleOption[]>([]);
@@ -122,6 +124,7 @@ export function useQuizForm(quizId?: string) {
             questions: (cat.questions ?? []).map((q) => ({
               id: q.id,
               questionText: q.questionText,
+              questionImageUrl: q.questionImageUrl ?? "",
               explanation: q.explanation ?? "",
               choices: (q.choices ?? []).map((c) => ({
                 id: c.id,
@@ -201,37 +204,39 @@ export function useQuizForm(quizId?: string) {
     });
   }, []);
 
-  // Question manipulation inside a Category
-  const addQuestion = useCallback((catIndex: number) => {
+  // Question manipulation
+  const addQuestion = useCallback((catIndex = 0) => {
     setFields((prev) => {
-      const updated = [...prev.categories];
-      const targetCat = updated[catIndex];
-      updated[catIndex] = {
-        ...targetCat,
-        questions: [...targetCat.questions, createEmptyQuestion()],
+      const updatedCats = [...prev.categories];
+      if (!updatedCats[catIndex]) {
+        updatedCats[catIndex] = createEmptyCategory("Soal Post-Test");
+      }
+      updatedCats[catIndex] = {
+        ...updatedCats[catIndex],
+        questions: [...updatedCats[catIndex].questions, createEmptyQuestion()],
       };
-      return { ...prev, categories: updated };
+      return { ...prev, categories: updatedCats };
     });
   }, []);
 
   const deleteQuestion = useCallback(
     (catIndex: number, qIndex: number) => {
       setFields((prev) => {
-        const updated = [...prev.categories];
-        const targetCat = updated[catIndex];
-        if (targetCat.questions.length <= 1) {
+        const cat = prev.categories[catIndex];
+        if (!cat || cat.questions.length <= 1) {
           showToast({
             type: "warning",
             title: "Peringatan",
-            description: "Kategori minimal harus memiliki 1 pertanyaan.",
+            description: "Minimal harus memiliki 1 pertanyaan.",
           });
           return prev;
         }
-        updated[catIndex] = {
-          ...targetCat,
-          questions: targetCat.questions.filter((_, i) => i !== qIndex),
+        const updatedCats = [...prev.categories];
+        updatedCats[catIndex] = {
+          ...cat,
+          questions: cat.questions.filter((_, i) => i !== qIndex),
         };
-        return { ...prev, categories: updated };
+        return { ...prev, categories: updatedCats };
       });
     },
     [showToast]
@@ -240,57 +245,68 @@ export function useQuizForm(quizId?: string) {
   const handleQuestionChange = useCallback(
     (catIndex: number, qIndex: number, field: "questionText" | "explanation", value: string) => {
       setFields((prev) => {
-        const updated = [...prev.categories];
-        const targetCat = updated[catIndex];
-        const updatedQuestions = [...targetCat.questions];
-        updatedQuestions[qIndex] = {
-          ...updatedQuestions[qIndex],
-          [field]: value,
-        };
-        updated[catIndex] = { ...targetCat, questions: updatedQuestions };
-        return { ...prev, categories: updated };
+        const updatedCats = [...prev.categories];
+        const cat = updatedCats[catIndex];
+        const updatedQuestions = [...cat.questions];
+        updatedQuestions[qIndex] = { ...updatedQuestions[qIndex], [field]: value };
+        updatedCats[catIndex] = { ...cat, questions: updatedQuestions };
+        return { ...prev, categories: updatedCats };
       });
     },
     []
   );
 
-  // Choice manipulation inside a Question
+  // Choice manipulation
   const addChoice = useCallback((catIndex: number, qIndex: number) => {
     setFields((prev) => {
-      const updated = [...prev.categories];
-      const targetCat = updated[catIndex];
-      const updatedQuestions = [...targetCat.questions];
-      const targetQ = updatedQuestions[qIndex];
+      const updatedCats = [...prev.categories];
+      const cat = updatedCats[catIndex];
+      const updatedQuestions = [...cat.questions];
+      const q = updatedQuestions[qIndex];
+
+      if (q.choices.length >= 5) {
+        showToast({
+          type: "warning",
+          title: "Peringatan",
+          description: "Maksimal 5 pilihan jawaban per pertanyaan.",
+        });
+        return prev;
+      }
+
       updatedQuestions[qIndex] = {
-        ...targetQ,
-        choices: [...targetQ.choices, createEmptyChoice(`Pilihan ${targetQ.choices.length + 1}`, false)],
+        ...q,
+        choices: [...q.choices, createEmptyChoice("")],
       };
-      updated[catIndex] = { ...targetCat, questions: updatedQuestions };
-      return { ...prev, categories: updated };
+      updatedCats[catIndex] = { ...cat, questions: updatedQuestions };
+      return { ...prev, categories: updatedCats };
     });
-  }, []);
+  }, [showToast]);
 
   const deleteChoice = useCallback(
     (catIndex: number, qIndex: number, choiceIndex: number) => {
       setFields((prev) => {
-        const updated = [...prev.categories];
-        const targetCat = updated[catIndex];
-        const updatedQuestions = [...targetCat.questions];
-        const targetQ = updatedQuestions[qIndex];
-        if (targetQ.choices.length <= 2) {
+        const updatedCats = [...prev.categories];
+        const cat = updatedCats[catIndex];
+        const updatedQuestions = [...cat.questions];
+        const q = updatedQuestions[qIndex];
+
+        if (q.choices.length <= 2) {
           showToast({
             type: "warning",
             title: "Peringatan",
-            description: "Pertanyaan minimal harus memiliki 2 pilihan jawaban.",
+            description: "Minimal harus memiliki 2 pilihan jawaban.",
           });
           return prev;
         }
-        updatedQuestions[qIndex] = {
-          ...targetQ,
-          choices: targetQ.choices.filter((_, i) => i !== choiceIndex),
-        };
-        updated[catIndex] = { ...targetCat, questions: updatedQuestions };
-        return { ...prev, categories: updated };
+
+        const filteredChoices = q.choices.filter((_, i) => i !== choiceIndex);
+        if (q.choices[choiceIndex].isCorrect && filteredChoices.length > 0) {
+          filteredChoices[0] = { ...filteredChoices[0], isCorrect: true };
+        }
+
+        updatedQuestions[qIndex] = { ...q, choices: filteredChoices };
+        updatedCats[catIndex] = { ...cat, questions: updatedQuestions };
+        return { ...prev, categories: updatedCats };
       });
     },
     [showToast]
@@ -299,18 +315,15 @@ export function useQuizForm(quizId?: string) {
   const handleChoiceChange = useCallback(
     (catIndex: number, qIndex: number, choiceIndex: number, value: string) => {
       setFields((prev) => {
-        const updated = [...prev.categories];
-        const targetCat = updated[catIndex];
-        const updatedQuestions = [...targetCat.questions];
-        const targetQ = updatedQuestions[qIndex];
-        const updatedChoices = [...targetQ.choices];
-        updatedChoices[choiceIndex] = {
-          ...updatedChoices[choiceIndex],
-          optionText: value,
-        };
-        updatedQuestions[qIndex] = { ...targetQ, choices: updatedChoices };
-        updated[catIndex] = { ...targetCat, questions: updatedQuestions };
-        return { ...prev, categories: updated };
+        const updatedCats = [...prev.categories];
+        const cat = updatedCats[catIndex];
+        const updatedQuestions = [...cat.questions];
+        const q = updatedQuestions[qIndex];
+        const updatedChoices = [...q.choices];
+        updatedChoices[choiceIndex] = { ...updatedChoices[choiceIndex], optionText: value };
+        updatedQuestions[qIndex] = { ...q, choices: updatedChoices };
+        updatedCats[catIndex] = { ...cat, questions: updatedQuestions };
+        return { ...prev, categories: updatedCats };
       });
     },
     []
@@ -318,130 +331,175 @@ export function useQuizForm(quizId?: string) {
 
   const setCorrectChoice = useCallback((catIndex: number, qIndex: number, choiceIndex: number) => {
     setFields((prev) => {
-      const updated = [...prev.categories];
-      const targetCat = updated[catIndex];
-      const updatedQuestions = [...targetCat.questions];
-      const targetQ = updatedQuestions[qIndex];
-      const updatedChoices = targetQ.choices.map((c, i) => ({
+      const updatedCats = [...prev.categories];
+      const cat = updatedCats[catIndex];
+      const updatedQuestions = [...cat.questions];
+      const q = updatedQuestions[qIndex];
+      const updatedChoices = q.choices.map((c, i) => ({
         ...c,
         isCorrect: i === choiceIndex,
       }));
-      updatedQuestions[qIndex] = { ...targetQ, choices: updatedChoices };
-      updated[catIndex] = { ...targetCat, questions: updatedQuestions };
-      return { ...prev, categories: updated };
+      updatedQuestions[qIndex] = { ...q, choices: updatedChoices };
+      updatedCats[catIndex] = { ...cat, questions: updatedQuestions };
+      return { ...prev, categories: updatedCats };
     });
   }, []);
 
-  const validate = useCallback((): boolean => {
-    if (!fields.title.trim()) {
-      showToast({ type: "error", title: "Validasi Gagal", description: "Judul kuesioner wajib diisi" });
-      return false;
-    }
-
-    if (fields.type === "POST_TEST") {
-      if (!fields.educationId) {
-        showToast({ type: "error", title: "Validasi Gagal", description: "Materi edukasi terkait wajib dipilih untuk Post-Test" });
-        return false;
-      }
-      if (fields.passingScore === undefined || fields.passingScore < 0 || fields.passingScore > 100) {
-        showToast({ type: "error", title: "Validasi Gagal", description: "Nilai kelulusan harus berkisar 0-100" });
-        return false;
-      }
-    }
-
-    if (fields.categories.length === 0) {
-      showToast({ type: "error", title: "Validasi Gagal", description: "Kuesioner wajib memiliki minimal 1 kategori" });
-      return false;
-    }
-
-    for (let cIdx = 0; cIdx < fields.categories.length; cIdx++) {
-      const cat = fields.categories[cIdx];
-      if (!cat.title.trim()) {
-        showToast({ type: "error", title: "Validasi Gagal", description: `Nama Kategori ke-${cIdx + 1} wajib diisi` });
-        return false;
-      }
-      if (cat.questions.length === 0) {
-        showToast({ type: "error", title: "Validasi Gagal", description: `Kategori "${cat.title}" wajib memiliki minimal 1 pertanyaan` });
-        return false;
-      }
-
-      for (let qIdx = 0; qIdx < cat.questions.length; qIdx++) {
-        const q = cat.questions[qIdx];
-        if (!q.questionText.trim()) {
-          showToast({ type: "error", title: "Validasi Gagal", description: `Teks pertanyaan ke-${qIdx + 1} pada kategori "${cat.title}" tidak boleh kosong` });
-          return false;
-        }
-        if (q.choices.length < 2) {
-          showToast({ type: "error", title: "Validasi Gagal", description: `Pertanyaan ke-${qIdx + 1} pada kategori "${cat.title}" minimal memiliki 2 pilihan` });
-          return false;
-        }
-        const hasCorrect = q.choices.some((c) => c.isCorrect);
-        if (!hasCorrect) {
-          showToast({ type: "error", title: "Validasi Gagal", description: `Pertanyaan ke-${qIdx + 1} pada kategori "${cat.title}" belum memilih kunci jawaban yang benar` });
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }, [fields, showToast]);
-
+  // Submit Handler
   const save = useCallback(
-    async (targetStatus: QuestionnaireStatus = "Draft") => {
-      if (!validate()) return;
-      setIsSaving(true);
-      try {
-        const payload = {
-          id: quizId,
-          title: fields.title,
-          type: fields.type,
-          description: fields.description,
-          education_id: fields.type === "POST_TEST" ? fields.educationId : null,
-          passing_score: fields.type === "POST_TEST" ? fields.passingScore : null,
-          difficulty: fields.type === "POST_TEST" ? fields.difficulty : null,
-          status: targetStatus === "Aktif" ? "aktif" : targetStatus === "Nonaktif" ? "nonaktif" : "draft",
-          categories: fields.categories.map((cat, cIdx) => ({
-            title: cat.title,
-            description: cat.description,
-            display_order: cIdx,
-            questions: cat.questions.map((q, qIdx) => ({
-              question_text: q.questionText,
-              explanation: q.explanation,
-              display_order: qIdx,
-              choices: q.choices.map((c, chIdx) => ({
-                option_text: c.optionText,
-                is_correct: c.isCorrect,
-                display_order: chIdx,
-              })),
-            })),
-          })),
-        };
-
-        await quizService.saveQuestionnaire(payload);
-
-        showToast({
-          type: "success",
-          title: "Berhasil",
-          description: `Kuesioner berhasil disimpan sebagai ${targetStatus}.`,
-        });
-        router.push(ROUTES.MANAJEMEN_KUISIONER);
-        router.refresh();
-      } catch (err: any) {
-        const msg = err?.response?.data?.message || err?.message || "Gagal menyimpan kuesioner.";
+    async (targetStatus: QuestionnaireStatus) => {
+      if (!fields.title.trim()) {
         showToast({
           type: "error",
-          title: "Gagal",
-          description: msg,
+          title: "Validasi Gagal",
+          description: "Judul Kuesioner wajib diisi.",
+        });
+        return;
+      }
+
+      if (fields.type === "POST_TEST" && !fields.educationId) {
+        showToast({
+          type: "error",
+          title: "Validasi Gagal",
+          description: "Pilih Materi Edukasi Terkait untuk Post-Test.",
+        });
+        return;
+      }
+
+      // Ensure categories payload structure
+      const formattedCategories: FormCategory[] = fields.categories.map((cat, idx) => {
+        let catTitle = cat.title.trim();
+        if (fields.type === "POST_TEST" && !catTitle) {
+          catTitle = fields.title.trim() || "Soal Post-Test";
+        } else if (!catTitle) {
+          catTitle = `Kategori ${idx + 1}`;
+        }
+        return {
+          ...cat,
+          title: catTitle,
+        };
+      });
+
+      // Validate questions inside categories or PRE_TEST questions
+      if (fields.type === "PRE_TEST") {
+        const questionsList = formattedCategories[0]?.questions || [];
+        if (questionsList.length === 0) {
+          showToast({
+            type: "error",
+            title: "Validasi Gagal",
+            description: "Pre-Test wajib memiliki minimal 1 pertanyaan.",
+          });
+          return;
+        }
+
+        for (let qIdx = 0; qIdx < questionsList.length; qIdx++) {
+          const q = questionsList[qIdx];
+          if (!q.questionText.trim()) {
+            showToast({
+              type: "error",
+              title: "Validasi Gagal",
+              description: `Soal #${qIdx + 1} belum memiliki teks pertanyaan.`,
+            });
+            return;
+          }
+        }
+      } else {
+        // Validate POST_TEST questions and choices
+        for (let cIdx = 0; cIdx < formattedCategories.length; cIdx++) {
+          const cat = formattedCategories[cIdx];
+          if (cat.questions.length === 0) {
+            showToast({
+              type: "error",
+              title: "Validasi Gagal",
+              description: `Kategori "${cat.title}" belum memiliki soal.`,
+            });
+            return;
+          }
+
+          for (let qIdx = 0; qIdx < cat.questions.length; qIdx++) {
+            const q = cat.questions[qIdx];
+            if (!q.questionText.trim()) {
+              showToast({
+                type: "error",
+                title: "Validasi Gagal",
+                description: `Soal #${qIdx + 1} belum memiliki teks pertanyaan.`,
+              });
+              return;
+            }
+
+            const hasValidChoice = q.choices.some((c) => c.optionText.trim().length > 0);
+            if (!hasValidChoice) {
+              showToast({
+                type: "error",
+                title: "Validasi Gagal",
+                description: `Soal #${qIdx + 1} harus memiliki minimal 1 pilihan jawaban bertuliskan teks.`,
+              });
+              return;
+            }
+
+            const hasCorrectChoice = q.choices.some((c) => c.isCorrect && c.optionText.trim().length > 0);
+            if (!hasCorrectChoice) {
+              showToast({
+                type: "error",
+                title: "Validasi Gagal",
+                description: `Soal #${qIdx + 1} belum memiliki jawaban benar yang valid.`,
+              });
+              return;
+            }
+          }
+        }
+      }
+
+      setIsSaving(true);
+      try {
+        const payload: QuestionnaireFormFields = {
+          ...fields,
+          status: targetStatus,
+          categories: formattedCategories,
+        };
+
+        let result;
+        if (quizId) {
+          result = await quizService.updateQuiz(quizId, payload);
+        } else {
+          result = await quizService.createQuiz(payload);
+        }
+
+        if (result) {
+          showToast({
+            type: "success",
+            title: "Berhasil",
+            description: quizId ? "Kuesioner berhasil diperbarui." : "Kuesioner berhasil dibuat.",
+          });
+          const rolePrefix = typeof window !== "undefined" && window.location.pathname.startsWith("/staff") ? "staff" : "admin";
+          router.push(`/${rolePrefix}/manajemen-kuisioner`);
+          router.refresh();
+        }
+      } catch (err: unknown) {
+        let errorMsg = "Gagal menyimpan kuesioner.";
+        if (typeof err === "object" && err !== null && "response" in err) {
+          const resErr = err as { response?: { data?: { message?: string } } };
+          if (resErr.response?.data?.message) {
+            errorMsg = resErr.response.data.message;
+          }
+        } else if (err instanceof Error) {
+          errorMsg = err.message;
+        }
+        showToast({
+          type: "error",
+          title: "Gagal Menyimpan",
+          description: errorMsg,
         });
       } finally {
         setIsSaving(false);
       }
     },
-    [quizId, fields, validate, router, showToast]
+    [fields, quizId, router, showToast]
   );
 
   const cancel = useCallback(() => {
-    router.push(ROUTES.MANAJEMEN_KUISIONER);
+    const rolePrefix = typeof window !== "undefined" && window.location.pathname.startsWith("/staff") ? "staff" : "admin";
+    router.push(`/${rolePrefix}/manajemen-kuisioner`);
   }, [router]);
 
   return {

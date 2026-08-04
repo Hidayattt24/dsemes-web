@@ -64,13 +64,6 @@ export function PatientTable({ patients, loading }: PatientTableProps) {
       },
     },
     {
-      key: "lastActive",
-      header: "Terakhir Aktif",
-      render: (row) => (
-        <span className="text-sm text-[#718096]">{row.lastActive}</span>
-      ),
-    },
-    {
       key: "actions",
       header: "Aksi",
       className: "text-right",

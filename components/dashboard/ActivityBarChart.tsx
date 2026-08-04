@@ -3,13 +3,11 @@ import type { ActivityDataPoint } from "@/types/dashboard";
 interface ActivityBarChartProps {
   readonly data: ActivityDataPoint[];
   readonly totalLabel: string;
-  readonly trendLabel: string;
 }
 
 export function ActivityBarChart({
   data,
   totalLabel,
-  trendLabel,
 }: ActivityBarChartProps) {
   return (
     <div className="bg-white p-8 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col h-full font-[family-name:var(--font-poppins)]">
@@ -23,10 +21,6 @@ export function ActivityBarChart({
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold text-[#00695C]">{totalLabel}</p>
-          <p className="text-[11px] font-bold text-green-600 flex items-center justify-end gap-1 mt-0.5">
-            <span className="material-symbols-outlined text-[14px] select-none">trending_up</span>
-            <span>{trendLabel}</span>
-          </p>
         </div>
       </div>
 

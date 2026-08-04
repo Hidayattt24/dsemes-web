@@ -28,25 +28,40 @@ function toBloodSugarLog(log: any): BloodSugarLog {
   const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   const timeStr = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
 
-  let measurementTimeLabel = "Sebelum Makan";
-  if (log.measurement_time_type === "sesudah_makan") measurementTimeLabel = "Sesudah Makan";
-  else if (log.measurement_time_type === "sewaktu") measurementTimeLabel = "Sewaktu Makan";
+  const mType = log.measurement_time_type || "random";
+  let measurementTimeLabel = log.measurement_time_label;
+  if (!measurementTimeLabel || measurementTimeLabel.includes("(")) {
+    if (mType === "fasting" || mType === "puasa") measurementTimeLabel = "Puasa";
+    else if (mType === "before_meal" || mType === "sebelum_makan") measurementTimeLabel = "Sebelum Makan";
+    else if (mType === "after_meal" || mType === "sesudah_makan") measurementTimeLabel = "2 Jam Sesudah Makan";
+    else if (mType === "before_bed" || mType === "sebelum_tidur") measurementTimeLabel = "Sebelum Tidur";
+    else measurementTimeLabel = "Sewaktu";
+  }
 
   return {
     id: log.id,
     date: dateStr,
     time: timeStr,
     glucoseValue: log.glucose_value ?? 0,
-    measurementTimeType: log.measurement_time_type || "sebelum_makan",
+    measurementTimeType: mType,
     measurementTimeLabel,
     status: log.status || "normal",
+    classificationLabel: log.classification_label || (
+      log.glucose_value < 40 ? "Hipoglikemia Berat" :
+      log.glucose_value < 70 ? "Hipoglikemia" :
+      log.glucose_value >= 350 ? "Hiperglikemia Berat" :
+      log.glucose_value > 200 ? "Hiperglikemia" : "Normal"
+    ),
+    referenceRangeText: log.reference_range_text || "< 140 mg/dL",
+    recommendation: log.recommendation || "-",
+    colorIndicator: log.color_indicator || "#10B981",
     rawDate: d,
   };
 }
 
 export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
   const router = useRouter();
-  const { patient, bloodSugar, meals, activities, isLoading, error, refetch } = usePatientDetail(patientId);
+  const { patient, bloodSugar, meals, activities, educationActivities, isLoading, error, refetch } = usePatientDetail(patientId);
   const bloodSugarLogs = bloodSugar.map(toBloodSugarLog);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddMeasurementOpen, setIsAddMeasurementOpen] = useState(false);
@@ -168,7 +183,7 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
           <PatientCalorieChart data={meals} patient={patient} />
         </div>
         <div className="lg:col-span-5">
-          <PatientEducationActivity data={activities} />
+          <PatientEducationActivity data={educationActivities} />
         </div>
       </div>
 

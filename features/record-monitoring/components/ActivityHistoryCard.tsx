@@ -15,8 +15,14 @@ export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isL
   // Group activities by date
   const dailyMap: { [dateStr: string]: { duration: number; date: Date } } = {};
   logs.forEach((log) => {
-    const cleanTime = log.time.replace(" WIB", "").replace("WIB", "");
-    const d = new Date(cleanTime);
+    let d = log.rawDate ? new Date(log.rawDate) : null;
+    if (!d || isNaN(d.getTime())) {
+      const cleanTime = log.time.replace(" WIB", "").replace("WIB", "");
+      d = new Date(cleanTime);
+    }
+    if (isNaN(d.getTime())) {
+      d = new Date();
+    }
     const dateStr = d.toDateString();
     if (!dailyMap[dateStr]) {
       dailyMap[dateStr] = { duration: 0, date: d };
@@ -82,20 +88,33 @@ export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isL
             <p className="text-xs text-[#718096] mt-1">Data grafik durasi aktivitas fisik pasien pada tanggal ini akan muncul di sini.</p>
           </div>
         ) : (
-          <div className="flex-1 flex items-end justify-around pb-2">
+          <div className="h-44 w-full flex items-end justify-around pb-2 relative border-b border-[#E2E8F0]">
+            {/* Grid lines for Y-axis guide */}
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-30">
+              <div className="border-b border-dashed border-[#718096] w-full flex justify-between">
+                <span className="text-[9px] text-[#718096]">60m</span>
+              </div>
+              <div className="border-b border-dashed border-[#718096] w-full flex justify-between">
+                <span className="text-[9px] text-[#718096]">30m</span>
+              </div>
+              <div className="border-b border-dashed border-[#718096] w-full"></div>
+            </div>
+
             {chartBars.map((bar, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 w-10">
-                <span className="text-[10px] font-bold text-[#718096]">{bar.value}m</span>
-                <div 
-                  style={{ height: bar.height }}
-                  className={[
-                    "w-6 rounded-t-lg transition-all duration-500 hover:opacity-80 cursor-pointer",
-                    bar.active 
-                      ? "bg-[#00695C] shadow-md shadow-[#00695C]/20" 
-                      : "bg-[#EBF8FF] text-[#2B6CB0]"
-                  ].join(" ")}
-                />
-                <span className="text-[10px] font-semibold text-[#718096]">{bar.label}</span>
+              <div key={i} className="flex flex-col items-center gap-1.5 z-10 h-full justify-end">
+                <span className="text-[11px] font-bold text-[#00695C]">{bar.value}m</span>
+                <div className="w-8 h-28 flex items-end justify-center bg-[#E2E8F0]/40 rounded-t-lg p-0.5">
+                  <div 
+                    style={{ height: `${bar.value > 0 ? Math.max(12, Math.min(100, Math.round((bar.value / 60) * 100))) : 4}%` }}
+                    className={[
+                      "w-full rounded-t-md transition-all duration-500 hover:opacity-90",
+                      bar.value > 0
+                        ? "bg-[#00695C] shadow-md shadow-[#00695C]/20"
+                        : "bg-[#CBD5E0]"
+                    ].join(" ")}
+                  />
+                </div>
+                <span className="text-[11px] font-semibold text-[#4A5568]">{bar.label}</span>
               </div>
             ))}
           </div>
@@ -134,7 +153,6 @@ export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isL
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-[#1A202C]">{log.duration} Menit</p>
-                  <p className="text-xs text-[#718096] mt-0.5">-{log.caloriesBurned} kcal</p>
                 </div>
               </li>
             ))}
