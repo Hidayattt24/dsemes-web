@@ -39,9 +39,9 @@ const riskOptions = [
 const bloodSugarOptions = [
   { value: "Semua", label: "Semua Status Gula" },
   { value: "normal", label: "Normal" },
-  { value: "tinggi", label: "Tinggi" },
-  { value: "sangat_tinggi", label: "Sangat Tinggi" },
-  { value: "rendah", label: "Rendah" },
+  { value: "prediabetes", label: "Prediabetes" },
+  { value: "hyperglycemia", label: "Hiperglikemia" },
+  { value: "hypoglycemia", label: "Hipoglikemia" },
 ] as const;
 
 export function RecordMonitoringFilters({

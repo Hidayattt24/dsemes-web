@@ -4,9 +4,8 @@ import type {
   StaffDashboardStats,
   PriorityPatientResponse,
   TrendPatientResponse,
-  FoodIntakeItemResponse,
   PhysicalActivityItemResponse,
-  AdherenceItemResponse,
+  PatientContributionResponse,
 } from "@/services/staffDashboardService";
 
 export type TimeRange = 7 | 30 | 90;
@@ -37,6 +36,12 @@ export interface AdherenceItem {
   readonly label: string;
   readonly percentage: number;
   readonly color: string;
+  readonly count: number;
+}
+
+export interface PatientContribution {
+  readonly patientId: string;
+  readonly name: string;
   readonly count: number;
 }
 
@@ -82,9 +87,17 @@ function mapTrendPatient(p: TrendPatientResponse): TrendPatient {
   };
 }
 
+function mapPatientContribution(p: PatientContributionResponse): PatientContribution {
+  return {
+    patientId: p.patient_id,
+    name: p.full_name,
+    count: p.count,
+  };
+}
+
 function buildSummaryCards(stats: StaffDashboardStats | null): DashboardSummaryCardData[] {
   if (!stats) return [];
-  const highGlucose = stats.glucose_distribution.sangat_tinggi_count + stats.glucose_distribution.tinggi_count;
+  const highGlucose = stats.glucose_distribution.prediabetes_count + stats.glucose_distribution.elevated_count + stats.glucose_distribution.hyperglycemia_count;
   return [
     {
       label: "Total Pasien Terdaftar",
@@ -95,9 +108,9 @@ function buildSummaryCards(stats: StaffDashboardStats | null): DashboardSummaryC
       variant: "primary",
     },
     {
-      label: "Pasien Gula Darah Tinggi",
+      label: "Pasien Perlu Perhatian",
       value: highGlucose,
-      change: "Perlu perhatian",
+      change: `${stats.glucose_distribution.hyperglycemia_count} diabetes, ${stats.glucose_distribution.hypoglycemia_count} hipoglikemia`,
       isPositive: false,
       icon: "warning",
       variant: "error",
@@ -111,9 +124,9 @@ function buildSummaryCards(stats: StaffDashboardStats | null): DashboardSummaryC
       variant: stats.average_blood_sugar <= 140 ? "primary" : "warning",
     },
     {
-      label: "Gula Darah Normal",
+      label: "Pasien Terkendali",
       value: `${stats.stability_percentage.toFixed(1)}%`,
-      change: `${stats.stability_percentage >= 80 ? "Stabil" : "Perlu perhatian"}`,
+      change: `${stats.stability_percentage >= 80 ? "Terkendali baik" : "Perlu perhatian"}`,
       isPositive: stats.stability_percentage >= 80,
       icon: "verified",
       variant: stats.stability_percentage >= 80 ? "primary" : "warning",
@@ -131,6 +144,10 @@ export function useStaffDashboard() {
   const [physicalActivity, setPhysicalActivity] = useState<readonly PhysicalActivityItem[]>([]);
   const [medicationAdherence, setMedicationAdherence] = useState<readonly AdherenceItem[]>([]);
 
+  const [foodPatients, setFoodPatients] = useState<readonly PatientContribution[]>([]);
+  const [activityPatients, setActivityPatients] = useState<readonly PatientContribution[]>([]);
+  const [medicationPatients, setMedicationPatients] = useState<readonly PatientContribution[]>([]);
+
   const [priorityPatients, setPriorityPatients] = useState<readonly PriorityPatient[]>([]);
   const [trendPatients, setTrendPatients] = useState<readonly TrendPatient[]>([]);
 
@@ -144,7 +161,6 @@ export function useStaffDashboard() {
   // Fetch all dashboard data on mount — each request is independent
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
 
     async function fetchAll() {
       try {
@@ -163,6 +179,9 @@ export function useStaffDashboard() {
         setFoodIntake(metrics.food_intake);
         setPhysicalActivity(metrics.physical_activity.map((a: PhysicalActivityItemResponse) => ({ level: a.level, count: a.count })));
         setMedicationAdherence(metrics.medication_adherence);
+        setFoodPatients((metrics.food_patients ?? []).map(mapPatientContribution));
+        setActivityPatients((metrics.activity_patients ?? []).map(mapPatientContribution));
+        setMedicationPatients((metrics.medication_patients ?? []).map(mapPatientContribution));
       } catch {
         // Population metrics error handled silently
       }
@@ -187,18 +206,21 @@ export function useStaffDashboard() {
     setFoodRange(range);
     const data = await staffDashboardService.getPopulationMetrics(range);
     setFoodIntake(data.food_intake);
+    setFoodPatients((data.food_patients ?? []).map(mapPatientContribution));
   }, []);
 
   const updateActivityRange = useCallback(async (range: TimeRange) => {
     setActivityRange(range);
     const data = await staffDashboardService.getPopulationMetrics(range);
     setPhysicalActivity(data.physical_activity.map((a: PhysicalActivityItemResponse) => ({ level: a.level, count: a.count })));
+    setActivityPatients((data.activity_patients ?? []).map(mapPatientContribution));
   }, []);
 
   const updateAdherenceRange = useCallback(async (range: TimeRange) => {
     setAdherenceRange(range);
     const data = await staffDashboardService.getPopulationMetrics(range);
     setMedicationAdherence(data.medication_adherence);
+    setMedicationPatients((data.medication_patients ?? []).map(mapPatientContribution));
   }, []);
 
   const updateTrendRange = useCallback(async (range: TimeRange) => {
@@ -216,6 +238,9 @@ export function useStaffDashboard() {
     foodIntake,
     physicalActivity,
     medicationAdherence,
+    foodPatients,
+    activityPatients,
+    medicationPatients,
     priorityPatients,
     trendPatients,
     foodRange,

@@ -39,7 +39,10 @@ export function RecordMonitoringFeature() {
   } = useRecordMonitoring();
 
   const priorityPatients = patients.filter(
-    (p) => p.dailySummary.status === "Tinggi" || p.dailySummary.status === "Waspada"
+    (p) => {
+      const s = (p.dailySummary.status ?? "").toLowerCase();
+      return s === "prediabetes" || s === "elevated" || s === "hyperglycemia" || s === "hipoglikemia";
+    }
   );
 
   const trendPatients = patients.filter(

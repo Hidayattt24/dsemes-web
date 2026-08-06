@@ -396,11 +396,15 @@ export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: Patie
                     const timeType = log.measurement_time_type || log.measurementTimeType || "sewaktu";
                     const timeLabel = log.measurementTimeLabel || (timeType === "sebelum_makan" ? "Sebelum Makan" : timeType === "sesudah_makan" ? "Sesudah Makan" : "Sewaktu");
                     const ptColor = timeType === "sesudah_makan" ? "#E53E3E" : timeType === "sewaktu" ? "#3182CE" : "#00695C";
-                    let statusLabel = "Normal";
-                    let statusCls = "bg-emerald-50 text-emerald-700 border-emerald-200";
-                    if (val < 70) { statusLabel = "Rendah"; statusCls = "bg-blue-50 text-blue-700 border-blue-200"; }
-                    else if (val > 200) { statusLabel = "Sangat Tinggi"; statusCls = "bg-rose-50 text-rose-700 border-rose-200"; }
-                    else if (val > 130) { statusLabel = "Tinggi"; statusCls = "bg-amber-50 text-amber-700 border-amber-200"; }
+                    // All classification comes from the backend ClassifyBloodGlucose().
+                    const statusLabel = log.classificationLabel || log.status || "Normal";
+                    const isDanger = log.status === "hyperglycemia" || log.status === "hypoglycemia";
+                    const isWarning = log.status === "prediabetes" || log.status === "elevated";
+                    const statusCls = isDanger
+                      ? "bg-rose-50 text-rose-700 border-rose-200"
+                      : isWarning
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200";
                     return (
                       <tr key={log.id || `bsc-${idx}`} className="hover:bg-[#F8FAFC] transition-colors">
                         <td className="py-2.5 px-3 font-semibold text-[#1A202C]">{dateStr}</td>

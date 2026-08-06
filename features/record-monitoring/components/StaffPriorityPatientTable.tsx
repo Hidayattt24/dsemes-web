@@ -50,10 +50,13 @@ export function StaffPriorityPatientTable({ patients, loading }: StaffPriorityPa
       key: "risk",
       header: "Level Risiko",
       render: (row) => {
-        const sugarVal = parseInt(row.dailySummary.bloodSugar) || 0;
+        const statusStr = (row.dailySummary.status ?? "").toLowerCase();
+        const isHigh = statusStr === "hyperglycemia";
+        const isWarning = statusStr === "prediabetes" || statusStr === "elevated";
+        const isHypo = statusStr === "hipoglikemia" || statusStr === "hypoglycemia";
         return (
-          <Badge variant={sugarVal > 180 ? "error" : "warning"}>
-            {sugarVal > 180 ? "Sangat Tinggi" : "Tinggi"}
+          <Badge variant={isHigh || isHypo ? "error" : "warning"}>
+            {isHigh ? "Hiperglikemia" : isHypo ? "Hipoglikemia" : isWarning ? "Prediabetes" : "Perlu Perhatian"}
           </Badge>
         );
       },

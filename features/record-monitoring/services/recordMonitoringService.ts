@@ -93,16 +93,20 @@ const mapPatientRecord = (data: any): PatientRecord => {
     }
   }
 
-  let status: "Stabil" | "Waspada" | "Tinggi" | "Normal" = "Normal";
-  const statusStr = data.latest_blood_sugar_status ?? "";
-  if (statusStr === "tinggi") {
-    status = "Waspada";
-  } else if (statusStr === "sangat_tinggi") {
-    status = "Tinggi";
-  } else if (statusStr === "rendah") {
-    status = "Waspada";
-  } else if (data.latest_blood_sugar) {
-    status = "Stabil";
+  // Classification comes from the backend ClassifyBloodGlucose() — single source of truth.
+  const backendCategory = (data.latest_blood_sugar_status ?? "").toLowerCase();
+  // Map the backend category to an Indonesian display label.
+  const statusLabels: Record<string, string> = {
+    hypoglycemia: "Hipoglikemia",
+    normal: "Normal",
+    target: "Target",
+    prediabetes: "Prediabetes",
+    elevated: "Elevated",
+    hyperglycemia: "Hiperglikemia",
+  };
+  let status: string = statusLabels[backendCategory] ?? "";
+  if (!status && data.latest_blood_sugar) {
+    status = "Normal";
   }
 
   const initials = data.full_name
@@ -261,8 +265,8 @@ export const recordMonitoringService = {
         glucoseValue: log.glucose_value ?? 0,
         measurementTimeType: mType,
         measurementTimeLabel,
-        status: log.status || "normal",
-        classificationLabel: log.classification_label || (log.status === "normal" ? "Normal" : log.status),
+        status: log.category || log.status || "normal",
+        classificationLabel: log.category_label || log.classification_label || "Normal",
         severity: log.severity || "normal",
         referenceMin: log.reference_min,
         referenceMax: log.reference_max,

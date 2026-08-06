@@ -7,7 +7,8 @@ export interface DailySummary {
   readonly mealType: string;
   readonly activity: string;
   readonly activityType: string;
-  readonly status: "Stabil" | "Waspada" | "Tinggi" | "Normal";
+  /** Diagnostic category from the backend ClassifyBloodGlucose() — e.g. "Normal", "Prediabetes", "Hyperglycemia". */
+  readonly status: string;
   readonly bloodSugarStatus?: string;
   readonly avgBloodSugar?: number;
 }

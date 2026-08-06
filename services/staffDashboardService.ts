@@ -7,10 +7,11 @@ export interface StaffDashboardStats {
   readonly average_blood_sugar: number;
   readonly stability_percentage: number;
   readonly glucose_distribution: {
+    readonly hypoglycemia_count: number;
     readonly normal_count: number;
-    readonly tinggi_count: number;
-    readonly sangat_tinggi_count: number;
-    readonly rendah_count: number;
+    readonly prediabetes_count: number;
+    readonly elevated_count: number;
+    readonly hyperglycemia_count: number;
   };
   readonly priority_patients: readonly PriorityPatientResponse[];
   readonly non_compliant_patients: readonly PriorityPatientResponse[];
@@ -34,6 +35,15 @@ export interface PopulationMetricsResponse {
   readonly food_intake: readonly FoodIntakeItemResponse[];
   readonly physical_activity: readonly PhysicalActivityItemResponse[];
   readonly medication_adherence: readonly AdherenceItemResponse[];
+  readonly food_patients: readonly PatientContributionResponse[];
+  readonly activity_patients: readonly PatientContributionResponse[];
+  readonly medication_patients: readonly PatientContributionResponse[];
+}
+
+export interface PatientContributionResponse {
+  readonly patient_id: string;
+  readonly full_name: string;
+  readonly count: number;
 }
 
 export interface FoodIntakeItemResponse {

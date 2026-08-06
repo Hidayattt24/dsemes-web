@@ -9,16 +9,18 @@ interface PriorityPatientTableProps {
 }
 
 function GlucoseBadge({ status, value }: { readonly status: string; readonly value: number | null }) {
-  if (status === "sangat_tinggi") {
-    return <Badge variant="error">Sangat Tinggi</Badge>;
+  // All classification labels come from the backend (ClassifyBloodGlucose).
+  const c = status.toLowerCase();
+  if (c === "hyperglycemia" || (value !== null && value >= 200)) {
+    return <Badge variant="error">Hiperglikemia</Badge>;
   }
-  if (status === "tinggi" || (value !== null && value > 140)) {
-    return <Badge variant="warning">Tinggi</Badge>;
+  if (c === "elevated" || c === "prediabetes") {
+    return <Badge variant="warning">{status}</Badge>;
   }
-  if (status === "rendah") {
-    return <Badge variant="error">Rendah</Badge>;
+  if (c === "hypoglycemia") {
+    return <Badge variant="error">Hipoglikemia</Badge>;
   }
-  return <Badge variant="muted">Normal</Badge>;
+  return <Badge variant="primary">Normal</Badge>;
 }
 
 export function PriorityPatientTable({ patients, loading }: PriorityPatientTableProps) {
@@ -42,14 +44,14 @@ export function PriorityPatientTable({ patients, loading }: PriorityPatientTable
       key: "bloodSugar",
       header: "Gula Darah Terakhir",
       render: (row) => (
-        <span className="font-bold text-sm" style={{ color: row.bloodSugar !== null && row.bloodSugar > 180 ? "#DC2626" : "#D97706" }}>
+        <span className="font-bold text-sm" style={{ color: row.bloodSugar !== null && row.bloodSugar >= 200 ? "#DC2626" : "#D97706" }}>
           {row.bloodSugar !== null ? `${row.bloodSugar} mg/dL` : "-"}
         </span>
       ),
     },
     {
       key: "risk",
-      header: "Tingkat Risiko",
+      header: "Kategori",
       render: (row) => <GlucoseBadge status={row.glucoseStatus} value={row.bloodSugar} />,
     },
     {
@@ -61,8 +63,8 @@ export function PriorityPatientTable({ patients, loading }: PriorityPatientTable
     },
     {
       key: "status",
-      header: "Status",
-      render: () => <Badge variant="warning">Waspada</Badge>,
+      header: "Kategori Klinis",
+      render: (row) => <GlucoseBadge status={row.glucoseStatus} value={row.bloodSugar} />,
     },
     {
       key: "action",
@@ -97,8 +99,8 @@ export function PriorityPatientTable({ patients, loading }: PriorityPatientTable
           data={patients as PriorityPatient[]}
           keyExtract={(row) => row.id}
           loading={loading}
-          emptyTitle="Semua pasien stabil"
-          emptyMessage="Hari ini belum ada catatan gula darah kategori tinggi."
+          emptyTitle="Semua pasien terkendali"
+          emptyMessage="Hari ini belum ada catatan gula darah yang memerlukan perhatian."
         />
       </div>
     </div>
