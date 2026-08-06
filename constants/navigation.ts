@@ -17,6 +17,7 @@ export const MAIN_NAV_ITEMS: readonly NavItem[] = [
   { label: "Manajemen Edukasi",   href: ROUTES.MANAJEMEN_EDUKASI,         icon: "school"              },
   { label: "Manajemen Kuesioner", href: ROUTES.MANAJEMEN_KUISIONER,       icon: "quiz"                },
   { label: "Survey",              href: ROUTES.SURVEY,              icon: "assignment"          },
+  { label: "Data Makanan",        href: ROUTES.DATA_MAKANAN,              icon: "restaurant"          },
   { label: "Administrator",       href: ROUTES.ADMINISTRATOR,             icon: "admin_panel_settings" },
   { label: "Pengaturan",          href: ROUTES.PENGATURAN,                icon: "settings"            },
 ] as const;
