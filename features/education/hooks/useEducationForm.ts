@@ -6,7 +6,7 @@ import { educationService } from "../services/educationService";
 import { ROUTES } from "@/constants/routes";
 import { useToast } from "@/components/ui/Toast";
 
-interface FormFields {
+export interface FormFields {
   readonly title: string;
   readonly category: string;
   readonly createdBy: string;
@@ -119,7 +119,8 @@ export function useEducationForm(articleId?: string) {
       router.push(ROUTES.MANAJEMEN_EDUKASI);
       router.refresh();
     } catch (err: unknown) {
-      const serverMsg = err?.response?.data?.message || err?.message || "Gagal menyimpan materi edukasi. Coba lagi.";
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const serverMsg = error.response?.data?.message || error.message || "Gagal menyimpan materi edukasi. Coba lagi.";
       showToast({
         type: "error",
         title: "Gagal Menyimpan",

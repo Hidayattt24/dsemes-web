@@ -1,6 +1,7 @@
 "use client";
 
 import { useAdministratorForm } from "../hooks/useAdministratorForm";
+import type { FormFields } from "../hooks/useAdministratorForm";
 import { useState, useEffect } from "react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { BackButton } from "@/components/common/BackButton";
@@ -29,7 +30,7 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
   const [isDirty, setIsDirty] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
 
-  const handleChange = (key: string, val: string) => {
+  const handleChange = (key: keyof FormFields, val: string) => {
     baseHandleChange(key, val);
     setIsDirty(true);
   };

@@ -168,7 +168,7 @@ export function AddMeasurementModal({
                 label="Jenis Kelamin"
                 value={formData.gender}
                 options={genderOptions}
-                onChange={(val: string) => setFormData((prev) => ({ ...prev, gender: String(val) }))}
+                onChange={(val: string) => setFormData((prev) => ({ ...prev, gender: val as string }))}
               />
             </div>
 
@@ -189,7 +189,7 @@ export function AddMeasurementModal({
                 label="Golongan Darah"
                 value={formData.blood_type}
                 options={bloodTypeOptions}
-                onChange={(val: string) => setFormData((prev) => ({ ...prev, blood_type: String(val) }))}
+                onChange={(val: string) => setFormData((prev) => ({ ...prev, blood_type: val as "A" | "B" | "AB" | "O" }))}
               />
             </div>
 
@@ -199,7 +199,7 @@ export function AddMeasurementModal({
                 label="Tingkat Aktivitas Fisik"
                 value={formData.activity_level}
                 options={activityOptions}
-                onChange={(val: string) => setFormData((prev) => ({ ...prev, activity_level: String(val) }))}
+                onChange={(val: string) => setFormData((prev) => ({ ...prev, activity_level: val as string }))}
               />
             </div>
 
@@ -263,7 +263,7 @@ export function AddMeasurementModal({
                     { value: "before_bed", label: "Sebelum Tidur" },
                     { value: "random", label: "Sewaktu" },
                   ]}
-                  onChange={(val: string) => setFormData((prev) => ({ ...prev, blood_sugar_time_type: String(val) }))}
+                  onChange={(val: string) => setFormData((prev) => ({ ...prev, blood_sugar_time_type: val as string }))}
                 />
               </div>
             </div>

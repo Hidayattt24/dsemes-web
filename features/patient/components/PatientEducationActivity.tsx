@@ -11,7 +11,7 @@ interface PatientArticleCompletionItem {
   readonly last_activity_at: string | null;
 }
 
-interface PatientEducationSummary {
+export interface PatientEducationSummary {
   readonly total_articles: number;
   readonly completed_count: number;
   readonly read_count: number;

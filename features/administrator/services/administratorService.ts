@@ -19,13 +19,13 @@ interface ListResult {
 
 function mapBackendToFrontend(item: Record<string, unknown>): Administrator {
   return {
-    id: item.id,
+    id: item.id as string,
     fullName: (item.full_name as string) ?? "",
     username: (item.username as string) ?? "",
     email: (item.email as string) ?? "",
     whatsappNumber: (item.whatsapp_number as string) ?? "",
-    status: item.status === "nonaktif" ? "Nonaktif" : "Aktif",
-    role: item.role === "staff" ? "staff" : "admin",
+    status: (item.status as string) === "nonaktif" ? "Nonaktif" : "Aktif",
+    role: (item.role as string) === "staff" ? "staff" : "admin",
     positionTitle: (item.position_title as string) ?? "",
     shortBio: (item.short_bio as string) ?? "",
     profilePhotoUrl: (item.profile_photo_url as string) ?? "",

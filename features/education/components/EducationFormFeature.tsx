@@ -1,6 +1,7 @@
 "use client";
 
 import { useEducationForm } from "../hooks/useEducationForm";
+import type { FormFields } from "../hooks/useEducationForm";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useState, useRef, useEffect } from "react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
@@ -28,7 +29,7 @@ export function EducationFormFeature({ articleId }: EducationFormFeatureProps) {
   const [isDirty, setIsDirty] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
 
-  const handleChange = (key: string, val: string | number) => {
+  const handleChange = (key: keyof FormFields, val: string | number) => {
     baseHandleChange(key, val);
     setIsDirty(true);
   };
