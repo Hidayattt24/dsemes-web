@@ -17,6 +17,7 @@ export const ROUTES = {
   MANAJEMEN_EDUKASI: "/admin/manajemen-edukasi",
   MANAJEMEN_KUISIONER: "/admin/manajemen-kuisioner",
   SURVEY: "/admin/survey",
+  DATA_MAKANAN: "/admin/data-makanan",
   ADMINISTRATOR: "/admin/administrator",
   PENGATURAN: "/admin/pengaturan",
   // Staff pages

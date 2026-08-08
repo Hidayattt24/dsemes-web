@@ -123,7 +123,8 @@ export function RecordMonitoringTable({
       render: (row) => {
         const value = row.dailySummary.bloodSugar;
         const time = row.dailySummary.bloodSugarTime;
-        const isWarning = row.dailySummary.status === "Waspada" || row.dailySummary.status === "Tinggi";
+        const s = row.dailySummary.status.toLowerCase();
+        const isWarning = s === "prediabetes" || s === "elevated" || s === "hyperglycemia" || s === "hipoglikemia";
         return (
           <div>
             <span className={`font-semibold text-sm ${isWarning ? "text-[#C53030]" : "text-[#1A202C]"}`}>
@@ -161,16 +162,16 @@ export function RecordMonitoringTable({
       key: "status",
       header: "Status",
       render: (row) => {
-        const status = row.dailySummary.status;
+        const statusStr = (row.dailySummary.status || "").toLowerCase();
         let badgeVariant: "primary" | "warning" | "error" | "muted" = "muted";
-        if (status === "Stabil" || status === "Normal") {
+        if (statusStr === "normal" || statusStr === "target") {
           badgeVariant = "primary";
-        } else if (status === "Waspada") {
+        } else if (statusStr === "prediabetes" || statusStr === "elevated") {
           badgeVariant = "warning";
-        } else if (status === "Tinggi") {
+        } else if (statusStr === "hyperglycemia" || statusStr === "hipoglikemia") {
           badgeVariant = "error";
         }
-        return <Badge variant={badgeVariant}>{status}</Badge>;
+        return <Badge variant={badgeVariant}>{row.dailySummary.status}</Badge>;
       },
     },
     {

@@ -14,6 +14,9 @@ export function StaffDashboardFeature() {
     physicalActivity,
     foodIntake,
     medicationAdherence,
+    foodPatients,
+    activityPatients,
+    medicationPatients,
     priorityPatients,
     trendPatients,
     foodRange,
@@ -49,6 +52,9 @@ export function StaffDashboardFeature() {
           physicalActivity={physicalActivity}
           foodIntake={foodIntake}
           medicationAdherence={medicationAdherence}
+          foodPatients={foodPatients}
+          activityPatients={activityPatients}
+          medicationPatients={medicationPatients}
           foodRange={foodRange}
           activityRange={activityRange}
           adherenceRange={adherenceRange}

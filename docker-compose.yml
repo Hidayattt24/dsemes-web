@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DSMES Web — Docker Compose
+#
+# Usage:
+#   docker compose up -d          Start the web container
+#   docker compose build --no-cache  Rebuild from scratch
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}
+    container_name: dsmes_web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    networks:
+      - dsmes_web_net
+
+networks:
+  dsmes_web_net:
+    driver: bridge

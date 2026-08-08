@@ -45,13 +45,8 @@ function toBloodSugarLog(log: any): BloodSugarLog {
     glucoseValue: log.glucose_value ?? 0,
     measurementTimeType: mType,
     measurementTimeLabel,
-    status: log.status || "normal",
-    classificationLabel: log.classification_label || (
-      log.glucose_value < 40 ? "Hipoglikemia Berat" :
-      log.glucose_value < 70 ? "Hipoglikemia" :
-      log.glucose_value >= 350 ? "Hiperglikemia Berat" :
-      log.glucose_value > 200 ? "Hiperglikemia" : "Normal"
-    ),
+    status: log.category || log.status || "normal",
+    classificationLabel: log.category_label || log.classification_label || "Normal",
     referenceRangeText: log.reference_range_text || "< 140 mg/dL",
     recommendation: log.recommendation || "-",
     colorIndicator: log.color_indicator || "#10B981",

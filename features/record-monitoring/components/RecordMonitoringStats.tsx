@@ -25,7 +25,7 @@ export function RecordMonitoringStats({ stats }: RecordMonitoringStatsProps) {
           </p>
           <p className="text-2xl font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
             {bloodSugarCount.toLocaleString("id-ID")}{" "}
-            <span className="text-xs font-semibold text-[#718096] lowercase">records</span>
+            <span className="text-xs font-semibold text-[#718096] lowercase">Catatan</span>
           </p>
         </div>
       </div>
@@ -41,7 +41,7 @@ export function RecordMonitoringStats({ stats }: RecordMonitoringStatsProps) {
           </p>
           <p className="text-2xl font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
             {mealCount.toLocaleString("id-ID")}{" "}
-            <span className="text-xs font-semibold text-[#718096] lowercase">records</span>
+            <span className="text-xs font-semibold text-[#718096] lowercase">Catatan</span>
           </p>
         </div>
       </div>
@@ -57,7 +57,7 @@ export function RecordMonitoringStats({ stats }: RecordMonitoringStatsProps) {
           </p>
           <p className="text-2xl font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
             {activityCount.toLocaleString("id-ID")}{" "}
-            <span className="text-xs font-semibold text-[#718096] lowercase">records</span>
+            <span className="text-xs font-semibold text-[#718096] lowercase">Catatan</span>
           </p>
         </div>
       </div>
@@ -73,7 +73,7 @@ export function RecordMonitoringStats({ stats }: RecordMonitoringStatsProps) {
           </p>
           <p className="text-2xl font-bold text-[#1A202C] font-[family-name:var(--font-poppins)]">
             {medicationCount.toLocaleString("id-ID")}{" "}
-            <span className="text-xs font-semibold text-[#718096] lowercase">records</span>
+            <span className="text-xs font-semibold text-[#718096] lowercase">Catatan</span>
           </p>
         </div>
       </div>

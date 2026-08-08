@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/common/EmptyState";
-import type { FoodIntakeItem, AdherenceItem, TimeRange } from "../hooks/useStaffDashboard";
+import type { FoodIntakeItem, AdherenceItem, PatientContribution, TimeRange } from "../hooks/useStaffDashboard";
 
 interface PhysicalActivityItem {
   readonly level: string;
@@ -42,6 +43,9 @@ interface MonitoringChartsProps {
   readonly physicalActivity: readonly PhysicalActivityItem[];
   readonly foodIntake: readonly FoodIntakeItem[];
   readonly medicationAdherence: readonly AdherenceItem[];
+  readonly foodPatients: readonly PatientContribution[];
+  readonly activityPatients: readonly PatientContribution[];
+  readonly medicationPatients: readonly PatientContribution[];
   readonly foodRange: TimeRange;
   readonly activityRange: TimeRange;
   readonly adherenceRange: TimeRange;
@@ -50,10 +54,55 @@ interface MonitoringChartsProps {
   readonly onAdherenceRangeChange: (range: TimeRange) => void;
 }
 
+function initialOf(name: string): string {
+  const trimmed = name.trim();
+  return trimmed.length > 0 ? trimmed.charAt(0).toUpperCase() : "?";
+}
+
+// PatientList shows which patients contributed data (up to 3) and links to the
+// full record-monitoring page when there are more than 3.
+function PatientList({ patients }: { readonly patients: readonly PatientContribution[] }) {
+  if (patients.length === 0) return null;
+
+  const visible = patients.slice(0, 3);
+
+  return (
+    <div className="mt-4 pt-3 border-t border-[#E2E8F0]">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-[#718096] mb-2">
+        Pasien dengan data
+      </p>
+      <div className="space-y-2">
+        {visible.map((p) => (
+          <div key={p.patientId} className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-5 h-5 rounded-full bg-[#00695C] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                {initialOf(p.name)}
+              </span>
+              <span className="text-xs text-[#4A5568] font-semibold truncate">{p.name}</span>
+            </div>
+            <span className="text-[10px] font-extrabold text-[#1A202C] shrink-0">{p.count} log</span>
+          </div>
+        ))}
+      </div>
+      {patients.length > 3 && (
+        <Link
+          href="/staff/pemantauan-catatan-pasien"
+          className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[#00695C] hover:text-[#004d40] transition-colors"
+        >
+          Lihat Semua ({patients.length}) <span aria-hidden>→</span>
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export function MonitoringCharts({
   physicalActivity,
   foodIntake,
   medicationAdherence,
+  foodPatients,
+  activityPatients,
+  medicationPatients,
   foodRange,
   activityRange,
   adherenceRange,
@@ -139,6 +188,7 @@ export function MonitoringCharts({
             </div>
           </div>
         )}
+        <PatientList patients={foodPatients} />
       </div>
 
       {/* 2. Physical Activity Distribution (Vertical Bar Chart) */}
@@ -188,6 +238,7 @@ export function MonitoringCharts({
             })()}
           </div>
         )}
+        <PatientList patients={activityPatients} />
       </div>
 
       {/* 3. Medication Adherence (Horizontal Progress bars) */}
@@ -228,6 +279,7 @@ export function MonitoringCharts({
             ))}
           </div>
         )}
+        <PatientList patients={medicationPatients} />
       </div>
     </div>
   );
