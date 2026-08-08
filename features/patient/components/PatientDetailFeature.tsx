@@ -14,7 +14,7 @@ import { PatientPersonalInfoCard } from "./PatientPersonalInfoCard";
 import { PatientMeasurementHistoryCard } from "./PatientMeasurementHistoryCard";
 import { BloodSugarHistoryCard } from "@/features/record-monitoring/components/BloodSugarHistoryCard";
 import { PatientCalorieChart } from "./PatientCalorieChart";
-import { PatientEducationActivity } from "./PatientEducationActivity";
+import { PatientEducationActivity, type PatientEducationSummary } from "./PatientEducationActivity";
 import { EditPatientModal } from "./EditPatientModal";
 import { AddMeasurementModal } from "./AddMeasurementModal";
 
@@ -22,7 +22,8 @@ interface PatientDetailFeatureProps {
   readonly patientId: string;
 }
 
-function toBloodSugarLog(log: Record<string, unknown>): BloodSugarLog {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toBloodSugarLog(log: any): BloodSugarLog {
   const d = log.measured_at ? new Date(log.measured_at) : new Date();
   const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   const timeStr = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
@@ -176,7 +177,7 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
           <PatientCalorieChart data={meals} patient={patient} />
         </div>
         <div className="lg:col-span-5">
-          <PatientEducationActivity data={educationActivities} />
+          <PatientEducationActivity data={educationActivities as PatientEducationSummary | null} />
         </div>
       </div>
 

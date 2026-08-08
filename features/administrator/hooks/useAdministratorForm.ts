@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { administratorService } from "../services/administratorService";
 import { useToast } from "@/components/ui/Toast";
 
-interface FormFields {
+export interface FormFields {
   readonly fullName: string;
   readonly username: string;
   readonly email: string;

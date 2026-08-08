@@ -69,7 +69,8 @@ export function FoodImportModal({
     try {
       await onPreview(file);
     } catch (err: unknown) {
-      setErrorMessage(err.message || "Gagal memproses file Excel");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setErrorMessage(error.response?.data?.message || error.message || "Gagal memproses file Excel");
     }
   };
 
@@ -98,7 +99,8 @@ export function FoodImportModal({
     try {
       await onConfirm(validItems);
     } catch (err: unknown) {
-      setErrorMessage(err.message || "Gagal melakukan impor data");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setErrorMessage(error.response?.data?.message || error.message || "Gagal melakukan impor data");
     }
   };
 

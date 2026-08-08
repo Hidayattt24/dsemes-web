@@ -3,19 +3,19 @@ import { axiosInstance } from "@/lib/axios";
 
 const mapArticleFromBackend = (data: Record<string, unknown>): EducationArticle => {
   return {
-    id: data.id,
-    title: data.title,
-    category: data.category_name || "Lainnya",
-    shortDescription: data.summary || "",
-    content: data.content || "",
-    duration: data.estimated_read_minutes || 5,
-    youtubeLink: data.youtube_link || "",
-    thumbnail: data.banner_image_url || "",
-    status: data.status === "publikasi" ? "Diterbitkan" : "Draf",
-    createdBy: data.author_name || "-",
-    createdAt: new Date(data.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
-    updatedAt: new Date(data.updated_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
-    readCount: data.read_count || 0,
+    id: data.id as string,
+    title: data.title as string,
+    category: (data.category_name as string) || "Lainnya",
+    shortDescription: (data.summary as string) || "",
+    content: (data.content as string) || "",
+    duration: (data.estimated_read_minutes as number) || 5,
+    youtubeLink: (data.youtube_link as string) || "",
+    thumbnail: (data.banner_image_url as string) || "",
+    status: (data.status as string) === "publikasi" ? "Diterbitkan" : "Draf",
+    createdBy: (data.author_name as string) || "-",
+    createdAt: new Date(data.created_at as string).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
+    updatedAt: new Date(data.updated_at as string).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }),
+    readCount: (data.read_count as number) || 0,
   };
 };
 
@@ -25,7 +25,7 @@ export const educationService = {
     try {
       const res = await axiosInstance.get("/education/categories");
       const list = res.data?.data ?? [];
-      return list.map((c: Record<string, unknown>) => (c as Record<string, string>).name || (c as Record<string, string>).category_name || c).filter(Boolean);
+      return list.map((c: Record<string, unknown>) => ((c.name || c.category_name) as string) || String(c)).filter(Boolean);
     } catch {
       return [];
     }
@@ -124,7 +124,7 @@ export const educationService = {
       completed_at: r.completed_at ?? null,
       completion_source: r.completion_source ?? "",
       last_activity_at: r.last_activity_at ?? null,
-    }));
+    })) as unknown as EducationProgressItem[];
   },
 
   /** Get progress analytics summary for an education article */
@@ -166,7 +166,7 @@ export const educationService = {
           completion_date: r.completion_date || null,
           created_at: r.created_at,
           updated_at: r.updated_at,
-        })),
+        } as unknown as AdminArticleReviewsData['reviews'][0])),
       };
     } catch {
       return {

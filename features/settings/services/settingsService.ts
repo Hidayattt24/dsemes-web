@@ -23,7 +23,8 @@ function getMeEndpoint(): string {
   }
 }
 
-const mapSettingsFromBackend = (data: Record<string, unknown>): SystemSettings => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapSettingsFromBackend = (data: any): SystemSettings => {
   return {
     name: data.full_name || "",
     username: data.username || "",

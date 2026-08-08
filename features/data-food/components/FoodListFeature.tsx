@@ -111,7 +111,8 @@ export function FoodListFeature() {
       const preview = await foodService.previewImport(file);
       setImportPreview(preview);
     } catch (err: unknown) {
-      throw new Error(err?.response?.data?.message || "Gagal memproses file Excel");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      throw new Error(error.response?.data?.message || "Gagal memproses file Excel");
     } finally {
       setImporting(false);
     }
@@ -131,7 +132,8 @@ export function FoodListFeature() {
       fetchFoods();
       fetchStats();
     } catch (err: unknown) {
-      throw new Error(err?.response?.data?.message || "Gagal melakukan impor data");
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      throw new Error(error.response?.data?.message || "Gagal melakukan impor data");
     } finally {
       setImporting(false);
     }

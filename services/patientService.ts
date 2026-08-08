@@ -1,7 +1,8 @@
 import { axiosInstance } from "@/lib/axios";
 import type { Patient, PatientStats, PatientMeasurement } from "@/types/patient";
 
-function mapBackendPatientToFrontend(p: Record<string, unknown>): Patient {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendPatientToFrontend(p: any): Patient {
   const fullName = (p.full_name ?? "") as string;
   const names = fullName ? fullName.split(" ") : ["P"];
   const initials = names.map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
@@ -32,10 +33,10 @@ function mapBackendPatientToFrontend(p: Record<string, unknown>): Patient {
     whatsapp: (p.whatsapp_number as string) ?? "",
     height: (p.height_cm as number) ?? 0,
     weight: (p.weight_kg as number) ?? 0,
-    bloodType: (p.blood_type as string) ?? "O",
+    bloodType: ((p.blood_type as string) ?? "O") as "A" | "B" | "AB" | "O",
     registeredAt: p.created_at ? new Date(p.created_at as string).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "",
     compliance: (p.compliance as number) ?? 0,
-    interventionType: (p.intervention_type as string) ?? "Mobile App",
+    interventionType: ((p.intervention_type as string) ?? "Mobile App") as "Mobile App" | "Web App",
     diabetesType: (p.diabetes_type as string) ?? "Diabetes Tipe 2",
     doctor,
     puskesmas,
@@ -83,7 +84,8 @@ function mapBackendPatientToFrontend(p: Record<string, unknown>): Patient {
   };
 }
 
-function mapBackendMeasurementToFrontend(m: Record<string, unknown>): PatientMeasurement {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendMeasurementToFrontend(m: any): PatientMeasurement {
   return {
     id: m.id,
     patientId: m.patient_id,

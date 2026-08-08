@@ -227,11 +227,12 @@ export function FoodFormFeature({ foodId }: Props) {
 
       router.push(ROUTES.DATA_MAKANAN);
     } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       showToast({
         type: "error",
         title: "Gagal Menyimpan",
         description:
-          err?.response?.data?.message || "Terjadi kesalahan saat menyimpan data.",
+          error.response?.data?.message || "Terjadi kesalahan saat menyimpan data.",
       });
     } finally {
       setIsSubmitting(false);
