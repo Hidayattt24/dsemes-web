@@ -23,7 +23,7 @@ function getMeEndpoint(): string {
   }
 }
 
-const mapSettingsFromBackend = (data: any): SystemSettings => {
+const mapSettingsFromBackend = (data: Record<string, unknown>): SystemSettings => {
   return {
     name: data.full_name || "",
     username: data.username || "",

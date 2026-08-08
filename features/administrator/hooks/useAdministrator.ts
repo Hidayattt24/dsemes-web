@@ -37,10 +37,12 @@ export function useAdministrator() {
   }, [searchQuery, statusFilter, page, limit]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [searchQuery, statusFilter]);
 

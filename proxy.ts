@@ -21,7 +21,7 @@ function decodeJwt(token: string): DecodedToken | null {
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = Buffer.from(base64, "base64").toString("utf8");
     return JSON.parse(jsonPayload);
-  } catch (e) {
+  } catch {
     return null;
   }
 }

@@ -20,7 +20,6 @@ export function PatientActivityAnalyticsCard({
   analytics,
   selectedDays = 7,
   onDaysChange,
-  isLoading = false,
 }: PatientActivityAnalyticsCardProps) {
   const data = analytics ?? {
     totalRecords: 0,

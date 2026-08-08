@@ -1,89 +1,89 @@
 import { axiosInstance } from "@/lib/axios";
 import type { Patient, PatientStats, PatientMeasurement } from "@/types/patient";
 
-function mapBackendPatientToFrontend(p: any): Patient {
-  // Initials
-  const names = p.full_name ? p.full_name.split(" ") : ["P"];
+function mapBackendPatientToFrontend(p: Record<string, unknown>): Patient {
+  const fullName = (p.full_name ?? "") as string;
+  const names = fullName ? fullName.split(" ") : ["P"];
   const initials = names.map((n: string) => n[0]).join("").substring(0, 2).toUpperCase();
 
-  // Age calculation
   let age = 0;
   if (p.date_of_birth) {
-    const dob = new Date(p.date_of_birth);
+    const dob = new Date(p.date_of_birth as string);
     const ageDifMs = Date.now() - dob.getTime();
     const ageDate = new Date(ageDifMs);
     age = Math.abs(ageDate.getUTCFullYear() - 1970);
   }
 
-  // Doctor/Staff and Puskesmas
-  const doctor = p.assigned_staff?.full_name ?? "-";
-  const puskesmas = p.assigned_staff?.position_title ?? "-";
+  const assignedStaff = p.assigned_staff as Record<string, unknown> | undefined;
+  const doctor = (assignedStaff?.full_name as string) ?? "-";
+  const puskesmas = (assignedStaff?.position_title as string) ?? "-";
+
+  const patientStatus = (p.status as string) ?? "";
+  const calorieInfo = p.calorie_status_info as Record<string, unknown> | undefined;
 
   return {
     id: String(p.id),
-    name: p.full_name ?? "",
+    name: (p.full_name as string) ?? "",
     age,
-    gender: p.gender === "laki_laki" || p.gender === "Laki-laki" ? "Laki-laki" : "Perempuan",
-    status: p.status === "aktif" || p.status === "Aktif" ? "Aktif" : "Nonaktif",
-    lastActive: p.last_active_at ? new Date(p.last_active_at).toLocaleDateString("id-ID") : "Belum aktif",
+    gender: (p.gender as string) === "laki_laki" || (p.gender as string) === "Laki-laki" ? "Laki-laki" : "Perempuan",
+    status: patientStatus === "aktif" || patientStatus === "Aktif" ? "Aktif" : "Nonaktif",
+    lastActive: p.last_active_at ? new Date(p.last_active_at as string).toLocaleDateString("id-ID") : "Belum aktif",
     initials,
-    whatsapp: p.whatsapp_number ?? "",
-    height: p.height_cm ?? 0,
-    weight: p.weight_kg ?? 0,
-    bloodType: p.blood_type ?? "O",
-    registeredAt: p.created_at ? new Date(p.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "",
-    compliance: p.compliance ?? 0,
-    interventionType: p.intervention_type ?? "Mobile App",
-    diabetesType: p.diabetes_type ?? "Diabetes Tipe 2",
+    whatsapp: (p.whatsapp_number as string) ?? "",
+    height: (p.height_cm as number) ?? 0,
+    weight: (p.weight_kg as number) ?? 0,
+    bloodType: (p.blood_type as string) ?? "O",
+    registeredAt: p.created_at ? new Date(p.created_at as string).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }) : "",
+    compliance: (p.compliance as number) ?? 0,
+    interventionType: (p.intervention_type as string) ?? "Mobile App",
+    diabetesType: (p.diabetes_type as string) ?? "Diabetes Tipe 2",
     doctor,
     puskesmas,
-    address: p.address ?? "",
-    email: p.email ?? "",
-    accountStatus: p.status === "aktif" || p.status === "Aktif" ? "Terverifikasi" : "Belum Terverifikasi",
-    nik: p.nik ?? "",
-    bpjs: p.bpjs ?? "",
-    emergencyName: p.emergency_name ?? "",
-    emergencyRelation: p.emergency_relation ?? "",
-    emergencyPhone: p.emergency_phone ?? "",
-    avatarUrl: p.profile_photo_url || undefined,
+    address: (p.address as string) ?? "",
+    email: (p.email as string) ?? "",
+    accountStatus: patientStatus === "aktif" || patientStatus === "Aktif" ? "Terverifikasi" : "Belum Terverifikasi",
+    nik: (p.nik as string) ?? "",
+    bpjs: (p.bpjs as string) ?? "",
+    emergencyName: (p.emergency_name as string) ?? "",
+    emergencyRelation: (p.emergency_relation as string) ?? "",
+    emergencyPhone: (p.emergency_phone as string) ?? "",
+    avatarUrl: (p.profile_photo_url as string) || undefined,
     
-    // Extended Information
-    patientCode: p.patient_code ?? "",
-    diagnosisDate: p.diagnosis_date ?? "",
-    currentMedication: p.current_medication ?? "",
-    allergies: p.allergies ?? "",
-    smokingStatus: p.smoking_status ?? "",
-    physicalActivityLevel: p.physical_activity_level ?? "",
+    patientCode: (p.patient_code as string) ?? "",
+    diagnosisDate: (p.diagnosis_date as string) ?? "",
+    currentMedication: (p.current_medication as string) ?? "",
+    allergies: (p.allergies as string) ?? "",
+    smokingStatus: (p.smoking_status as string) ?? "",
+    physicalActivityLevel: (p.physical_activity_level as string) ?? "",
 
-    // Summary Stats
-    latestBloodSugar: p.latest_blood_sugar,
-    averageBloodSugar: p.average_blood_sugar,
-    latestWeight: p.latest_weight,
-    bmi: p.bmi,
-    waistCircumferenceCm: p.waist_circumference_cm,
-    dailyCalorieTarget: p.daily_calorie_target,
-    latestActivityTime: p.latest_activity_time,
-    latestActivityName: p.latest_activity_name,
-    calorieStatusInfo: p.calorie_status_info ? {
-      targetCalories: p.calorie_status_info.target_calories || 0,
-      consumedCalories: p.calorie_status_info.consumed_calories ?? 0,
-      achievementPercentage: p.calorie_status_info.achievement_percentage ?? 0,
-      calorieDifference: p.calorie_status_info.calorie_difference ?? 0,
-      calorieDifferenceStr: p.calorie_status_info.calorie_difference_str ?? "0 kcal",
-      calorieStatus: p.calorie_status_info.calorie_status ?? "Asupan Sangat Rendah",
-      calorieStatusCode: p.calorie_status_info.calorie_status_code ?? "very_low",
-      calorieDescription: p.calorie_status_info.calorie_description ?? "-",
+    latestBloodSugar: p.latest_blood_sugar as number | undefined,
+    averageBloodSugar: p.average_blood_sugar as number | undefined,
+    latestWeight: p.latest_weight as number | undefined,
+    bmi: p.bmi as number | undefined,
+    waistCircumferenceCm: p.waist_circumference_cm as number | undefined,
+    dailyCalorieTarget: p.daily_calorie_target as number | undefined,
+    latestActivityTime: p.latest_activity_time as string | undefined,
+    latestActivityName: p.latest_activity_name as string | undefined,
+    calorieStatusInfo: calorieInfo ? {
+      targetCalories: (calorieInfo.target_calories as number) || 0,
+      consumedCalories: (calorieInfo.consumed_calories as number) ?? 0,
+      achievementPercentage: (calorieInfo.achievement_percentage as number) ?? 0,
+      calorieDifference: (calorieInfo.calorie_difference as number) ?? 0,
+      calorieDifferenceStr: (calorieInfo.calorie_difference_str as string) ?? "0 kcal",
+      calorieStatus: (calorieInfo.calorie_status as string) ?? "Asupan Sangat Rendah",
+      calorieStatusCode: (calorieInfo.calorie_status_code as string) ?? "very_low",
+      calorieDescription: (calorieInfo.calorie_description as string) ?? "-",
     } : undefined,
     measurements: Array.isArray(p.measurements)
-      ? p.measurements.map(mapBackendMeasurementToFrontend)
+      ? (p.measurements as Array<Record<string, unknown>>).map(mapBackendMeasurementToFrontend)
       : undefined,
     latestMeasurement: p.latest_measurement
-      ? mapBackendMeasurementToFrontend(p.latest_measurement)
+      ? mapBackendMeasurementToFrontend(p.latest_measurement as Record<string, unknown>)
       : undefined,
   };
 }
 
-function mapBackendMeasurementToFrontend(m: any): PatientMeasurement {
+function mapBackendMeasurementToFrontend(m: Record<string, unknown>): PatientMeasurement {
   return {
     id: m.id,
     patientId: m.patient_id,
@@ -168,25 +168,25 @@ export const patientService = {
   },
 
   /** Fetch patient blood sugar history */
-  async getPatientBloodSugar(id: string): Promise<any[]> {
+  async getPatientBloodSugar(id: string): Promise<Record<string, unknown>[]> {
     const res = await axiosInstance.get(`/admin/patients/${id}/blood-sugar`, { params: { limit: 100 } });
     return res.data?.data ?? [];
   },
 
   /** Fetch patient meal logs (past 30 days) */
-  async getPatientMeals(id: string): Promise<any[]> {
+  async getPatientMeals(id: string): Promise<Record<string, unknown>[]> {
     const res = await axiosInstance.get(`/admin/patients/${id}/meals`);
     return res.data?.data ?? [];
   },
 
   /** Fetch patient activities timeline */
-  async getPatientActivities(id: string): Promise<any[]> {
+  async getPatientActivities(id: string): Promise<Record<string, unknown>[]> {
     const res = await axiosInstance.get(`/admin/patients/${id}/activities`);
     return res.data?.data ?? [];
   },
 
   /** Fetch patient education activities */
-  async getPatientEducationActivities(id: string): Promise<any> {
+  async getPatientEducationActivities(id: string): Promise<unknown> {
     try {
       const res = await axiosInstance.get(`/admin/patients/${id}/activities/education`);
       return res.data?.data ?? null;
@@ -210,7 +210,7 @@ export const patientService = {
   },
 
   /** Create a new health measurement record as Admin */
-  async createPatientMeasurement(id: string, data: any): Promise<PatientMeasurement | null> {
+  async createPatientMeasurement(id: string, data: Record<string, unknown>): Promise<PatientMeasurement | null> {
     const res = await axiosInstance.post(`/admin/patients/${id}/measurements`, data);
     if (res.data?.success && res.data?.data) {
       return mapBackendMeasurementToFrontend(res.data.data);
@@ -219,7 +219,7 @@ export const patientService = {
   },
 
   /** Update patient personal & health info as Admin */
-  async updatePatientByAdmin(id: string, data: any): Promise<Patient | null> {
+  async updatePatientByAdmin(id: string, data: Record<string, unknown>): Promise<Patient | null> {
     const res = await axiosInstance.put(`/admin/patients/${id}`, data);
     if (res.data?.success && res.data?.data) {
       return mapBackendPatientToFrontend(res.data.data);

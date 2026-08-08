@@ -32,7 +32,11 @@ export function useCountdown(initialSeconds = 60): UseCountdownReturn {
   };
 
   // Start on mount, clean up on unmount
-  useEffect(() => { start(); return clear; }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    start();
+    return clear;
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { seconds, isFinished: seconds === 0, restart: start };
 }

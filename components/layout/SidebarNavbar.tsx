@@ -4,15 +4,13 @@ import { useState, useEffect } from "react";
 import { SidebarNavLink } from "@/components/layout/SidebarNavLink";
 import { MAIN_NAV_ITEMS, STAFF_NAV_ITEMS } from "@/constants/navigation";
 import { useSidebarStore } from "@/lib/stores/sidebarStore";
-import { useRouter, usePathname }    from "next/navigation";
-import { ROUTES }       from "@/constants/routes";
+import { usePathname }    from "next/navigation";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useAuth } from "@/hooks/useAuth";
 
 export function SidebarNavbar() {
   const { logout } = useAuth();
   const { isMobileOpen, closeMobile } = useSidebarStore();
-  const router     = useRouter();
   const pathname   = usePathname();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 

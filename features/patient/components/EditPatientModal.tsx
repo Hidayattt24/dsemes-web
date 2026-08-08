@@ -8,7 +8,7 @@ interface EditPatientModalProps {
   readonly isOpen: boolean;
   readonly patient: Patient;
   readonly onClose: () => void;
-  readonly onSubmit: (data: any) => Promise<void>;
+  readonly onSubmit: (data: Record<string, unknown>) => Promise<void>;
 }
 
 const genderOptions = [

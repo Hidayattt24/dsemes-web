@@ -37,6 +37,7 @@ export function useEducationList() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchEducationData();
   }, []);
 
@@ -66,6 +67,7 @@ export function useEducationList() {
 
   // Reset pagination on filter change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
   }, [searchQuery, categoryFilter, statusFilter]);
 

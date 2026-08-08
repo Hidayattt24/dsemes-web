@@ -11,8 +11,8 @@ interface CaloriePoint {
 }
 
 interface PatientCalorieChartProps {
-  readonly data?: any[];
-  readonly patient?: any;
+  readonly data?: Record<string, unknown>[];
+  readonly patient?: Record<string, unknown>;
 }
 
 export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartProps) {
@@ -26,7 +26,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - limitDays);
 
-  const filteredLogs = data.filter((log: any) => {
+  const filteredLogs = data.filter((log: Record<string, unknown>) => {
     return new Date(log.logged_at) >= cutoffDate;
   });
 
@@ -34,7 +34,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
 
   // Calculate statistics from filteredLogs
   const dailyCaloriesMap: { [dateStr: string]: number } = {};
-  filteredLogs.forEach((log: any) => {
+  filteredLogs.forEach((log: Record<string, unknown>) => {
     const dStr = new Date(log.logged_at).toDateString();
     const cals = (log.food?.calories ?? 0) * (log.portion_multiplier ?? 1);
     dailyCaloriesMap[dStr] = (dailyCaloriesMap[dStr] || 0) + cals;
@@ -53,7 +53,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
     const dayName = daysIndo[targetDate.getDay()];
     const dateStr = targetDate.toDateString();
     
-    const dayLogs = data.filter((log: any) => new Date(log.logged_at).toDateString() === dateStr);
+    const dayLogs = data.filter((log: Record<string, unknown>) => new Date(log.logged_at).toDateString() === dateStr);
     
     let actualCalories = 0;
     if (dayLogs.length > 0) {
@@ -126,7 +126,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
         ) : (
           /* Grouped Bars */
           barData.map((bar, idx) => {
-            const hasValueForDay = data.some((log: any) => new Date(log.logged_at).toDateString() === bar.day);
+            const hasValueForDay = data.some((log: Record<string, unknown>) => new Date(log.logged_at).toDateString() === bar.day);
             return (
               <div
                 key={bar.day}

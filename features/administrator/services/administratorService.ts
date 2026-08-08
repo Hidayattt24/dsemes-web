@@ -17,20 +17,20 @@ interface ListResult {
   totalPages: number;
 }
 
-function mapBackendToFrontend(item: any): Administrator {
+function mapBackendToFrontend(item: Record<string, unknown>): Administrator {
   return {
     id: item.id,
-    fullName: item.full_name ?? "",
-    username: item.username ?? "",
-    email: item.email ?? "",
-    whatsappNumber: item.whatsapp_number ?? "",
+    fullName: (item.full_name as string) ?? "",
+    username: (item.username as string) ?? "",
+    email: (item.email as string) ?? "",
+    whatsappNumber: (item.whatsapp_number as string) ?? "",
     status: item.status === "nonaktif" ? "Nonaktif" : "Aktif",
     role: item.role === "staff" ? "staff" : "admin",
-    positionTitle: item.position_title ?? "",
-    shortBio: item.short_bio ?? "",
-    profilePhotoUrl: item.profile_photo_url ?? "",
+    positionTitle: (item.position_title as string) ?? "",
+    shortBio: (item.short_bio as string) ?? "",
+    profilePhotoUrl: (item.profile_photo_url as string) ?? "",
     createdAt: item.created_at
-      ? new Date(item.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
+      ? new Date(item.created_at as string).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
       : "",
   };
 }

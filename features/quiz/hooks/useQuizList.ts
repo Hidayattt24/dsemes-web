@@ -68,6 +68,7 @@ export function useQuizList(): UseQuizListReturn {
   }, [page, searchQuery, filterType, filterStatus, sortBy, rolePrefix]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
 

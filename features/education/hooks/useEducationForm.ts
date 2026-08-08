@@ -118,7 +118,7 @@ export function useEducationForm(articleId?: string) {
       });
       router.push(ROUTES.MANAJEMEN_EDUKASI);
       router.refresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       const serverMsg = err?.response?.data?.message || err?.message || "Gagal menyimpan materi edukasi. Coba lagi.";
       showToast({
         type: "error",

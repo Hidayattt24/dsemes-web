@@ -42,6 +42,7 @@ export function useParticipantQuizDetail(
 
   useEffect(() => {
     if (quizId && participantId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchDetail();
     }
   }, [quizId, participantId, fetchDetail]);

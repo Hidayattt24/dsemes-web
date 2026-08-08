@@ -5,11 +5,7 @@ import type {
   QuestionnaireType,
   QuestionnaireDifficulty,
   QuestionnaireStatus,
-  QuestionCategoryItem,
-  QuestionItem,
-  QuestionChoice,
 } from "../types/quiz";
-import { ROUTES } from "@/constants/routes";
 import { useToast } from "@/components/ui/Toast";
 
 export interface FormChoice {

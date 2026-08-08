@@ -29,7 +29,7 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
   const [isDirty, setIsDirty] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
 
-  const handleChange = (key: any, val: any) => {
+  const handleChange = (key: string, val: string) => {
     baseHandleChange(key, val);
     setIsDirty(true);
   };

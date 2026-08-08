@@ -33,8 +33,6 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 export function RecordPatientProfileCard({ patient }: RecordPatientProfileCardProps) {
   const genderIcon = patient.gender === "Laki-laki" ? "male" : "female";
 
-  const bmiVal = patient.bmi ? patient.bmi.toFixed(1) : "-";
-
   return (
     <div className="space-y-6">
       {/* Avatar + Sidebar Info */}
@@ -44,6 +42,7 @@ export function RecordPatientProfileCard({ patient }: RecordPatientProfileCardPr
             <div className="w-32 h-32 rounded-full border-2 border-[#00695C]/20 p-1.5">
               <div className="w-full h-full rounded-full overflow-hidden bg-[#F4F6F8] shadow-inner flex items-center justify-center">
                 {patient.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={patient.avatarUrl}
                     alt={patient.name}

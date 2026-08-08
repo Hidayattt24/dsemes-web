@@ -20,10 +20,8 @@ export function Avatar({
   src,
   name,
   size      = 40,
-  showOnline = false,
   className  = "",
 }: AvatarProps) {
-  const indicatorSize = Math.max(10, Math.round(size * 0.3));
 
   return (
     <div

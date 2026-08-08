@@ -22,6 +22,7 @@ export function FoodImportModal({
   onConfirm,
   onReset,
 }: Props) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export function FoodImportModal({
   // Update active rows when preview changes
   React.useEffect(() => {
     if (preview?.rows) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveRows(preview.rows);
     } else {
       setActiveRows([]);
@@ -66,7 +68,7 @@ export function FoodImportModal({
     setErrorMessage(null);
     try {
       await onPreview(file);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMessage(err.message || "Gagal memproses file Excel");
     }
   };
@@ -95,7 +97,7 @@ export function FoodImportModal({
     }
     try {
       await onConfirm(validItems);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMessage(err.message || "Gagal melakukan impor data");
     }
   };

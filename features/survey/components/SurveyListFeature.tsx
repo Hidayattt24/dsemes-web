@@ -63,7 +63,7 @@ export function SurveyListFeature({ isStaff: propIsStaff }: SurveyListFeaturePro
 
       setItems(filtered);
       setTotal(res.total);
-    } catch (err) {
+    } catch {
       showToast({
         type: "error",
         title: "Gagal Memuat Data",
@@ -75,6 +75,7 @@ export function SurveyListFeature({ isStaff: propIsStaff }: SurveyListFeaturePro
   }, [filterType, filterStatus, isStaff, searchQuery, sortBy, showToast]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSurveys();
   }, [fetchSurveys]);
 
@@ -133,8 +134,6 @@ export function SurveyListFeature({ isStaff: propIsStaff }: SurveyListFeaturePro
       setActiveToggleItem(null);
     }
   };
-
-  const basePath = isStaff ? "/staff/survey" : "/admin/survey";
 
   if (isLoading) {
     return (

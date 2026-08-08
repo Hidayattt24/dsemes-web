@@ -48,6 +48,7 @@ export function useQuizParticipants(quizId: string): UseQuizParticipantsReturn {
 
   useEffect(() => {
     if (quizId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchData();
     }
   }, [quizId, fetchData]);
