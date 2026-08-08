@@ -11,7 +11,7 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
   const [period, setPeriod] = useState<"7" | "30">("7");
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const getParsedDate = (log: any): Date => {
+  const getParsedDate = (log: BloodSugarLog): Date => {
     if (log.rawDate instanceof Date && !isNaN(log.rawDate.getTime())) return log.rawDate;
     if (log.rawDate && (typeof log.rawDate === "string" || typeof log.rawDate === "number")) {
       const d = new Date(log.rawDate);
@@ -91,7 +91,7 @@ export function BloodSugarHistoryCard({ logs = [] }: BloodSugarHistoryCardProps)
     }
   };
 
-  const getGlucoseStatus = (log: any) => {
+  const getGlucoseStatus = (log: BloodSugarLog) => {
     const status = log.status || "";
     const label = log.classificationLabel || (
       status === "severe_hypoglycemia" ? "Hipoglikemia Berat" :

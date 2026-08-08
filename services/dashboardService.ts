@@ -26,10 +26,10 @@ export const dashboardService = {
   async getActivityChart(): Promise<ActivityDataPoint[]> {
     const res = await axiosInstance.get("/admin/dashboard/activity-chart");
     const list = res.data?.data ?? [];
-    return list.map((item: any) => ({
+    return list.map((item: Record<string, unknown>) => ({
       day: item.day,
-      value: Number(item.value ?? 0),
-      heightPercent: Number(item.height_percent ?? 10),
+      value: Number((item.value as number) ?? 0),
+      heightPercent: Number((item.height_percent as number) ?? 10),
     }));
   },
 
@@ -57,9 +57,9 @@ export const dashboardService = {
   async getTopArticles(): Promise<TopArticle[]> {
     const res = await axiosInstance.get("/admin/dashboard/top-articles");
     const list = res.data?.data ?? [];
-    return list.map((item: any) => {
+    return list.map((item: Record<string, unknown>) => {
       let categoryVariant: "primary" | "warning" | "error" | "muted" = "primary";
-      const cat = item.category?.toLowerCase() ?? "";
+      const cat = ((item.category as string)?.toLowerCase() ?? "") as string;
       if (cat.includes("aktivitas") || cat.includes("olahraga")) {
         categoryVariant = "warning";
       } else if (cat.includes("medis") || cat.includes("obat")) {
@@ -72,9 +72,9 @@ export const dashboardService = {
       return {
         id: item.id,
         title: item.title,
-        category: item.category ?? "Edukasi",
+        category: (item.category as string) ?? "Edukasi",
         categoryVariant,
-        readCount: Number(item.read_count ?? 0),
+        readCount: Number((item.read_count as number) ?? 0),
         thumbnailUrl: item.thumbnail_url,
       };
     });

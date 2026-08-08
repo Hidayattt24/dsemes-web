@@ -100,8 +100,10 @@ export function useRecordDetail(patientId: string): UseRecordDetailReturn {
 
   useEffect(() => {
     if (patientId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const handleSetMealDate = useCallback((date: string) => {

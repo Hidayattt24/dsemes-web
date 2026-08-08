@@ -144,7 +144,7 @@ export function FoodFormFeature({ foodId }: Props) {
   const handleItemChange = (
     index: number,
     field: keyof CreateFoodDTO,
-    value: any
+    value: unknown
   ) => {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
@@ -226,7 +226,7 @@ export function FoodFormFeature({ foodId }: Props) {
       }
 
       router.push(ROUTES.DATA_MAKANAN);
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast({
         type: "error",
         title: "Gagal Menyimpan",

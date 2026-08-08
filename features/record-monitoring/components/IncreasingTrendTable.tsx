@@ -1,6 +1,5 @@
 import { DataTable, type TableColumn } from "@/components/common/DataTable";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import type { PatientRecord } from "../types/record";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

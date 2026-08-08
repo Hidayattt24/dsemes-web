@@ -54,9 +54,10 @@ export const authService = {
         user,
         token: tokens.access_token,
       };
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
       }
       throw error;
     }
@@ -83,9 +84,10 @@ export const authService = {
         email,
         owner_type: "staff",
       });
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
       }
       throw error;
     }
@@ -99,9 +101,10 @@ export const authService = {
         otp_code: code,
         owner_type: "staff",
       });
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
       }
       throw error;
     }
@@ -122,9 +125,10 @@ export const authService = {
         new_password: password,
         confirm_password: confirmPassword,
       });
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
       }
       throw error;
     }

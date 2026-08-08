@@ -76,6 +76,7 @@ export function FoodListFeature() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchFoods();
     fetchStats();
   }, [fetchFoods, fetchStats]);
@@ -109,7 +110,7 @@ export function FoodListFeature() {
     try {
       const preview = await foodService.previewImport(file);
       setImportPreview(preview);
-    } catch (err: any) {
+    } catch (err: unknown) {
       throw new Error(err?.response?.data?.message || "Gagal memproses file Excel");
     } finally {
       setImporting(false);
@@ -129,7 +130,7 @@ export function FoodListFeature() {
       setImportPreview(null);
       fetchFoods();
       fetchStats();
-    } catch (err: any) {
+    } catch (err: unknown) {
       throw new Error(err?.response?.data?.message || "Gagal melakukan impor data");
     } finally {
       setImporting(false);

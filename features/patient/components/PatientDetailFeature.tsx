@@ -1,29 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { usePatientDetail } from "../hooks/usePatientDetail";
-import { PatientProfileCard } from "./PatientProfileCard";
-import { PatientPersonalInfoCard } from "./PatientPersonalInfoCard";
-import { PatientSummaryCard } from "./PatientSummaryCard";
-import { PatientCalorieChart } from "./PatientCalorieChart";
-import { PatientEducationActivity } from "./PatientEducationActivity";
-import { PatientMeasurementHistoryCard } from "./PatientMeasurementHistoryCard";
-import { BloodSugarHistoryCard } from "@/features/record-monitoring/components/BloodSugarHistoryCard";
-import type { BloodSugarLog } from "@/features/record-monitoring/types/record";
-import { AddMeasurementModal } from "./AddMeasurementModal";
-import { EditPatientModal } from "./EditPatientModal";
-import { ErrorState } from "@/components/common/ErrorState";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
-import { patientService } from "@/services/patientService";
+import { ErrorState } from "@/components/common/ErrorState";
 import { DetailPageLoader } from "@/components/ui/loading";
+import { patientService } from "@/services/patientService";
+import { usePatientDetail } from "../hooks/usePatientDetail";
+import type { BloodSugarLog } from "@/features/record-monitoring/types/record";
+import { PatientSummaryCard } from "./PatientSummaryCard";
+import { PatientProfileCard } from "./PatientProfileCard";
+import { PatientPersonalInfoCard } from "./PatientPersonalInfoCard";
+import { PatientMeasurementHistoryCard } from "./PatientMeasurementHistoryCard";
+import { BloodSugarHistoryCard } from "@/features/record-monitoring/components/BloodSugarHistoryCard";
+import { PatientCalorieChart } from "./PatientCalorieChart";
+import { PatientEducationActivity } from "./PatientEducationActivity";
+import { EditPatientModal } from "./EditPatientModal";
+import { AddMeasurementModal } from "./AddMeasurementModal";
 
 interface PatientDetailFeatureProps {
   readonly patientId: string;
 }
 
-function toBloodSugarLog(log: any): BloodSugarLog {
+function toBloodSugarLog(log: Record<string, unknown>): BloodSugarLog {
   const d = log.measured_at ? new Date(log.measured_at) : new Date();
   const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
   const timeStr = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
@@ -55,14 +54,13 @@ function toBloodSugarLog(log: any): BloodSugarLog {
 }
 
 export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
-  const router = useRouter();
-  const { patient, bloodSugar, meals, activities, educationActivities, isLoading, error, refetch } = usePatientDetail(patientId);
+  const { patient, bloodSugar, meals, educationActivities, isLoading, error, refetch } = usePatientDetail(patientId);
   const bloodSugarLogs = bloodSugar.map(toBloodSugarLog);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddMeasurementOpen, setIsAddMeasurementOpen] = useState(false);
   const { showToast } = useToast();
 
-  const handleUpdatePatient = async (data: any) => {
+  const handleUpdatePatient = async (data: Record<string, unknown>) => {
     try {
       const res = await patientService.updatePatientByAdmin(patientId, data);
       if (res) {
@@ -82,7 +80,7 @@ export function PatientDetailFeature({ patientId }: PatientDetailFeatureProps) {
     }
   };
 
-  const handleAddMeasurement = async (data: any) => {
+  const handleAddMeasurement = async (data: Record<string, unknown>) => {
     try {
       const res = await patientService.createPatientMeasurement(patientId, data);
       if (res) {

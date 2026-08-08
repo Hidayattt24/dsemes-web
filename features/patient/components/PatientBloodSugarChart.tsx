@@ -14,8 +14,8 @@ interface SugarPoint {
 }
 
 interface PatientBloodSugarChartProps {
-  readonly data?: any[];
-  readonly bloodSugarLogs?: any[];
+  readonly data?: Record<string, unknown>[];
+  readonly bloodSugarLogs?: Record<string, unknown>[];
 }
 
 export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: PatientBloodSugarChartProps) {
@@ -23,10 +23,9 @@ export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: Patie
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const daysIndo = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-  const fullDaysIndo = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
   const xCoords = [71, 214, 357, 500, 643, 785, 928];
 
-  const getLogDate = (log: any): Date => {
+  const getLogDate = (log: Record<string, unknown>): Date => {
     const raw = log.measured_at || log.measuredAt || log.date || log.rawDate;
     if (raw instanceof Date) return raw;
     if (raw) {
@@ -40,7 +39,7 @@ export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: Patie
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - limitDays);
 
-  const filteredLogs = data.filter((log: any) => {
+  const filteredLogs = data.filter((log: Record<string, unknown>) => {
     return getLogDate(log) >= cutoffDate;
   });
 
@@ -48,8 +47,8 @@ export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: Patie
   const hasData = chartSourceData.length > 0;
 
   const glucoseValues = filteredLogs
-    .map((log: any) => log.glucose_value || log.glucoseValue || log.blood_sugar)
-    .filter((val: any) => typeof val === "number" && val > 0);
+    .map((log: Record<string, unknown>) => log.glucose_value || log.glucoseValue || log.blood_sugar)
+    .filter((val: unknown) => typeof val === "number" && val > 0);
 
   const totalCount = glucoseValues.length;
   const avgBloodSugar = totalCount > 0 ? Math.round(glucoseValues.reduce((a: number, b: number) => a + b, 0) / totalCount) : null;
@@ -74,7 +73,7 @@ export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: Patie
     const label = `${targetDate.getDate()} ${targetDate.toLocaleDateString("id-ID", { month: "short" })}`;
     const targetDateStr = targetDate.toDateString();
 
-    const dayLogs = chartSourceData.filter((log: any) => {
+    const dayLogs = chartSourceData.filter((log: Record<string, unknown>) => {
       const logD = getLogDate(log);
       if (limitDays === 7) {
         return logD.toDateString() === targetDateStr;
@@ -87,7 +86,7 @@ export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: Patie
     const hasDayData = dayLogs.length > 0;
     let value = 0;
     if (hasDayData) {
-      const sum = dayLogs.reduce((acc: number, log: any) => {
+      const sum = dayLogs.reduce((acc: number, log: Record<string, unknown>) => {
         const val = log.glucose_value || log.glucoseValue || log.blood_sugar || 0;
         return acc + val;
       }, 0);
@@ -382,12 +381,12 @@ export function PatientBloodSugarChart({ data = [], bloodSugarLogs = [] }: Patie
               </thead>
               <tbody className="text-xs font-medium divide-y divide-[#E2E8F0]/40 bg-white">
                 {[...bloodSugarLogs]
-                  .sort((a: any, b: any) => {
+                  .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
                     const da = new Date(a.measured_at || a.measuredAt || a.date || 0).getTime();
                     const db2 = new Date(b.measured_at || b.measuredAt || b.date || 0).getTime();
                     return db2 - da;
                   })
-                  .map((log: any, idx: number) => {
+                  .map((log: Record<string, unknown>, idx: number) => {
                     const val = log.glucose_value || log.glucoseValue || log.blood_sugar || 0;
                     const measuredAt = log.measured_at || log.measuredAt || log.date || null;
                     const d = measuredAt ? new Date(measuredAt) : null;

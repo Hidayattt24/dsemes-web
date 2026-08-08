@@ -116,7 +116,6 @@ export function SurveyFormFeature({ surveyId }: SurveyFormFeatureProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<SurveyType>("USER_SATISFACTION");
-  const [estimatedDuration, setEstimatedDuration] = useState(5);
   const [questions, setQuestions] = useState<QuestionRequest[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -126,6 +125,7 @@ export function SurveyFormFeature({ surveyId }: SurveyFormFeatureProps) {
 
   useEffect(() => {
     if (isEdit && surveyId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(true);
       surveyService
         .getSurveyById(surveyId)
@@ -253,7 +253,7 @@ export function SurveyFormFeature({ surveyId }: SurveyFormFeatureProps) {
     setQuestions(newQs.map((q, idx) => ({ ...q, display_order: idx + 1 })));
   };
 
-  const handleQuestionChange = (index: number, field: keyof QuestionRequest, value: any) => {
+  const handleQuestionChange = (index: number, field: keyof QuestionRequest, value: string) => {
     setQuestions((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
@@ -318,11 +318,12 @@ export function SurveyFormFeature({ surveyId }: SurveyFormFeatureProps) {
         });
       }
       router.push("/admin/survey");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       showToast({
         type: "error",
         title: "Gagal Menyimpan",
-        description: err.response?.data?.message || "Terjadi kesalahan saat menyimpan survey.",
+        description: error.response?.data?.message || "Terjadi kesalahan saat menyimpan survey.",
       });
     } finally {
       setIsSaving(false);

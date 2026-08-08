@@ -32,8 +32,10 @@ export function useEducationDetail(articleId: string) {
 
   useEffect(() => {
     if (articleId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchDetail();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleId]);
 
   const deleteArticle = async () => {

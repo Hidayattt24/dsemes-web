@@ -34,7 +34,6 @@ export function RecordMonitoringFeature() {
     setGenderFilter,
     setBloodSugarStatusFilter,
     setSortBy,
-    setSortOrder,
     setPage,
   } = useRecordMonitoring();
 

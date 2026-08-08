@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type { SurveyListItem } from "@/types/survey";
 
 interface SurveyTableProps {
@@ -19,7 +18,6 @@ export function SurveyTable({
   onDeleteClick,
   onToggleActiveClick,
 }: SurveyTableProps) {
-  const pathname = usePathname();
   const basePath = isStaff ? "/staff/survey" : "/admin/survey";
 
   return (

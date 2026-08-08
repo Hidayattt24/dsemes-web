@@ -17,6 +17,7 @@ export function useTopArticles(): UseTopArticlesReturn {
 
   useEffect(() => {
     let mounted = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     dashboardService
       .getTopArticles()

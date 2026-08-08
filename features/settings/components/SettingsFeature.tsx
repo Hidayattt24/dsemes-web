@@ -6,7 +6,6 @@ import { ProfilePhotoCard } from "./ProfilePhotoCard";
 import { AccountInfoForm } from "./AccountInfoForm";
 import { AccountSecurityForm } from "./AccountSecurityForm";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import { SettingsSkeleton } from "@/components/staff/settings/SettingsSkeleton";
 

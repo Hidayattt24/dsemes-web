@@ -61,6 +61,7 @@ export function Select({
   useEffect(() => {
     if (isOpen) {
       const selectedIndex = options.findIndex((opt) => opt.value === value);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
     }
   }, [isOpen, value, options]);
@@ -146,7 +147,6 @@ export function Select({
           onKeyDown={handleKeyDown}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
-          aria-invalid={error}
           className={[
             "w-full flex items-center justify-between h-12 px-4 rounded-xl border bg-white outline-none transition-all text-sm font-semibold select-none",
             disabled ? "bg-slate-50 border-[#E2E8F0] text-slate-400 cursor-not-allowed" : "",

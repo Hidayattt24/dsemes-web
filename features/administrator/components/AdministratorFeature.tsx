@@ -17,8 +17,6 @@ const statusOptions = [
   { value: "Nonaktif", label: "Nonaktif" },
 ] as const;
 
-const PAGE_SIZE = 10;
-
 function formatRole(role: string): string {
   if (role === "admin") return "Admin";
   if (role === "staff") return "Staff";

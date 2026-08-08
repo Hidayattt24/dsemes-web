@@ -12,7 +12,7 @@ import type {
   PatientActivityAnalyticsResponse,
 } from "../types/record";
 
-function mapBackendMeasurementToFrontend(m: any): PatientMeasurement {
+function mapBackendMeasurementToFrontend(m: Record<string, unknown>): PatientMeasurement {
   return {
     id: m.id,
     patientId: m.patient_id,
@@ -33,7 +33,7 @@ function mapBackendMeasurementToFrontend(m: any): PatientMeasurement {
   };
 }
 
-const mapPatientRecord = (data: any): PatientRecord => {
+const mapPatientRecord = (data: Record<string, unknown>): PatientRecord => {
   let age = 50;
   if (data.date_of_birth) {
     const dob = new Date(data.date_of_birth);
@@ -243,7 +243,7 @@ export const recordMonitoringService = {
     const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/blood-sugar`, { params: { limit: 100 } });
     const list = res.data?.data ?? [];
 
-    return list.map((log: any) => {
+    return list.map((log: Record<string, unknown>) => {
       const d = log.measured_at ? new Date(log.measured_at) : new Date();
       const dateStr = d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
       const timeStr = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
@@ -278,13 +278,13 @@ export const recordMonitoringService = {
         before: (mType === "before_meal" || mType === "sebelum_makan") ? log.glucose_value : 0,
         after: (mType === "after_meal" || mType === "sesudah_makan") ? log.glucose_value : 0,
       };
-    }).sort((a: any, b: any) => (b.rawDate?.getTime() ?? 0) - (a.rawDate?.getTime() ?? 0));
+    }).sort((a: BloodSugarLog, b: BloodSugarLog) => (b.rawDate?.getTime() ?? 0) - (a.rawDate?.getTime() ?? 0));
   },
 
   async getMealLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff', date?: string): Promise<MealLog[]> {
     const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/meals`, { params: { limit: 100, date: date || undefined } });
     const list = res.data?.data ?? [];
-    return list.map((log: any) => {
+    return list.map((log: Record<string, unknown>) => {
       const loggedDate = new Date(log.logged_at);
       const timeStr = loggedDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
       const dateStr = loggedDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
@@ -307,7 +307,7 @@ export const recordMonitoringService = {
   async getActivityLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff', date?: string): Promise<ActivityLog[]> {
     const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/activities`, { params: { limit: 100, date: date || undefined } });
     const list = res.data?.data ?? [];
-    return list.map((log: any) => {
+    return list.map((log: Record<string, unknown>) => {
       const loggedDate = log.logged_at ? new Date(log.logged_at) : new Date();
       const dateStr = loggedDate.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
       const timeStr = loggedDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WIB";
@@ -331,7 +331,7 @@ export const recordMonitoringService = {
   async getMedicationLogs(patientId: string, rolePrefix: 'admin' | 'staff' = 'staff', date?: string): Promise<MedicationLog[]> {
     const res = await axiosInstance.get(`/${rolePrefix}/patients/${patientId}/medications`, { params: { limit: 100, date: date || undefined } });
     const list = res.data?.data ?? [];
-    return list.map((log: any) => {
+    return list.map((log: Record<string, unknown>) => {
       let status: "Diminum" | "Terlewat" | "Mendatang" = "Mendatang";
       if (log.status === "selesai") status = "Diminum";
       else if (log.status === "terlewat") status = "Terlewat";

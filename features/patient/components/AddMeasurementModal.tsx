@@ -9,7 +9,7 @@ interface AddMeasurementModalProps {
   readonly isOpen: boolean;
   readonly patient: Patient;
   readonly onClose: () => void;
-  readonly onSubmit: (data: any) => Promise<void>;
+  readonly onSubmit: (data: Record<string, unknown>) => Promise<void>;
 }
 
 const genderOptions: SelectOption[] = [
@@ -104,7 +104,7 @@ export function AddMeasurementModal({
       // Combine date and time into a full ISO datetime string (WIB / UTC+7)
       const measuredAt = `${formData.measured_at}T${formData.measurement_time}:00+07:00`;
 
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         measured_at: measuredAt,
         notes: formData.notes,
         daily_calorie_target: liveCalorieTarget,
@@ -168,7 +168,7 @@ export function AddMeasurementModal({
                 label="Jenis Kelamin"
                 value={formData.gender}
                 options={genderOptions}
-                onChange={(val: any) => setFormData((prev: any) => ({ ...prev, gender: String(val) }))}
+                onChange={(val: string) => setFormData((prev) => ({ ...prev, gender: String(val) }))}
               />
             </div>
 
@@ -189,7 +189,7 @@ export function AddMeasurementModal({
                 label="Golongan Darah"
                 value={formData.blood_type}
                 options={bloodTypeOptions}
-                onChange={(val: any) => setFormData((prev: any) => ({ ...prev, blood_type: String(val) }))}
+                onChange={(val: string) => setFormData((prev) => ({ ...prev, blood_type: String(val) }))}
               />
             </div>
 
@@ -199,7 +199,7 @@ export function AddMeasurementModal({
                 label="Tingkat Aktivitas Fisik"
                 value={formData.activity_level}
                 options={activityOptions}
-                onChange={(val: any) => setFormData((prev: any) => ({ ...prev, activity_level: String(val) }))}
+                onChange={(val: string) => setFormData((prev) => ({ ...prev, activity_level: String(val) }))}
               />
             </div>
 
@@ -263,7 +263,7 @@ export function AddMeasurementModal({
                     { value: "before_bed", label: "Sebelum Tidur" },
                     { value: "random", label: "Sewaktu" },
                   ]}
-                  onChange={(val: any) => setFormData((prev: any) => ({ ...prev, blood_sugar_time_type: String(val) }))}
+                  onChange={(val: string) => setFormData((prev) => ({ ...prev, blood_sugar_time_type: String(val) }))}
                 />
               </div>
             </div>

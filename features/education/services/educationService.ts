@@ -1,7 +1,7 @@
 import type { EducationArticle, EducationStats, EducationProgressItem, EducationProgressAnalytics, AdminArticleReviewsData } from "../types/education";
 import { axiosInstance } from "@/lib/axios";
 
-const mapArticleFromBackend = (data: any): EducationArticle => {
+const mapArticleFromBackend = (data: Record<string, unknown>): EducationArticle => {
   return {
     id: data.id,
     title: data.title,
@@ -25,7 +25,7 @@ export const educationService = {
     try {
       const res = await axiosInstance.get("/education/categories");
       const list = res.data?.data ?? [];
-      return list.map((c: any) => c.name || c.category_name || c).filter(Boolean);
+      return list.map((c: Record<string, unknown>) => (c as Record<string, string>).name || (c as Record<string, string>).category_name || c).filter(Boolean);
     } catch {
       return [];
     }
@@ -103,7 +103,7 @@ export const educationService = {
   /** Get all patients' progress for an education article */
   async getProgress(articleId: string): Promise<EducationProgressItem[]> {
     const res = await axiosInstance.get(`/admin/education/${articleId}/progress`);
-    const raw: any[] = res.data?.data ?? [];
+    const raw: Array<Record<string, unknown>> = res.data?.data ?? [];
     return raw.map((r) => ({
       patient_id: r.patient_id ?? "",
       patient_name: r.patient_name ?? "-",
@@ -156,7 +156,7 @@ export const educationService = {
           star_4: data.rating_distribution?.star_4 || 0,
           star_5: data.rating_distribution?.star_5 || 0,
         },
-        reviews: (data.reviews || []).map((r: any) => ({
+        reviews: (data.reviews || []).map((r: Record<string, unknown>) => ({
           id: r.id,
           education_id: r.education_id,
           patient_id: r.patient_id,

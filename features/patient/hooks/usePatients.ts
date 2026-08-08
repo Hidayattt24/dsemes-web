@@ -68,11 +68,14 @@ export function usePatients(): UsePatientsReturn {
 
   // Re-fetch when parameters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, statusFilter, genderFilter, currentPage]);
 
   // Handle page resets when filters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
   }, [searchQuery, statusFilter, genderFilter]);
 

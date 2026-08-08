@@ -147,11 +147,12 @@ export function useSettingsForm() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       showToast({
         type: "error",
         title: "Gagal",
-        description: error.response?.data?.message || "Gagal memperbarui kata sandi.",
+        description: err.response?.data?.message || "Gagal memperbarui kata sandi.",
       });
     } finally {
       setIsSaving(false);

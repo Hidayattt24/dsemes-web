@@ -18,13 +18,9 @@ export function SurveyAnalyticsFeature({ surveyId, isStaff = false }: SurveyAnal
   const [analytics, setAnalytics] = useState<SurveyAnalytics | null>(null);
   const [responses, setResponses] = useState<SurveyResponseItem[]>([]);
   const [totalResponses, setTotalResponses] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-
-  useEffect(() => {
-    fetchData();
-  }, [surveyId, page]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -46,6 +42,12 @@ export function SurveyAnalyticsFeature({ surveyId, isStaff = false }: SurveyAnal
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [surveyId, page]);
 
   const handleExportCSV = async () => {
     setIsExporting(true);
