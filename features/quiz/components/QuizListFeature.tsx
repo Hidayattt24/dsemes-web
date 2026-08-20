@@ -124,7 +124,7 @@ export function QuizListFeature() {
         </div>
         {!isStaff && (
           <Link
-            href={`${ROUTES.MANAJEMEN_KUISIONER}/create`}
+            href={`${ROUTES.MANAJEMEN_KUISIONER}/tambah`}
             className="h-12 px-6 rounded-xl bg-[#00695C] text-white text-sm font-bold hover:bg-[#004D40] transition-all flex items-center gap-2 cursor-pointer shadow-sm shadow-[#00695C]/20 shrink-0"
           >
             <span className="material-symbols-outlined text-xl select-none">add</span>
