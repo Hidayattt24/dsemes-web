@@ -38,7 +38,6 @@ const ROLE_DASHBOARDS: Record<string, string> = {
 const GUEST_ROUTES = [
   "/login",
   "/lupa-password",
-  "/verifikasi-kode",
   "/atur-ulang-kata-sandi",
   "/berhasil-reset",
 ];

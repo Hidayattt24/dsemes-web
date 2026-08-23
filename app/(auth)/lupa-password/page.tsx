@@ -5,7 +5,7 @@ import { ForgotPasswordForm } from "@/features/auth/components/ForgotPasswordFor
 
 export const metadata: Metadata = {
   title: "Lupa Kata Sandi | Digital DSMES",
-  description: "Kirim kode verifikasi ke email Anda untuk mengatur ulang kata sandi.",
+  description: "Masukkan alamat email yang terdaftar untuk mengatur ulang kata sandi.",
 };
 
 export default function LupaPasswordPage() {

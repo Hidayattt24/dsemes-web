@@ -77,12 +77,11 @@ export const authService = {
     }
   },
 
-  /** Request a password reset email. */
-  async forgotPassword(email: string): Promise<void> {
+  /** Check whether an email is registered to a staff account. */
+  async checkEmail(email: string): Promise<void> {
     try {
-      await axiosInstance.post("/auth/forgot-password", {
+      await axiosInstance.post("/auth/forgot-password/check-email", {
         email,
-        owner_type: "staff",
       });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -93,35 +92,15 @@ export const authService = {
     }
   },
 
-  /** Verify the 6-digit OTP code. */
-  async verifyResetCode(email: string, code: string): Promise<void> {
-    try {
-      await axiosInstance.post("/auth/verify-otp", {
-        email,
-        otp_code: code,
-        owner_type: "staff",
-      });
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      if (err.response?.data?.message) {
-        throw new Error(err.response.data.message);
-      }
-      throw error;
-    }
-  },
-
-  /** Set a new password after successful verification. */
-  async resetPassword(
+  /** Set a new password for a staff account using a registered email. */
+  async resetPasswordByEmail(
     email:           string,
-    code:            string,
     password:        string,
     confirmPassword: string
   ): Promise<void> {
     try {
-      await axiosInstance.post("/auth/reset-password", {
+      await axiosInstance.post("/auth/reset-password-by-email", {
         email,
-        otp_code: code,
-        owner_type: "staff",
         new_password: password,
         confirm_password: confirmPassword,
       });

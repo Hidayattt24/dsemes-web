@@ -17,7 +17,7 @@ interface UseResetPasswordReturn {
 export function useResetPassword(): UseResetPasswordReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState<string | null>(null);
-  const { email, code, reset }    = useForgotPasswordStore();
+  const { email, reset }          = useForgotPasswordStore();
   const { showToast }             = useToast();
   const router                    = useRouter();
 
@@ -25,7 +25,7 @@ export function useResetPassword(): UseResetPasswordReturn {
     setIsLoading(true);
     setError(null);
     try {
-      await authService.resetPassword(email, code, values.password, values.confirmPassword);
+      await authService.resetPasswordByEmail(email, values.password, values.confirmPassword);
       reset(); // clear session state — flow complete
       showToast({
         type: "success",
