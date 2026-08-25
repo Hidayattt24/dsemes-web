@@ -74,7 +74,7 @@ export function ResetPasswordForm() {
         </Button>
       </form>
 
-      <AuthBackLink href={ROUTES.VERIFIKASI_KODE} label="Kembali" />
+      <AuthBackLink href={ROUTES.LUPA_PASSWORD} label="Kembali" />
     </div>
   );
 }

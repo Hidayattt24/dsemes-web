@@ -30,7 +30,7 @@ export function ForgotPasswordForm() {
     <div className="font-[family-name:var(--font-jakarta)]">
       <AuthFormHeader
         title="Lupa Kata Sandi"
-        description="Masukkan alamat email yang terdaftar. Kami akan mengirimkan kode verifikasi untuk mengatur ulang kata sandi Anda."
+        description="Masukkan alamat email yang terdaftar untuk mengatur ulang kata sandi Anda."
       />
 
       <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-6">
@@ -54,7 +54,7 @@ export function ForgotPasswordForm() {
         />
 
         <Button type="submit" size="lg" className="w-full" loading={isLoading}>
-          Kirim Kode Verifikasi
+          Lanjut
         </Button>
       </form>
 
