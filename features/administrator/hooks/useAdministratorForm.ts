@@ -15,6 +15,7 @@ export interface FormFields {
   readonly role: "admin" | "staff";
   readonly positionTitle: string;
   readonly shortBio: string;
+  readonly healthFacilityId: string;
 }
 
 export function useAdministratorForm(adminId?: string) {
@@ -30,6 +31,7 @@ export function useAdministratorForm(adminId?: string) {
     role: "staff",
     positionTitle: "",
     shortBio: "",
+    healthFacilityId: "",
   });
 
   const [isLoading, setIsLoading] = useState(!!adminId);
@@ -54,6 +56,7 @@ export function useAdministratorForm(adminId?: string) {
             role: found.role,
             positionTitle: found.positionTitle,
             shortBio: found.shortBio,
+            healthFacilityId: found.healthFacilityId ?? "",
           });
         }
       } catch {
@@ -118,6 +121,7 @@ export function useAdministratorForm(adminId?: string) {
           whatsapp_number: fields.whatsappNumber,
           position_title: fields.positionTitle || undefined,
           short_bio: fields.shortBio || undefined,
+          health_facility_id: fields.healthFacilityId || undefined,
         });
         showToast({
           type: "success",
@@ -134,6 +138,7 @@ export function useAdministratorForm(adminId?: string) {
           role: fields.role,
           position_title: fields.positionTitle || undefined,
           short_bio: fields.shortBio || undefined,
+          health_facility_id: fields.healthFacilityId || undefined,
         });
         showToast({
           type: "success",

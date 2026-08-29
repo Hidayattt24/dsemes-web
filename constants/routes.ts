@@ -18,6 +18,7 @@ export const ROUTES = {
   SURVEY: "/admin/survey",
   DATA_MAKANAN: "/admin/data-makanan",
   ADMINISTRATOR: "/admin/administrator",
+  FASILITAS: "/admin/fasilitas",
   PENGATURAN: "/admin/pengaturan",
   // Staff pages
   STAFF_DASHBOARD: "/staff/dashboard",

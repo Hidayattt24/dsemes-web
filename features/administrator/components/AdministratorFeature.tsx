@@ -127,6 +127,16 @@ export function AdministratorFeature() {
       className: "w-44",
     },
     {
+      key: "healthFacilityName",
+      header: "Puskesmas",
+      render: (row) => (
+        <span className="text-sm text-[#1A202C] font-medium font-[family-name:var(--font-poppins)]">
+          {row.healthFacilityName || "-"}
+        </span>
+      ),
+      className: "w-44",
+    },
+    {
       key: "createdAt",
       header: "Tanggal Dibuat",
       render: (row) => (

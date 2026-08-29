@@ -5,6 +5,9 @@ import type { FormFields } from "../hooks/useAdministratorForm";
 import { useState, useEffect } from "react";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { BackButton } from "@/components/common/BackButton";
+import { Select, type SelectOption } from "@/components/ui/Select";
+import { facilityService } from "@/services/facilityService";
+import Link from "next/link";
 
 import { FormLoader } from "@/components/ui/loading";
 
@@ -29,6 +32,26 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
 
   const [isDirty, setIsDirty] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
+
+  const [facilityOptions, setFacilityOptions] = useState<SelectOption[]>([]);
+  const [isFacilityLoading, setIsFacilityLoading] = useState(true);
+
+  useEffect(() => {
+    const loadFacilities = async () => {
+      setIsFacilityLoading(true);
+      try {
+        const facilities = await facilityService.listAll();
+        setFacilityOptions(
+          facilities.map((f) => ({ value: f.id, label: f.name, icon: "local_hospital" }))
+        );
+      } catch {
+        setFacilityOptions([]);
+      } finally {
+        setIsFacilityLoading(false);
+      }
+    };
+    loadFacilities();
+  }, []);
 
   const handleChange = (key: keyof FormFields, val: string) => {
     baseHandleChange(key, val);
@@ -313,6 +336,35 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
                 className="w-full px-5 py-3.5 rounded-xl border border-[#E2E8F0] focus:border-[#00695C] focus:ring-1 focus:ring-[#00695C] outline-none transition-all text-sm placeholder:text-[#64748B]/50 font-medium font-[family-name:var(--font-poppins)] text-[#1E293B]"
               />
             </div>
+
+            {/* Puskesmas / Health Facility */}
+            {fields.role === "staff" && (
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                    Puskesmas <span className="text-red-500">*</span>
+                  </label>
+                  <Link
+                    href="/admin/fasilitas"
+                    className="text-xs font-semibold text-[#00695C] hover:underline flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">add</span>
+                    Kelola Puskesmas
+                  </Link>
+                </div>
+                <Select
+                  value={fields.healthFacilityId}
+                  onChange={(val) => handleChange("healthFacilityId", val)}
+                  options={facilityOptions}
+                  placeholder="Pilih puskesmas"
+                  icon="local_hospital"
+                  loading={isFacilityLoading}
+                />
+                <p className="text-[11px] font-medium text-[#718096]">
+                  Staff hanya dapat melihat data pasien di puskesmas yang dipilih.
+                </p>
+              </div>
+            )}
 
             {/* Bio Singkat */}
             <div className="space-y-2 md:col-span-2">

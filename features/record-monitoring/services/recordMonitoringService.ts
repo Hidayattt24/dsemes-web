@@ -116,7 +116,7 @@ const mapPatientRecord = (data: any): PatientRecord => {
     : "P";
 
   const doctor = data.assigned_staff?.full_name ?? "-";
-  const puskesmas = data.assigned_staff?.position_title ?? "-";
+  const puskesmas = data.health_facility ?? data.assigned_staff?.position_title ?? "-";
   const registeredAt = data.created_at
     ? new Date(data.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
     : "-";
@@ -155,6 +155,11 @@ const mapPatientRecord = (data: any): PatientRecord => {
     diabetesType: data.diabetes_type ?? "-",
     doctor,
     email: data.email ?? "-",
+    district: data.district ?? "-",
+    city: data.city ?? "-",
+    livingArrangement: data.living_arrangement ?? "-",
+    educationLevel: data.education_level ?? "-",
+    diabetesDuration: data.diabetes_duration ?? "-",
     accountStatus: data.status === "aktif" || data.status === "Aktif" ? "Terverifikasi" : "Belum Terverifikasi",
     nik: data.nik ?? "-",
     bpjs: data.bpjs ?? "-",

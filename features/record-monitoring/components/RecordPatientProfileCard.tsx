@@ -126,6 +126,13 @@ export function RecordPatientProfileCard({ patient }: RecordPatientProfileCardPr
             <InfoRow icon="cake" label="Tanggal Lahir" value={patient.dateOfBirth} />
             <InfoRow icon="email" label="Email" value={patient.email} />
             <InfoRow icon="home" label="Alamat" value={patient.address} />
+            <InfoRow icon="local_hospital" label="Puskesmas" value={patient.puskesmas} />
+            <InfoRow icon="map" label="Kecamatan" value={patient.district} />
+            <InfoRow icon="location_city" label="Kota" value={patient.city} />
+            <InfoRow icon="school" label="Pendidikan" value={patient.educationLevel} />
+            <InfoRow icon="groups" label="Tinggal Bersama" value={patient.livingArrangement} />
+            <InfoRow icon="schedule" label="Durasi Diabetes" value={patient.diabetesDuration} />
+            <InfoRow icon="directions_walk" label="Aktivitas Fisik" value={patient.physicalActivityLevel} />
           </div>
         </div>
       </div>

@@ -86,6 +86,105 @@ export function PatientPersonalInfoCard({ patient }: PatientPersonalInfoCardProp
           </p>
         </div>
       </div>
+
+      {/* Data Sosiodemografi (Onboarding) */}
+      <h4 className="font-semibold text-base text-[#1A202C] mt-10 mb-6 font-[family-name:var(--font-poppins)]">
+        Data Sosiodemografi
+      </h4>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* PUSKESMAS */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">local_hospital</span> Puskesmas
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.puskesmas && patient.puskesmas !== "-" ? patient.puskesmas : "-"}
+          </p>
+        </div>
+
+        {/* KECAMATAN */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">map</span> Kecamatan
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.district || "-"}
+          </p>
+        </div>
+
+        {/* KOTA */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">location_city</span> Kota
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.city || "-"}
+          </p>
+        </div>
+
+        {/* ALAMAT */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">home</span> Alamat
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.address || "-"}
+          </p>
+        </div>
+
+        {/* TANGGAL LAHIR */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">cake</span> Tanggal Lahir
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.dateOfBirth
+              ? new Date(patient.dateOfBirth).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+              : "-"}
+          </p>
+        </div>
+
+        {/* PENDIDIKAN */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">school</span> Pendidikan
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.educationLevel || "-"}
+          </p>
+        </div>
+
+        {/* TINGGAL BERSAMA */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">groups</span> Tinggal Bersama
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.livingArrangement || "-"}
+          </p>
+        </div>
+
+        {/* DURASI DIABETES */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">schedule</span> Durasi Diabetes
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.diabetesDuration || "-"}
+          </p>
+        </div>
+
+        {/* AKTIVITAS FISIK */}
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">directions_walk</span> Aktivitas Fisik
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-all sm:break-words">
+            {patient.physicalActivityLevel || "-"}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
