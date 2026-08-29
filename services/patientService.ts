@@ -17,7 +17,7 @@ function mapBackendPatientToFrontend(p: any): Patient {
 
   const assignedStaff = p.assigned_staff as Record<string, unknown> | undefined;
   const doctor = (assignedStaff?.full_name as string) ?? "-";
-  const puskesmas = (assignedStaff?.position_title as string) ?? "-";
+  const puskesmas = (p.health_facility as string) ?? (assignedStaff?.position_title as string) ?? "-";
 
   const patientStatus = (p.status as string) ?? "";
   const calorieInfo = p.calorie_status_info as Record<string, unknown> | undefined;
@@ -42,6 +42,12 @@ function mapBackendPatientToFrontend(p: any): Patient {
     puskesmas,
     address: (p.address as string) ?? "",
     email: (p.email as string) ?? "",
+    dateOfBirth: (p.date_of_birth as string) ?? "",
+    district: (p.district as string) ?? "",
+    city: (p.city as string) ?? "",
+    livingArrangement: (p.living_arrangement as string) ?? "",
+    educationLevel: (p.education_level as string) ?? "",
+    diabetesDuration: (p.diabetes_duration as string) ?? "",
     accountStatus: patientStatus === "aktif" || patientStatus === "Aktif" ? "Terverifikasi" : "Belum Terverifikasi",
     nik: (p.nik as string) ?? "",
     bpjs: (p.bpjs as string) ?? "",

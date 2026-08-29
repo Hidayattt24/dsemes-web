@@ -9,5 +9,7 @@ export interface Administrator {
   readonly positionTitle: string;
   readonly shortBio: string;
   readonly profilePhotoUrl: string;
+  readonly healthFacilityId: string | null;
+  readonly healthFacilityName: string;
   readonly createdAt: string;
 }

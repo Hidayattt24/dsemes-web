@@ -29,6 +29,8 @@ function mapBackendToFrontend(item: Record<string, unknown>): Administrator {
     positionTitle: (item.position_title as string) ?? "",
     shortBio: (item.short_bio as string) ?? "",
     profilePhotoUrl: (item.profile_photo_url as string) ?? "",
+    healthFacilityId: (item.health_facility_id as string) ?? null,
+    healthFacilityName: (item.health_facility_name as string) ?? "",
     createdAt: item.created_at
       ? new Date(item.created_at as string).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
       : "",
@@ -71,6 +73,7 @@ export const administratorService = {
     position_title?: string;
     short_bio?: string;
     profile_photo_url?: string;
+    health_facility_id?: string;
   }): Promise<Administrator> {
     const res = await axiosInstance.post("/admin/staff", data);
     return mapBackendToFrontend(res.data?.data);
@@ -86,6 +89,7 @@ export const administratorService = {
       position_title?: string;
       short_bio?: string;
       profile_photo_url?: string;
+      health_facility_id?: string;
     }
   ): Promise<Administrator> {
     const res = await axiosInstance.put(`/admin/staff/${id}`, data);

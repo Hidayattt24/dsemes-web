@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
             name: staff.full_name,
             email: staff.email,
             role: staff.role,
-            puskesmas: "",
+            puskesmas: staff.health_facility_name ?? "",
             positionTitle: staff.position_title ?? undefined,
             avatarUrl: staff.profile_photo_url ?? undefined,
           });
@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
           name: staff.full_name,
           email: staff.email,
           role: staff.role,
-          puskesmas: "",
+          puskesmas: staff.health_facility_name ?? "",
           positionTitle: staff.position_title ?? undefined,
           avatarUrl: staff.profile_photo_url ?? undefined,
         });

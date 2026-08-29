@@ -22,6 +22,11 @@ export interface PatientRecord {
   readonly address: string;
   readonly initials: string;
   readonly puskesmas: string;
+  readonly district: string;
+  readonly city: string;
+  readonly livingArrangement: string;
+  readonly educationLevel: string;
+  readonly diabetesDuration: string;
   readonly avatarUrl?: string;
   readonly lastActive: string;
   readonly dailySummary: DailySummary;

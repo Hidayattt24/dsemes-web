@@ -18,6 +18,12 @@ export interface Patient {
   readonly puskesmas: string;
   readonly address: string;
   readonly email: string;
+  readonly dateOfBirth: string;
+  readonly district: string;
+  readonly city: string;
+  readonly livingArrangement: string;
+  readonly educationLevel: string;
+  readonly diabetesDuration: string;
   readonly accountStatus: "Terverifikasi" | "Menunggu" | "Belum Terverifikasi";
   
   // NIK & BPJS
