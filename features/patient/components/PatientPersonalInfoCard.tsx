@@ -103,6 +103,15 @@ export function PatientPersonalInfoCard({ patient }: PatientPersonalInfoCardProp
           </p>
         </div>
 
+        <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
+          <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">
+            <span className="material-symbols-outlined text-[14px]">medical_services</span> Tempat Pengobatan
+          </p>
+          <p className="font-medium text-[#1A202C] text-sm font-[family-name:var(--font-poppins)] break-words">
+            {patient.treatmentFacility || "-"}
+          </p>
+        </div>
+
         {/* KECAMATAN */}
         <div className="bg-[#F8F9FA] p-4 rounded-lg border border-[#E2E8F0]/30 min-w-0 overflow-hidden">
           <p className="text-[#718096] text-[10px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1.5 font-[family-name:var(--font-poppins)]">

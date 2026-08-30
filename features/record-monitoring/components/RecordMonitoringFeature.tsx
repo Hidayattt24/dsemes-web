@@ -122,7 +122,15 @@ export function RecordMonitoringFeature() {
             )}
           </>
         ) : (
-          <RecordMonitoringTable patients={patients} loading={isLoading} />
+          <RecordMonitoringTable
+            patients={patients}
+            loading={isLoading}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            pagination={pagination}
+            onSort={setSortBy}
+            onPageChange={setPage}
+          />
         )}
       </div>
     </div>

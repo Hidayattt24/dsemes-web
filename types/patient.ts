@@ -16,6 +16,7 @@ export interface Patient {
   readonly diabetesType: string;
   readonly doctor: string;
   readonly puskesmas: string;
+  readonly treatmentFacility: string;
   readonly address: string;
   readonly email: string;
   readonly dateOfBirth: string;

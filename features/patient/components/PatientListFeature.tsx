@@ -99,9 +99,7 @@ export function PatientListFeature() {
               Menampilkan{" "}
               <span className="text-[#1A202C] font-bold">{startItem}-{endItem}</span> dari{" "}
               <span className="text-[#1A202C] font-bold">
-                {statusFilter === "Semua" && searchQuery === "" && genderFilter === "Semua"
-                  ? "1.284" // exact Stitch mock count if unfiltered
-                  : totalCount.toLocaleString("id-ID")}
+                {totalCount.toLocaleString("id-ID")}
               </span>{" "}
               pasien
             </p>

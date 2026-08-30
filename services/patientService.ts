@@ -40,6 +40,7 @@ function mapBackendPatientToFrontend(p: any): Patient {
     diabetesType: (p.diabetes_type as string) ?? "Diabetes Tipe 2",
     doctor,
     puskesmas,
+    treatmentFacility: (p.treatment_facility as string) ?? "",
     address: (p.address as string) ?? "",
     email: (p.email as string) ?? "",
     dateOfBirth: (p.date_of_birth as string) ?? "",

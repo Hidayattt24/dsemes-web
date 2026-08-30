@@ -63,30 +63,50 @@ function PaginationBar({ pagination, onPageChange }: {
   onPageChange: (page: number) => void;
 }) {
   const { page, total_pages, total } = pagination;
-  if (total_pages <= 1) return null;
+  const start = (page - 1) * pagination.per_page + 1;
+  const end = Math.min(page * pagination.per_page, total);
+  const pageNumbers = Array.from({ length: total_pages }, (_, i) => i + 1);
 
   return (
-    <div className="flex items-center justify-between px-8 py-4 border-t border-[#E2E8F0] bg-white">
-      <span className="text-sm text-[#718096]">
-        Total {total} pasien
-      </span>
-      <div className="flex items-center gap-2">
+    <div className="px-8 py-6 border-t border-[#E2E8F0]/50 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p className="text-xs text-[#718096] font-medium font-[family-name:var(--font-poppins)]">
+        Menampilkan <span className="text-[#1A202C] font-bold">{start}-{end}</span> dari{" "}
+        <span className="text-[#1A202C] font-bold">
+          {total.toLocaleString("id-ID")}
+        </span>{" "}
+        pasien
+      </p>
+
+      <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(page - 1)}
-          disabled={page <= 1}
-          className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-sm disabled:opacity-40 hover:bg-[#F4F6F8] transition-colors cursor-pointer disabled:cursor-not-allowed"
+          disabled={page === 1}
+          className="w-9 h-9 flex items-center justify-center border border-[#E2E8F0] rounded-lg hover:bg-[#F4F6F8] transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
         >
-          Sebelumnya
+          <span className="material-symbols-outlined text-lg">chevron_left</span>
         </button>
-        <span className="text-sm font-semibold text-[#1A202C] px-3">
-          {page} / {total_pages}
-        </span>
+
+        {pageNumbers.map((number) => (
+          <button
+            key={number}
+            onClick={() => onPageChange(number)}
+            className={[
+              "w-9 h-9 flex items-center justify-center rounded-lg text-xs font-bold transition-all",
+              page === number
+                ? "bg-[#00695C] text-white shadow-sm shadow-[#00695C]/20"
+                : "hover:bg-[#F4F6F8] text-[#718096] font-semibold",
+            ].join(" ")}
+          >
+            {number}
+          </button>
+        ))}
+
         <button
           onClick={() => onPageChange(page + 1)}
-          disabled={page >= total_pages}
-          className="px-3 py-1.5 rounded-lg border border-[#E2E8F0] text-sm disabled:opacity-40 hover:bg-[#F4F6F8] transition-colors cursor-pointer disabled:cursor-not-allowed"
+          disabled={page === total_pages}
+          className="w-9 h-9 flex items-center justify-center border border-[#E2E8F0] rounded-lg hover:bg-[#F4F6F8] transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
         >
-          Selanjutnya
+          <span className="material-symbols-outlined text-lg">chevron_right</span>
         </button>
       </div>
     </div>
