@@ -16,6 +16,12 @@ const genderOptions = [
   { value: "perempuan", label: "Perempuan" },
 ] as const;
 
+const facilityOptions = [
+  { value: "Puskesmas", label: "Puskesmas" },
+  { value: "Klinik", label: "Klinik" },
+  { value: "Rumah Sakit", label: "Rumah Sakit" },
+] as const;
+
 export function EditPatientModal({
   isOpen,
   patient,
@@ -23,6 +29,18 @@ export function EditPatientModal({
   onSubmit,
 }: EditPatientModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const savedFacilities = (patient.treatmentFacility ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
+    savedFacilities.filter((value) => facilityOptions.some((option) => option.value === value)),
+  );
+  const [otherFacility, setOtherFacility] = useState(
+    savedFacilities
+      .filter((value) => !facilityOptions.some((option) => option.value === value))
+      .join(", "),
+  );
   const [formData, setFormData] = useState({
     full_name: patient.name ?? "",
     whatsapp_number: patient.whatsapp ?? "",
@@ -49,7 +67,11 @@ export function EditPatientModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
+      const facilities = [
+        ...selectedFacilities,
+        ...(otherFacility.trim() ? [otherFacility.trim()] : []),
+      ];
+      await onSubmit({ ...formData, treatment_facility: facilities.join(", ") });
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -84,6 +106,41 @@ export function EditPatientModal({
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                 className="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#00695C]/20 focus:border-[#00695C] transition-all"
                 required
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Saya melakukan pengobatan dengan mengunjungi fasilitas kesehatan di:
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {facilityOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-xs text-slate-700 cursor-pointer hover:border-[#00695C]"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedFacilities.includes(option.value)}
+                      onChange={(e) =>
+                        setSelectedFacilities((current) =>
+                          e.target.checked
+                            ? [...current, option.value]
+                            : current.filter((value) => value !== option.value),
+                        )
+                      }
+                      className="h-4 w-4 accent-[#00695C]"
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={otherFacility}
+                onChange={(e) => setOtherFacility(e.target.value)}
+                placeholder="Lainnya (tuliskan fasilitas kesehatan)"
+                className="mt-2 w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#00695C]/20 focus:border-[#00695C] transition-all"
               />
             </div>
 
