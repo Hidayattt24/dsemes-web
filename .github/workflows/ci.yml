@@ -84,8 +84,18 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=sha,prefix=
+            type=sha,prefix=,format=long
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Verify production image tag
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE_TAGS: ${{ steps.meta.outputs.tags }}
+          EXPECTED_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_NAME="ghcr.io/${GITHUB_REPOSITORY,,}"
+          printf '%s\n' "$IMAGE_TAGS"
+          printf '%s\n' "$IMAGE_TAGS" | grep -Fx "$IMAGE_NAME:$EXPECTED_TAG"
 
       - name: Build and push
         uses: docker/build-push-action@v6
