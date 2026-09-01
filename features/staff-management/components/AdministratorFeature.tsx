@@ -72,7 +72,7 @@ export function AdministratorFeature() {
       header: "Nama Lengkap",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <Avatar name={row.fullName} size={36} />
+          <Avatar src={row.profilePhotoUrl} name={row.fullName} size={36} />
           <span className="text-sm font-semibold text-[#1A202C] font-[family-name:var(--font-poppins)]">
             {row.fullName}
           </span>
@@ -177,10 +177,10 @@ export function AdministratorFeature() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-[#1A202C] tracking-tight font-[family-name:var(--font-poppins)]">
-            Manajemen Administrator
+            Manajemen Staff
           </h2>
           <p className="text-sm text-[#718096] mt-1 font-[family-name:var(--font-poppins)]">
-            Kelola hak akses dan akun administrator di seluruh unit layanan.
+            Kelola hak akses dan akun staff di seluruh unit layanan.
           </p>
         </div>
 
@@ -267,8 +267,8 @@ export function AdministratorFeature() {
           data={administrators}
           keyExtract={(row) => row.id}
           loading={isLoading}
-          emptyTitle="Tidak ada administrator"
-          emptyMessage="Belum ada administrator yang sesuai dengan kriteria."
+          emptyTitle="Tidak ada staff"
+          emptyMessage="Belum ada staff yang sesuai dengan kriteria."
         />
       </div>
 
