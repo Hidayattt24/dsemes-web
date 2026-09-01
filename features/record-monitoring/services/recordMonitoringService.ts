@@ -331,7 +331,7 @@ export const recordMonitoringService = {
         name: log.activity_name || log.descriptive_name || "Aktivitas Fisik",
         time: `${dateStr}, ${timeStr}`,
         intensity,
-        duration: log.duration_minutes || 30,
+        duration: Number(log.duration_minutes) || 0,
         caloriesBurned: Math.round(log.calories_burned ?? 0),
         rawDate: loggedDate,
       };

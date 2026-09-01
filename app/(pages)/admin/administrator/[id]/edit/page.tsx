@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { FormLoader } from "@/components/ui/loading";
 
 const AdministratorFormFeature = dynamic(
-  () => import("@/features/administrator/components/AdministratorFormFeature").then((mod) => mod.AdministratorFormFeature),
+  () => import("@/features/staff-management/components/AdministratorFormFeature").then((mod) => mod.AdministratorFormFeature),
   {
     loading: () => <FormLoader />,
   }

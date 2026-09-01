@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { AdministratorFeature } from "@/features/administrator/components/AdministratorFeature";
+import { AdministratorFeature } from "@/features/staff-management/components/AdministratorFeature";
 
 export const metadata: Metadata = {
-  title: "Administrator | Digital DSMES Admin",
+  title: "Staff | Digital DSMES Admin",
   description: "Kelola hak akses dan akun monitoring staff.",
 };
 

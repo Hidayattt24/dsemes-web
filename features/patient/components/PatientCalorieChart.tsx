@@ -5,9 +5,26 @@ import { calculateDSMESCalorieTarget } from "@/lib/calorieCalculator";
 
 interface CaloriePoint {
   readonly day: string;
+  readonly date: string;
   readonly targetHeight: string;
   readonly actualHeight: string;
+  readonly actualCalories: number;
   readonly hoverVal: string;
+}
+
+interface MealLogRecord {
+  readonly id?: string;
+  readonly logged_at?: string;
+  readonly meal_type?: string;
+  readonly mealType?: string;
+  readonly food_name?: string;
+  readonly name?: string;
+  readonly calories?: number;
+  readonly portion_multiplier?: number;
+  readonly food?: {
+    readonly name?: string;
+    readonly calories?: number;
+  };
 }
 
 interface PatientCalorieChartProps {
@@ -21,7 +38,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
   const [selectedRange, setSelectedRange] = useState<"7" | "30">("7");
   const [hoveredCalorieIndex, setHoveredCalorieIndex] = useState<number | null>(null);
 
-  const targetCalorie = calculateDSMESCalorieTarget(patient || {});
+  const targetCalorie = Number(patient?.daily_calorie_target) || calculateDSMESCalorieTarget(patient || {});
 
   // Filter logs based on the selected range
   const limitDays = parseInt(selectedRange);
@@ -30,7 +47,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filteredLogs = data.filter((log: any) => {
-    return new Date(log.logged_at) >= cutoffDate;
+    return new Date(log.logged_at ?? 0) >= cutoffDate;
   });
 
   const hasData = filteredLogs.length > 0;
@@ -39,8 +56,8 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
   const dailyCaloriesMap: { [dateStr: string]: number } = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filteredLogs.forEach((log: any) => {
-    const dStr = new Date(log.logged_at).toDateString();
-    const cals = (log.food?.calories ?? 0) * (log.portion_multiplier ?? 1);
+    const dStr = new Date(log.logged_at ?? 0).toDateString();
+    const cals = (log.food?.calories ?? log.calories ?? 0) * (log.portion_multiplier ?? 1);
     dailyCaloriesMap[dStr] = (dailyCaloriesMap[dStr] || 0) + cals;
   });
 
@@ -58,12 +75,12 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
     const dateStr = targetDate.toDateString();
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dayLogs = data.filter((log: any) => new Date(log.logged_at).toDateString() === dateStr);
+     const dayLogs = data.filter((log: any) => new Date(log.logged_at ?? 0).toDateString() === dateStr);
     
     let actualCalories = 0;
     if (dayLogs.length > 0) {
       actualCalories = Math.round(dayLogs.reduce((sum, log) => {
-        return sum + (log.food?.calories ?? 0) * (log.portion_multiplier ?? 1);
+        return sum + (log.food?.calories ?? log.calories ?? 0) * (log.portion_multiplier ?? 1);
       }, 0));
     }
 
@@ -76,8 +93,10 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
 
     return {
       day: dayName,
+      date: dateStr,
       targetHeight: `${targetHeightVal}%`,
       actualHeight: `${actualHeightVal}%`,
+      actualCalories,
       hoverVal: `${fullDaysMap[dayName] || dayName}: ${actualCalories.toLocaleString("id-ID")} kkal`,
     };
   });
@@ -131,8 +150,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
         ) : (
           /* Grouped Bars */
           barData.map((bar, idx) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const hasValueForDay = data.some((log: any) => new Date(log.logged_at).toDateString() === bar.day);
+            const hasValueForDay = bar.actualCalories > 0;
             return (
               <div
                 key={bar.day}
@@ -157,7 +175,7 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
                   {/* Actual bar (Teal color) */}
                   {hasValueForDay && (
                     <div
-                      className="w-4 bg-[#00695C] rounded-t-sm transition-all duration-200 group-hover:bg-[#0F766E]"
+                       className="w-4 bg-[#16A34A] rounded-t-sm transition-all duration-200 group-hover:bg-[#15803D]"
                       style={{ height: bar.actualHeight }}
                     />
                   )}
@@ -170,6 +188,30 @@ export function PatientCalorieChart({ data = [], patient }: PatientCalorieChartP
           })
         )}
       </div>
+
+      {hasData && (
+        <div className="mb-6 border-b border-[#E2E8F0]/50 pb-6">
+          <p className="text-[10px] uppercase font-bold tracking-widest text-[#718096] mb-3">
+            Makanan yang Dikonsumsi
+          </p>
+          <div className="max-h-32 overflow-y-auto space-y-2 pr-1">
+            {filteredLogs.map((log: MealLogRecord, index: number) => {
+              const foodName = log.food?.name || log.food_name || log.name || "Makanan tercatat";
+              const mealType = log.meal_type || log.mealType || "Asupan";
+              const calories = Math.round((log.food?.calories ?? log.calories ?? 0) * (log.portion_multiplier ?? 1));
+              return (
+                <div key={log.id ?? `${foodName}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-[#F0FDF4] px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-[#1A202C]">{foodName}</p>
+                    <p className="text-[10px] text-[#718096]">{mealType}</p>
+                  </div>
+                  <span className="shrink-0 text-xs font-bold text-[#15803D]">{calories.toLocaleString("id-ID")} kkal</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Metrics Footer */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-[#E2E8F0]/50 text-center md:text-left">

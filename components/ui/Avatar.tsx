@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 interface AvatarProps {
   readonly src?:       string;
   readonly name:       string;
@@ -29,13 +27,10 @@ export function Avatar({
       style={{ width: size, height: size }}
     >
       {src ? (
-        <Image
-          src={src}
-          alt={name}
-          fill
-          sizes={`${size}px`}
-          className="object-cover"
-        />
+        // Profile photos may be stored as data URLs or regular URLs.
+        // A native image supports both without requiring Next image-host config.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={name} className="h-full w-full object-cover" />
       ) : (
         <div
           className="flex items-center justify-center w-full h-full bg-[#F0F9F8] text-[#00695C] font-bold select-none"

@@ -85,7 +85,7 @@ export function AdministratorFormFeature({ adminId }: AdministratorFormFeaturePr
     <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full font-[family-name:var(--font-poppins)] relative">
       {/* Back button */}
       <div className="mb-4">
-        <BackButton href="/admin/administrator" label="Manajemen Administrator" />
+        <BackButton href="/admin/administrator" label="Manajemen Staff" />
       </div>
 
       {/* Action Toolbar */}

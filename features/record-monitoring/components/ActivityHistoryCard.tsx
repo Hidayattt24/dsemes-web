@@ -11,6 +11,10 @@ interface ActivityHistoryCardProps {
 
 export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isLoading }: ActivityHistoryCardProps) {
   const hasData = logs.length > 0;
+  const chartScale = Math.max(
+    30,
+    Math.ceil(Math.max(...logs.map((log) => log.duration), 0) / 30) * 30,
+  );
 
   // Group activities by date
   const dailyMap: { [dateStr: string]: { duration: number; date: Date } } = {};
@@ -42,8 +46,9 @@ export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isL
     const dateStr = targetDate.toDateString();
 
     const duration = dailyMap[dateStr]?.duration ?? 0;
-    // Scale height based on a target of 60 minutes
-    const height = duration > 0 ? `${Math.min(100, Math.max(10, Math.round((duration / 60) * 100)))}%` : "8px";
+    const height = duration > 0
+      ? `${Math.min(100, Math.max(10, Math.round((duration / chartScale) * 100)))}%`
+      : "8px";
 
     return {
       label: dayLabel,
@@ -92,10 +97,10 @@ export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isL
             {/* Grid lines for Y-axis guide */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-30">
               <div className="border-b border-dashed border-[#718096] w-full flex justify-between">
-                <span className="text-[9px] text-[#718096]">60m</span>
+                 <span className="text-[9px] text-[#718096]">{chartScale}m</span>
               </div>
               <div className="border-b border-dashed border-[#718096] w-full flex justify-between">
-                <span className="text-[9px] text-[#718096]">30m</span>
+                 <span className="text-[9px] text-[#718096]">{Math.round(chartScale / 2)}m</span>
               </div>
               <div className="border-b border-dashed border-[#718096] w-full"></div>
             </div>
@@ -105,7 +110,7 @@ export function ActivityHistoryCard({ logs = [], selectedDate, onDateChange, isL
                 <span className="text-[11px] font-bold text-[#00695C]">{bar.value}m</span>
                 <div className="w-8 h-28 flex items-end justify-center bg-[#E2E8F0]/40 rounded-t-lg p-0.5">
                   <div 
-                    style={{ height: `${bar.value > 0 ? Math.max(12, Math.min(100, Math.round((bar.value / 60) * 100))) : 4}%` }}
+                     style={{ height: `${bar.value > 0 ? Math.max(12, Math.min(100, Math.round((bar.value / chartScale) * 100))) : 4}%` }}
                     className={[
                       "w-full rounded-t-md transition-all duration-500 hover:opacity-90",
                       bar.value > 0

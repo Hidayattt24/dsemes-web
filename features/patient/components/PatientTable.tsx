@@ -3,6 +3,7 @@
 import { DataTable, type TableColumn } from "@/components/common/DataTable";
 import type { Patient } from "@/types/patient";
 import Link from "next/link";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface PatientTableProps {
   readonly patients: Patient[];
@@ -16,16 +17,7 @@ export function PatientTable({ patients, loading }: PatientTableProps) {
       header: "Nama Pasien",
       render: (row) => (
         <div className="flex items-center gap-4">
-          <div
-            className={[
-              "w-9 h-9 rounded-full flex items-center justify-center font-bold text-[11px] tracking-tighter",
-              row.status === "Aktif"
-                ? "bg-[#F0F9F8] text-[#00695C]"
-                : "bg-[#E2E8F0]/40 text-[#718096]",
-            ].join(" ")}
-          >
-            {row.initials}
-          </div>
+          <Avatar src={row.avatarUrl} name={row.name} size={36} />
           <span className="text-sm font-semibold text-[#1A202C]">{row.name}</span>
         </div>
       ),
